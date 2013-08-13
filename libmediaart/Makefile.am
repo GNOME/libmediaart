@@ -23,6 +23,7 @@ libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES = \
 	$(backend)
 
 libmediaartinclude_HEADERS = \
+	mediaart.h \
 	utils.h \
 	queue.h \
 	extract.h \
