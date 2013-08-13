@@ -35,15 +35,8 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 
-#include <libtracker-miner/tracker-miner.h>
-#include <libtracker-common/tracker-file-utils.h>
-#include <libtracker-common/tracker-date-time.h>
-#include <libtracker-common/tracker-media-art.h>
-
-#include "tracker-media-art.h"
-#include "tracker-extract.h"
-#include "tracker-marshal.h"
-#include "tracker-media-art-generic.h"
+#include "extract.h"
+#include "utils.h"
 
 #define ALBUMARTER_SERVICE    "com.nokia.albumart"
 #define ALBUMARTER_PATH       "/com/nokia/albumart/Requester"
@@ -56,7 +49,7 @@ static const gchar *media_art_type_name[TRACKER_MEDIA_ART_TYPE_COUNT] = {
 };
 
 typedef struct {
-	TrackerStorage *storage;
+	void *storage;  /* was TrackerStorage *storage; */
 	gchar *art_path;
 	gchar *local_uri;
 } GetFileInfo;
@@ -77,7 +70,7 @@ typedef enum {
 
 static gboolean initialized = FALSE;
 static gboolean disable_requests;
-static TrackerStorage *media_art_storage;
+/* static TrackerStorage *media_art_storage; */
 static GHashTable *media_art_cache;
 static GDBusConnection *connection;
 
@@ -777,8 +770,7 @@ media_art_set (const unsigned char *buffer,
 }
 
 static void
-media_art_request_download (TrackerStorage      *storage,
-                            TrackerMediaArtType  type,
+media_art_request_download (TrackerMediaArtType  type,
                             const gchar         *album,
                             const gchar         *artist,
                             const gchar         *local_uri,
@@ -796,8 +788,6 @@ media_art_request_download (TrackerStorage      *storage,
 		}
 
 		info = g_slice_new (GetFileInfo);
-
-		info->storage = storage ? g_object_ref (storage) : NULL;
 
 		info->local_uri = g_strdup (local_uri);
 		info->art_path = g_strdup (art_path);
@@ -820,6 +810,8 @@ media_art_request_download (TrackerStorage      *storage,
 		                        info);
 	}
 }
+
+#if 0
 
 static void
 media_art_copy_to_local (TrackerStorage *storage,
@@ -891,6 +883,18 @@ media_art_copy_to_local (TrackerStorage *storage,
 	}
 }
 
+#else
+#warning "FIXME: WE don't have TrackerStorage, media_art_copy_to_local() does nothing."
+
+static void
+media_art_copy_to_local (const gchar *filename,
+                         const gchar *local_uri)
+{
+	g_warning ("FIXME: WE don't have TrackerStorage, media_art_copy_to_local() does nothing.");
+}
+
+#endif
+
 static void
 media_art_queue_cb (GObject      *source_object,
                     GAsyncResult *res,
@@ -919,9 +923,7 @@ media_art_queue_cb (GObject      *source_object,
 
 	if (info->storage && info->art_path &&
 	    g_file_test (info->art_path, G_FILE_TEST_EXISTS)) {
-
-		media_art_copy_to_local (info->storage,
-		                         info->art_path,
+		media_art_copy_to_local (info->art_path,
 		                         info->local_uri);
 	}
 
@@ -943,8 +945,6 @@ tracker_media_art_init (void)
 	g_return_val_if_fail (initialized == FALSE, FALSE);
 
 	tracker_media_art_plugin_init ();
-
-	media_art_storage = tracker_storage_new ();
 
 	/* Cache to know if we have already handled uris */
 	media_art_cache = g_hash_table_new_full (g_str_hash,
@@ -978,10 +978,6 @@ tracker_media_art_shutdown (void)
 
 	if (media_art_cache) {
 		g_hash_table_unref (media_art_cache);
-	}
-
-	if (media_art_storage) {
-		g_object_unref (media_art_storage);
 	}
 
 	tracker_media_art_plugin_shutdown ();
@@ -1087,8 +1083,7 @@ tracker_media_art_process (const unsigned char *buffer,
 				 * media-art to the media-art
 				 * downloaders
 				 */
-				media_art_request_download (media_art_storage,
-				                            type,
+				media_art_request_download (type,
 				                            artist,
 				                            title,
 				                            local_art_uri,
@@ -1116,9 +1111,7 @@ tracker_media_art_process (const unsigned char *buffer,
 		 * situation might have changed
 		 */
 		if (g_file_test (art_path, G_FILE_TEST_EXISTS)) {
-			media_art_copy_to_local (media_art_storage,
-			                         art_path,
-			                         local_art_uri);
+			media_art_copy_to_local (art_path, local_art_uri);
 		}
 	}
 

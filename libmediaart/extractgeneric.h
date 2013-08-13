@@ -20,14 +20,19 @@
  * Philip Van Hoof <philip@codeminded.be>
  */
 
-#ifndef __TRACKER_MEDIA_ART_GENERIC_H__
-#define __TRACKER_MEDIA_ART_GENERIC_H__
+
+#ifndef __LIBMEDIAART_EXTRACTGENERIC_H__
+#define __LIBMEDIAART_EXTRACTGENERIC_H__
 
 #include <glib.h>
 
+#if !defined (__LIBMEDIAART_INSIDE__) && !defined (LIBMEDIAART_COMPILATION)
+#error "Only <libmediaart/mediaart.h> must be included directly."
+#endif
+
 G_BEGIN_DECLS
 
-void      tracker_media_art_plugin_init     (void);
+void      tracker_media_art_plugin_init     (gint                 max_width);
 void      tracker_media_art_plugin_shutdown (void);
 
 gboolean  tracker_media_art_file_to_jpeg    (const gchar         *filename,
@@ -39,4 +44,4 @@ gboolean  tracker_media_art_buffer_to_jpeg  (const unsigned char *buffer,
 
 G_END_DECLS
 
-#endif /* __TRACKER_MEDIA_ART_GENERIC_H__ */
+#endif /* __LIBMEDIAART_EXTRACTGENERIC_H__ */

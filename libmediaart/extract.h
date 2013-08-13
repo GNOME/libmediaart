@@ -17,10 +17,14 @@
  * Boston, MA  02110-1301, USA.
  */
 
-#ifndef __TRACKER_EXTRACT_MEDIA_ART_H__
-#define __TRACKER_EXTRACT_MEDIA_ART_H__
+#ifndef __LIBMEDIAART_EXTRACT_H__
+#define __LIBMEDIAART_EXTRACT_H__
 
 #include <glib.h>
+
+#if !defined (__LIBMEDIAART_INSIDE__) && !defined (LIBMEDIAART_COMPILATION)
+#error "Only <libmediaart/mediaart.h> must be included directly."
+#endif
 
 G_BEGIN_DECLS
 
@@ -44,4 +48,4 @@ gboolean tracker_media_art_process  (const unsigned char *buffer,
 
 G_END_DECLS
 
-#endif /* __TRACKER_EXTRACT_MEDIA_ART_H__ */
+#endif /* __LIBMEDIAART_UTILS_H__ */

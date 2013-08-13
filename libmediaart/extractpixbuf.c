@@ -22,13 +22,16 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include "tracker-media-art-generic.h"
+#include "extractgeneric.h"
 
-#include "tracker-main.h"
+static gint max_width_in_bytes = 0;
 
 void
-tracker_media_art_plugin_init (void)
+tracker_media_art_plugin_init (gint max_width)
 {
+	g_return_if_fail (max_width >= 0);
+
+	max_width_in_bytes = max_width;
 }
 
 void
@@ -42,13 +45,6 @@ tracker_media_art_file_to_jpeg (const gchar *filename,
 {
 	GdkPixbuf *pixbuf;
 	GError *error = NULL;
-	TrackerConfig *config = tracker_main_get_config ();
-	gint max_media_art_width = tracker_config_get_max_media_art_width (config);
-
-	if (max_media_art_width < 0) {
-		g_debug ("Not saving album art from file, disabled in config");
-		return TRUE;
-	}
 
 	/* TODO: Add resizing support */
 
@@ -77,17 +73,15 @@ size_prepared_cb (GdkPixbufLoader *loader,
                   gint             height,
                   gpointer         user_data)
 {
-	TrackerConfig *config = tracker_main_get_config ();
-	gint max_media_art_width = tracker_config_get_max_media_art_width (config);
 	gfloat scale;
 
-	if (max_media_art_width < 1 || width <= max_media_art_width) {
+	if (max_width_in_bytes < 1 || width <= max_width_in_bytes) {
 		return;
 	}
 
-	g_debug ("Resizing media art to %d width", max_media_art_width);
+	g_debug ("Resizing media art to %d width", max_width_in_bytes);
 
-	scale = width / (gfloat) max_media_art_width;
+	scale = width / (gfloat) max_width_in_bytes;
 
 	gdk_pixbuf_loader_set_size (loader, (gint) (width / scale), (gint) (height / scale));
 }
@@ -98,16 +92,13 @@ tracker_media_art_buffer_to_jpeg (const unsigned char *buffer,
                                   const gchar         *buffer_mime,
                                   const gchar         *target)
 {
-	TrackerConfig *config = tracker_main_get_config ();
-	gint max_media_art_width = tracker_config_get_max_media_art_width (config);
-
-	if (max_media_art_width < 0) {
+	if (max_width_in_bytes < 0) {
 		g_debug ("Not saving album art from buffer, disabled in config");
 		return TRUE;
 	}
 
 	/* FF D8 FF are the three first bytes of JPeg images */
-	if (max_media_art_width == 0 &&
+	if (max_width_in_bytes == 0 &&
 	    (g_strcmp0 (buffer_mime, "image/jpeg") == 0 ||
 	     g_strcmp0 (buffer_mime, "JPG") == 0) &&
 	    (buffer && len > 2 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff)) {
@@ -120,10 +111,10 @@ tracker_media_art_buffer_to_jpeg (const unsigned char *buffer,
 
 		g_debug ("Saving album art using GdkPixbufLoader for uri:'%s' (max width:%d)",
 		         target,
-		         max_media_art_width);
+		         max_width_in_bytes);
 
 		loader = gdk_pixbuf_loader_new ();
-		if (max_media_art_width > 0) {
+		if (max_width_in_bytes > 0) {
 			g_signal_connect (loader,
 			                  "size-prepared",
 			                  G_CALLBACK (size_prepared_cb),

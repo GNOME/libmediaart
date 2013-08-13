@@ -24,10 +24,7 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
-#include <libtracker-common/tracker-media-art.h>
 #include <libtracker-sparql/tracker-sparql.h>
-
-#include "tracker-media-art.h"
 
 /**
  * SECTION:tracker-media-art

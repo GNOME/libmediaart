@@ -17,16 +17,16 @@
  * Boston, MA  02110-1301, USA.
  */
 
-#ifndef __LIBTRACKER_COMMON_MEDIA_ART_H__
-#define __LIBTRACKER_COMMON_MEDIA_ART_H__
+#ifndef __LIBMEDIAART_UTILS_H__
+#define __LIBMEDIAART_UTILS_H__
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
-#if !defined (__LIBTRACKER_COMMON_INSIDE__) && !defined (TRACKER_COMPILATION)
-#error "only <libtracker-common/tracker-common.h> must be included directly."
+#if !defined (__LIBMEDIAART_INSIDE__) && !defined (LIBMEDIAART_COMPILATION)
+#error "Only <libmediaart/mediaart.h> must be included directly."
 #endif
+
+G_BEGIN_DECLS
 
 gchar * tracker_media_art_strip_invalid_entities (const gchar  *original);
 void    tracker_media_art_get_path               (const gchar  *artist,
@@ -39,4 +39,4 @@ void    tracker_media_art_get_path               (const gchar  *artist,
 
 G_END_DECLS
 
-#endif /* __LIBTRACKER_COMMON_MEDIA_ART_H__ */
+#endif /* __LIBMEDIAART_UTILS_H__ */

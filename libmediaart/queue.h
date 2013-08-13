@@ -17,13 +17,13 @@
  * 02110-1301  USA
  */
 
-#ifndef __LIBTRACKER_MINER_MEDIA_ART_H__
-#define __LIBTRACKER_MINER_MEDIA_ART_H__
+#ifndef __LIBMEDIAART_QUEUE_H__
+#define __LIBMEDIAART_QUEUE_H__
 
 #include <libtracker-sparql/tracker-sparql.h>
 
-#if !defined (__LIBTRACKER_MINER_H_INSIDE__) && !defined (TRACKER_COMPILATION)
-#error "Only <libtracker-miner/tracker-miner.h> can be included directly."
+#if !defined (__LIBMEDIAART_INSIDE__) && !defined (LIBMEDIAART_COMPILATION)
+#error "Only <libmediaart/mediaart.h> must be included directly."
 #endif
 
 G_BEGIN_DECLS
@@ -34,4 +34,4 @@ void     tracker_media_art_queue_empty (TrackerSparqlConnection *connection);
 
 G_END_DECLS
 
-#endif /* __LIBTRACKER_MINER_MEDIA_ART_H__ */
+#endif /* __LIBMEDIAART_QUEUE_H__ */

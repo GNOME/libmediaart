@@ -34,10 +34,6 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 
-#include "tracker-file-utils.h"
-#include "tracker-date-time.h"
-#include "tracker-media-art.h"
-
 static gboolean
 media_art_strip_find_next_block (const gchar    *original,
                                 const gunichar  open_char,

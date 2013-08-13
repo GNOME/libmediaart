@@ -19,7 +19,7 @@
 
 #include <glib-object.h>
 
-#include <libtracker-common/tracker-common.h>
+#include <libmediaart/mediaart.h>
 
 struct {
         const gchar *input;
