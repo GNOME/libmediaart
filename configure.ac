@@ -111,10 +111,6 @@ AC_PROG_YACC
 LT_PREREQ([2.2])
 LT_INIT([disable-static])
 
-# Get text
-AM_GNU_GETTEXT_VERSION([0.17])
-AM_GNU_GETTEXT([external])
-
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_AWK
@@ -279,7 +275,6 @@ Build Configuration:
 	Compiler:                               ${CC}
 	Compiler Warnings:                      $enable_compile_warnings
 
-	Enable functional tests:                $enable_functional_tests
 	Enable unit tests:                      $have_unit_tests
 
 	Support media art processing:           $selected_for_media_art
