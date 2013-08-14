@@ -28,13 +28,13 @@
 
 G_BEGIN_DECLS
 
-gchar * tracker_media_art_strip_invalid_entities (const gchar  *original);
-void    tracker_media_art_get_path               (const gchar  *artist,
-                                                  const gchar  *album,
-                                                  const gchar  *prefix,
-                                                  const gchar  *uri,
-                                                  gchar       **path,
-                                                  gchar       **local_uri);
+gchar * media_art_strip_invalid_entities (const gchar  *original);
+void    media_art_get_path               (const gchar  *artist,
+                                          const gchar  *album,
+                                          const gchar  *prefix,
+                                          const gchar  *uri,
+                                          gchar       **path,
+                                          gchar       **local_uri);
 
 
 G_END_DECLS

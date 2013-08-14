@@ -71,7 +71,7 @@ media_art_strip_find_next_block (const gchar    *original,
 }
 
 /**
- * tracker_media_art_strip_invalid_entities:
+ * media_art_strip_invalid_entities:
  * @original: original string
  *
  * Strip a albumname or artistname string to prepare it for calculating the
@@ -83,7 +83,7 @@ media_art_strip_find_next_block (const gchar    *original,
  * Since: 0.10.14
  */
 gchar *
-tracker_media_art_strip_invalid_entities (const gchar *original)
+media_art_strip_invalid_entities (const gchar *original)
 {
 	GString *str_no_blocks;
 	gchar **strv;
@@ -197,7 +197,7 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
 }
 
 /**
- * tracker_media_art_get_path:
+ * media_art_get_path:
  * @artist: the artist
  * @title: the title
  * @prefix: For example "album"
@@ -211,12 +211,12 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * Since: 0.10.14
  */
 void
-tracker_media_art_get_path (const gchar  *artist,
-                            const gchar  *title,
-                            const gchar  *prefix,
-                            const gchar  *uri,
-                            gchar       **path,
-                            gchar       **local_uri)
+media_art_get_path (const gchar  *artist,
+                    const gchar  *title,
+                    const gchar  *prefix,
+                    const gchar  *uri,
+                    gchar       **path,
+                    gchar       **local_uri)
 {
 	const gchar *space_checksum = "7215ee9c7d9dc229d2921a40e899ec5f";
 	const gchar *a, *b;
@@ -243,7 +243,7 @@ tracker_media_art_get_path (const gchar  *artist,
 	}
 
 	if (artist) {
-		artist_stripped = tracker_media_art_strip_invalid_entities (artist);
+		artist_stripped = media_art_strip_invalid_entities (artist);
 		artist_norm = g_utf8_normalize (artist_stripped, -1, G_NORMALIZE_NFKD);
 		artist_down = g_utf8_strdown (artist_norm, -1);
 		artist_checksum = media_art_checksum_for_data (G_CHECKSUM_MD5,
@@ -252,7 +252,7 @@ tracker_media_art_get_path (const gchar  *artist,
 	}
 
 	if (title) {
-		title_stripped = tracker_media_art_strip_invalid_entities (title);
+		title_stripped = media_art_strip_invalid_entities (title);
 		title_norm = g_utf8_normalize (title_stripped, -1, G_NORMALIZE_NFKD);
 		title_down = g_utf8_strdown (title_norm, -1);
 		title_checksum = media_art_checksum_for_data (G_CHECKSUM_MD5,

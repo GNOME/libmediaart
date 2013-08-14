@@ -32,15 +32,15 @@
 
 G_BEGIN_DECLS
 
-void      tracker_media_art_plugin_init     (gint                 max_width);
-void      tracker_media_art_plugin_shutdown (void);
+void      media_art_plugin_init     (gint                 max_width);
+void      media_art_plugin_shutdown (void);
 
-gboolean  tracker_media_art_file_to_jpeg    (const gchar         *filename,
-                                             const gchar         *target);
-gboolean  tracker_media_art_buffer_to_jpeg  (const unsigned char *buffer,
-                                             size_t               len,
-                                             const gchar         *buffer_mime,
-                                             const gchar         *target);
+gboolean  media_art_file_to_jpeg    (const gchar         *filename,
+                                     const gchar         *target);
+gboolean  media_art_buffer_to_jpeg  (const unsigned char *buffer,
+                                     size_t               len,
+                                     const gchar         *buffer_mime,
+                                     const gchar         *target);
 
 G_END_DECLS
 

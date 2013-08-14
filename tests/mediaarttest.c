@@ -47,13 +47,13 @@ struct {
 };
 
 static void
-test_albumart_stripping (void)
+test_mediaart_stripping (void)
 {
         gint i;
         gchar *result;
 
         for (i = 0; strip_test_cases[i].input != NULL; i++) {
-                result = tracker_media_art_strip_invalid_entities (strip_test_cases[i].input);
+                result = media_art_strip_invalid_entities (strip_test_cases[i].input);
                 g_assert_cmpstr (result, ==, strip_test_cases[i].expected_output);
                 g_free (result);
         }
@@ -62,19 +62,19 @@ test_albumart_stripping (void)
 }
 
 static void
-test_albumart_stripping_null (void)
+test_mediaart_stripping_null (void)
 {
         // FIXME: Decide what is the expected behaviour here...
         //   a. Return NULL
         //   b. Return ""
-        //g_assert (!tracker_albumart_strip_invalid_entities (NULL));
+        //g_assert (!mediaart_strip_invalid_entities (NULL));
 }
 
 struct {
         const gchar *artist;
         const gchar *album;
         const gchar *filename;
-} albumart_test_cases [] = {
+} mediaart_test_cases [] = {
         {"Beatles", "Sgt. Pepper", 
          "album-2a9ea35253dbec60e76166ec8420fbda-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
 
@@ -94,23 +94,23 @@ struct {
 };
 
 static void
-test_albumart_location (void)
+test_mediaart_location (void)
 {
         gchar *path = NULL, *local_uri = NULL;
         gchar *expected;
         gint i;
      
-        for (i = 0; albumart_test_cases[i].filename != NULL; i++) {
-                tracker_media_art_get_path (albumart_test_cases[i].artist,
-                                            albumart_test_cases[i].album,
-                                            "album",
-                                            "file:///home/test/a.mp3",
-                                            &path,
-                                            &local_uri);
+        for (i = 0; mediaart_test_cases[i].filename != NULL; i++) {
+                media_art_get_path (mediaart_test_cases[i].artist,
+                                    mediaart_test_cases[i].album,
+                                    "album",
+                                    "file:///home/test/a.mp3",
+                                    &path,
+                                    &local_uri);
                 expected = g_build_path (G_DIR_SEPARATOR_S, 
                                          g_get_user_cache_dir (),
                                          "media-art",
-                                         albumart_test_cases[i].filename, 
+                                         mediaart_test_cases[i].filename, 
                                          NULL);
                 g_assert_cmpstr (path, ==, expected);
                 
@@ -124,32 +124,32 @@ test_albumart_location (void)
 }
 
 static void
-test_albumart_location_null (void)
+test_mediaart_location_null (void)
 {
         gchar *path = NULL, *local_uri = NULL;
 
         /* NULL parameters */
-        tracker_media_art_get_path (NULL, NULL, "album", "file:///a/b/c.mp3", &path, &local_uri);
+        media_art_get_path (NULL, NULL, "album", "file:///a/b/c.mp3", &path, &local_uri);
         g_assert (!path && !local_uri);
 }
 
 static void
-test_albumart_location_path (void)
+test_mediaart_location_path (void)
 {
         gchar *path = NULL, *local_uri = NULL;
         gchar *expected;
 
         /* Use path instead of URI */
-        tracker_media_art_get_path (albumart_test_cases[0].artist,
-                                    albumart_test_cases[0].album,
-                                    "album",
-                                    "/home/test/a.mp3",
-                                    &path,
-                                    &local_uri);
+        media_art_get_path (mediaart_test_cases[0].artist,
+                            mediaart_test_cases[0].album,
+                            "album",
+                            "/home/test/a.mp3",
+                            &path,
+                            &local_uri);
         expected = g_build_path (G_DIR_SEPARATOR_S, 
                                  g_get_user_cache_dir (),
                                  "media-art",
-                                 albumart_test_cases[0].filename, 
+                                 mediaart_test_cases[0].filename, 
                                  NULL);
         g_assert_cmpstr (path, ==, expected);
                 
@@ -163,16 +163,16 @@ main (gint argc, gchar **argv)
 {
         g_test_init (&argc, &argv, NULL);
 
-        g_test_add_func ("/libtracker-common/albumart/stripping",
-                         test_albumart_stripping);
-        g_test_add_func ("/libtracker-common/albumart/stripping_null",
-                         test_albumart_stripping_null);
-        g_test_add_func ("/libtracker-common/albumart/location",
-                         test_albumart_location);
-        g_test_add_func ("/libtracker-common/albumart/location_null",
-                         test_albumart_location_null);
-        g_test_add_func ("/libtracker_common/albumart/location_path",
-                         test_albumart_location_path);
+        g_test_add_func ("/mediaart/stripping",
+                         test_mediaart_stripping);
+        g_test_add_func ("/mediaart/stripping_null",
+                         test_mediaart_stripping_null);
+        g_test_add_func ("/mediaart/location",
+                         test_mediaart_location);
+        g_test_add_func ("/mediaart/location_null",
+                         test_mediaart_location_null);
+        g_test_add_func ("/mediaart/location_path",
+                         test_mediaart_location_path);
 
         return g_test_run ();
 }
