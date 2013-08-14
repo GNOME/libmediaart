@@ -26,11 +26,13 @@
 
 #include <libtracker-sparql/tracker-sparql.h>
 
+#include "utils.h"
+
 /**
  * SECTION:media-art
  * @title: Media art management
  * @short_description: Media art request and management.
- * @include: libtracker-miner/tracker-media-art.h
+ * @include: libmediaart/mediaart.h
  *
  * This is a convenience API using D-Bus to talk to the media management service.
  **/

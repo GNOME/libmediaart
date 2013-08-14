@@ -20,7 +20,7 @@
  * Philip Van Hoof <philip@codeminded.be>
  */
 
-#include "tracker-media-art-generic.h"
+#include "extractgeneric.h"
 
 void
 media_art_plugin_init (void)
