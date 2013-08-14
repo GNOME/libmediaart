@@ -27,7 +27,7 @@
 static gint max_width_in_bytes = 0;
 
 void
-tracker_media_art_plugin_init (gint max_width)
+media_art_plugin_init (gint max_width)
 {
 	g_return_if_fail (max_width >= 0);
 
@@ -35,13 +35,13 @@ tracker_media_art_plugin_init (gint max_width)
 }
 
 void
-tracker_media_art_plugin_shutdown (void)
+media_art_plugin_shutdown (void)
 {
 }
 
 gboolean
-tracker_media_art_file_to_jpeg (const gchar *filename,
-                                const gchar *target)
+media_art_file_to_jpeg (const gchar *filename,
+                        const gchar *target)
 {
 	GdkPixbuf *pixbuf;
 	GError *error = NULL;
@@ -87,10 +87,10 @@ size_prepared_cb (GdkPixbufLoader *loader,
 }
 
 gboolean
-tracker_media_art_buffer_to_jpeg (const unsigned char *buffer,
-                                  size_t               len,
-                                  const gchar         *buffer_mime,
-                                  const gchar         *target)
+media_art_buffer_to_jpeg (const unsigned char *buffer,
+                          size_t               len,
+                          const gchar         *buffer_mime,
+                          const gchar         *target)
 {
 	if (max_width_in_bytes < 0) {
 		g_debug ("Not saving album art from buffer, disabled in config");

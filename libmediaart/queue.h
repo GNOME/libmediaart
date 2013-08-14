@@ -28,9 +28,9 @@
 
 G_BEGIN_DECLS
 
-gboolean tracker_media_art_queue_remove (const gchar             *uri,
-                                         const gchar             *mime_type);
-void     tracker_media_art_queue_empty (TrackerSparqlConnection *connection);
+gboolean media_art_queue_remove (const gchar             *uri,
+                                 const gchar             *mime_type);
+void     media_art_queue_empty (TrackerSparqlConnection *connection);
 
 G_END_DECLS
 

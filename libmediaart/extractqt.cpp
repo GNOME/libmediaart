@@ -39,7 +39,7 @@ G_BEGIN_DECLS
 static QApplication *app = NULL;
 
 void
-tracker_media_art_plugin_init (void)
+media_art_plugin_init (void)
 {
 	int argc = 0;
 	char *argv[2] = { NULL, NULL };
@@ -48,7 +48,7 @@ tracker_media_art_plugin_init (void)
 }
 
 void
-tracker_media_art_plugin_shutdown (void)
+media_art_plugin_shutdown (void)
 {
 	// Apparently isn't destructing a QApplication something you should do, as
 	// QApplication is designed to work on stack of the main() function.
@@ -57,8 +57,8 @@ tracker_media_art_plugin_shutdown (void)
 }
 
 gboolean
-tracker_media_art_file_to_jpeg (const gchar *filename,
-                                const gchar *target)
+media_art_file_to_jpeg (const gchar *filename,
+                        const gchar *target)
 {
 	TrackerConfig *config = tracker_main_get_config ();
 	gint max_media_art_width = tracker_config_get_max_media_art_width (config);

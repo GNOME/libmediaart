@@ -27,7 +27,7 @@
 #include <libtracker-sparql/tracker-sparql.h>
 
 /**
- * SECTION:tracker-media-art
+ * SECTION:media-art
  * @title: Media art management
  * @short_description: Media art request and management.
  * @include: libtracker-miner/tracker-media-art.h
@@ -87,18 +87,18 @@ on_query_finished (GObject      *source_object,
 		artist = tracker_sparql_cursor_get_value_type (cursor, 1) != TRACKER_SPARQL_VALUE_TYPE_UNBOUND ? tracker_sparql_cursor_get_string (cursor, 1, NULL) : NULL;
 
 		/* The get_path API does stripping itself */
-		tracker_media_art_get_path (artist,
-		                            album,
-		                            "album", NULL,
-		                            &target, NULL);
+		media_art_get_path (artist,
+		                    album,
+		                    "album", NULL,
+		                    &target, NULL);
 
 		g_hash_table_replace (table, target, target);
 
 		/* Also add the file to which the symlinks are made */
-		tracker_media_art_get_path (NULL,
-		                            album,
-		                            "album", NULL,
-		                            &album_path, NULL);
+		media_art_get_path (NULL,
+		                    album,
+		                    "album", NULL,
+		                    &album_path, NULL);
 
 
 		g_hash_table_replace (table, album_path, album_path);
@@ -152,20 +152,20 @@ on_error:
 	}
 }
 /**
- * tracker_media_art_queue_remove:
+ * media_art_queue_remove:
  * @uri: URI of the file
  * @mime_type: mime-type of the file
  *
  * Adds a new request to tell the media art subsystem that @uri was removed.
- * Stored requests can be processed with tracker_media_art_queue_empty().
+ * Stored requests can be processed with media_art_queue_empty().
  *
  * Returns: #TRUE if successfully stored to be reported, #FALSE otherwise.
  *
  * Since: 0.10.4
  */
 gboolean
-tracker_media_art_queue_remove (const gchar *uri,
-                                const gchar *mime_type)
+media_art_queue_remove (const gchar *uri,
+                        const gchar *mime_type)
 {
 	/* mime_type can be NULL */
 
@@ -206,14 +206,14 @@ on_timer_destroy (gpointer data)
 }
 
 /**
- * tracker_media_art_queue_execute:
+ * media_art_queue_execute:
  *
  * Process all stored media art requests.
  *
  * Since: 0.10.4
  */
 void
-tracker_media_art_queue_empty (TrackerSparqlConnection *connection)
+media_art_queue_empty (TrackerSparqlConnection *connection)
 {
 	if (had_any && timer_id == 0) {
 

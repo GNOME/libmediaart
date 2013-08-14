@@ -23,27 +23,27 @@
 #include "tracker-media-art-generic.h"
 
 void
-tracker_media_art_plugin_init (void)
+media_art_plugin_init (void)
 {
 }
 
 void
-tracker_media_art_plugin_shutdown (void)
+media_art_plugin_shutdown (void)
 {
 }
 
 gboolean
-tracker_media_art_file_to_jpeg (const gchar *filename,
-                                const gchar *target)
+media_art_file_to_jpeg (const gchar *filename,
+                        const gchar *target)
 {
 	return FALSE;
 }
 
 gboolean
-tracker_media_art_buffer_to_jpeg (const unsigned char *buffer,
-                                  size_t               len,
-                                  const gchar         *buffer_mime,
-                                  const gchar         *target)
+media_art_buffer_to_jpeg (const unsigned char *buffer,
+                          size_t               len,
+                          const gchar         *buffer_mime,
+                          const gchar         *target)
 {
 	return FALSE;
 }

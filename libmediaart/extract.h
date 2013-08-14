@@ -29,22 +29,22 @@
 G_BEGIN_DECLS
 
 typedef enum {
-	TRACKER_MEDIA_ART_NONE,
-	TRACKER_MEDIA_ART_ALBUM,
-	TRACKER_MEDIA_ART_VIDEO,
-	TRACKER_MEDIA_ART_TYPE_COUNT
-} TrackerMediaArtType;
+	MEDIA_ART_NONE,
+	MEDIA_ART_ALBUM,
+	MEDIA_ART_VIDEO,
+	MEDIA_ART_TYPE_COUNT
+} MediaArtType;
 
-gboolean tracker_media_art_init     (void);
-void     tracker_media_art_shutdown (void);
+gboolean media_art_init     (void);
+void     media_art_shutdown (void);
 
-gboolean tracker_media_art_process  (const unsigned char *buffer,
-                                     size_t               len,
-                                     const gchar         *mime,
-                                     TrackerMediaArtType  type,
-                                     const gchar         *artist,
-                                     const gchar         *title,
-                                     const gchar         *uri);
+gboolean media_art_process  (const unsigned char *buffer,
+                             size_t               len,
+                             const gchar         *mime,
+                             MediaArtType         type,
+                             const gchar         *artist,
+                             const gchar         *title,
+                             const gchar         *uri);
 
 G_END_DECLS
 
