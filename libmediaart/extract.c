@@ -19,20 +19,10 @@
 
 #include "config.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <sys/types.h>
 #include <utime.h>
-#include <time.h>
+#include <string.h>
 #include <errno.h>
 
-#include <glib.h>
-#include <glib/gprintf.h>
-#include <glib/gstdio.h>
 #include <gio/gio.h>
 
 #include "extract.h"
