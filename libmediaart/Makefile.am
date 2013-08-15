@@ -15,8 +15,6 @@ libmediaartincludedir=$(includedir)/libmediaart-$(LIBMEDIAART_API_VERSION)/
 libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES = \
 	cache.c \
 	cache.h \
-	utils.c \
-	utils.h \
 	extract.c \
 	extract.h \
 	extractgeneric.h \
@@ -25,7 +23,6 @@ libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES = \
 libmediaartinclude_HEADERS = \
 	mediaart.h \
 	cache.h
-	utils.h \
 	extract.h \
 	extractgeneric.h
 

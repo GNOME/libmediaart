@@ -1,5 +1,7 @@
 <SECTION>
 <FILE>cache</FILE>
+media_art_get_path
+media_art_strip_invalid_entities
 media_art_remove
 </SECTION>
 
@@ -22,11 +24,5 @@ media_art_plugin_shutdown
 <SECTION>
 <FILE>mediaart</FILE>
 
-</SECTION>
-
-<SECTION>
-<FILE>utils</FILE>
-media_art_get_path
-media_art_strip_invalid_entities
 </SECTION>
 

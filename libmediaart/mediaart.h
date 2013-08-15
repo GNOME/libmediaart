@@ -25,7 +25,6 @@
 #include <libmediaart/extract.h>
 #include <libmediaart/extractgeneric.h>
 #include <libmediaart/cache.h>
-#include <libmediaart/utils.h>
 
 #undef __LIBMEDIAART_H_INSIDE__
 

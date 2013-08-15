@@ -26,7 +26,7 @@
 #include <gio/gio.h>
 
 #include "extract.h"
-#include "utils.h"
+#include "cache.h"
 
 #define ALBUMARTER_SERVICE    "com.nokia.albumart"
 #define ALBUMARTER_PATH       "/com/nokia/albumart/Requester"

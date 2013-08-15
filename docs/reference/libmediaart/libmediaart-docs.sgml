@@ -32,7 +32,6 @@
       <title>Reference</title>
       <xi:include href="xml/extract.xml"/>
       <xi:include href="xml/cache.xml"/>
-      <xi:include href="xml/utils.xml"/>
     </chapter>
 
   </part>

@@ -48,13 +48,13 @@ typedef enum {
 gboolean media_art_init     (void);
 void     media_art_shutdown (void);
 
-gboolean media_art_process  (const unsigned char *buffer,
-                             size_t               len,
-                             const gchar         *mime,
-                             MediaArtType         type,
-                             const gchar         *artist,
-                             const gchar         *title,
-                             const gchar         *uri);
+gboolean media_art_process  (const unsigned char  *buffer,
+                             size_t                len,
+                             const gchar          *mime,
+                             MediaArtType          type,
+                             const gchar          *artist,
+                             const gchar          *title,
+                             const gchar          *uri);
 
 G_END_DECLS
 

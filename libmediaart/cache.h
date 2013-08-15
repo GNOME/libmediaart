@@ -28,9 +28,17 @@
 
 G_BEGIN_DECLS
 
-gboolean
-media_art_remove (const gchar *artist,
-                  const gchar *album);
+gchar *  media_art_strip_invalid_entities (const gchar          *original);
+
+void     media_art_get_path               (const gchar          *artist,
+                                           const gchar          *title,
+                                           const gchar          *prefix,
+                                           const gchar          *uri,
+                                           gchar               **path,
+                                           gchar               **local_uri);
+
+gboolean media_art_remove                 (const gchar          *artist,
+                                           const gchar          *album);
 
 G_END_DECLS
 
