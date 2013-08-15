@@ -28,9 +28,10 @@
 
 G_BEGIN_DECLS
 
-gboolean media_art_queue_remove (const gchar             *uri,
-                                 const gchar             *mime_type);
-void     media_art_queue_empty (TrackerSparqlConnection *connection);
+gboolean media_art_remove_by_uri (const gchar *uri,
+                                  const gchar *mime_type);
+gboolean media_art_remove        (const gchar *artist,
+                                  const gchar *albumvoid);
 
 G_END_DECLS
 
