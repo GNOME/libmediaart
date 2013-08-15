@@ -39,10 +39,9 @@ static const gchar *media_art_type_name[MEDIA_ART_TYPE_COUNT] = {
 };
 
 typedef struct {
-	void *storage;  /* was TrackerStorage *storage; */
 	gchar *art_path;
 	gchar *local_uri;
-} GetFileInfo;
+} FileInfo;
 
 typedef struct {
 	gchar *uri;
@@ -60,15 +59,13 @@ typedef enum {
 
 static gboolean initialized = FALSE;
 static gboolean disable_requests;
-/* static TrackerStorage *media_art_storage; */
+
 static GHashTable *media_art_cache;
 static GDBusConnection *connection;
 
-static void
-media_art_queue_cb (GObject      *source_object,
-                   GAsyncResult *res,
-                   gpointer      user_data);
-
+static void media_art_queue_cb (GObject      *source_object,
+                                GAsyncResult *res,
+                                gpointer      user_data);
 
 static GDir *
 get_parent_g_dir (const gchar  *uri,
@@ -759,6 +756,29 @@ media_art_set (const unsigned char *buffer,
 	return retval;
 }
 
+static FileInfo *
+file_info_new (const gchar *local_uri,
+               const gchar *art_path)
+{
+	FileInfo *fi;
+
+	fi = g_slice_new (FileInfo);
+
+	fi->local_uri = g_strdup (local_uri);
+	fi->art_path = g_strdup (art_path);
+
+	return fi;
+}
+
+static void
+file_info_free (FileInfo *fi)
+{
+	g_free (fi->local_uri);
+	g_free (fi->art_path);
+
+	g_slice_free (FileInfo, fi);
+}
+
 static void
 media_art_request_download (MediaArtType  type,
                             const gchar  *album,
@@ -767,7 +787,7 @@ media_art_request_download (MediaArtType  type,
                             const gchar  *art_path)
 {
 	if (connection) {
-		GetFileInfo *info;
+		FileInfo *info;
 
 		if (disable_requests) {
 			return;
@@ -777,10 +797,7 @@ media_art_request_download (MediaArtType  type,
 			return;
 		}
 
-		info = g_slice_new (GetFileInfo);
-
-		info->local_uri = g_strdup (local_uri);
-		info->art_path = g_strdup (art_path);
+		info = file_info_new (local_uri, art_path);
 
 		g_dbus_connection_call (connection,
 		                        ALBUMARTER_SERVICE,
@@ -891,10 +908,10 @@ media_art_queue_cb (GObject      *source_object,
                     gpointer      user_data)
 {
 	GError *error = NULL;
-	GetFileInfo *info;
+	FileInfo *fi;
 	GVariant *v;
 
-	info = user_data;
+	fi = user_data;
 
 	v = g_dbus_connection_call_finish ((GDBusConnection *) source_object, res, &error);
 
@@ -911,20 +928,17 @@ media_art_queue_cb (GObject      *source_object,
 		g_variant_unref (v);
 	}
 
-	if (info->storage && info->art_path &&
-	    g_file_test (info->art_path, G_FILE_TEST_EXISTS)) {
-		media_art_copy_to_local (info->art_path,
-		                         info->local_uri);
+	/* FIXME: was TrackerStorage ...*/
+#warning "FIXME: check for non-existant TrackerStorage"
+
+	if (NULL &&
+	    fi->art_path &&
+	    g_file_test (fi->art_path, G_FILE_TEST_EXISTS)) {
+		media_art_copy_to_local (fi->art_path,
+		                         fi->local_uri);
 	}
 
-	g_free (info->art_path);
-	g_free (info->local_uri);
-
-	if (info->storage) {
-		g_object_unref (info->storage);
-	}
-
-	g_slice_free (GetFileInfo, info);
+	file_info_free (fi);
 }
 
 gboolean
