@@ -17,10 +17,10 @@
  * 02110-1301  USA
  */
 
-#ifndef __LIBMEDIAART_QUEUE_H__
-#define __LIBMEDIAART_QUEUE_H__
+#ifndef __LIBMEDIAART_CACHE_H__
+#define __LIBMEDIAART_CACHE_H__
 
-#include <libtracker-sparql/tracker-sparql.h>
+#include <glib.h>
 
 #if !defined (__LIBMEDIAART_INSIDE__) && !defined (LIBMEDIAART_COMPILATION)
 #error "Only <libmediaart/mediaart.h> must be included directly."
@@ -28,11 +28,10 @@
 
 G_BEGIN_DECLS
 
-gboolean media_art_remove_by_uri (const gchar *uri,
-                                  const gchar *mime_type);
-gboolean media_art_remove        (const gchar *artist,
-                                  const gchar *albumvoid);
+gboolean
+media_art_remove (const gchar *artist,
+                  const gchar *album);
 
 G_END_DECLS
 
-#endif /* __LIBMEDIAART_QUEUE_H__ */
+#endif /* __LIBMEDIAART_CACHE_H__ */

@@ -35,34 +35,6 @@
  * This is a convenience API using D-Bus to talk to the media management service.
  **/
 
-
-/**
- * media_art_remove_by_uri():
- * @uri: URI of the file
- * @mime_type: mime-type of the file
- *
- * Adds a new request to tell the media art subsystem that @uri was removed.
- * Stored requests can be processed with media_art_queue_empty().
- *
- * Returns: #TRUE if successfully stored to be reported, #FALSE otherwise.
- *
- * Since: 0.2.0
- */
-gboolean
-media_art_remove_by_uri (const gchar *uri,
-                         const gchar *mime_type)
-{
-	/* mime_type can be NULL */
-
-	g_return_val_if_fail (uri != NULL, FALSE);
-
-	if (mime_type && (g_str_has_prefix (mime_type, "video/") || g_str_has_prefix (mime_type, "audio/"))) {
-		had_any = TRUE;
-	}
-
-	return TRUE;
-}
-
 /**
  * media_art_remove():
  * @artist: Artist the media art belongs to
@@ -74,7 +46,7 @@ media_art_remove_by_uri (const gchar *uri,
  *
  * Since: 0.2.0
  */
-void
+gboolean
 media_art_remove (const gchar *artist,
                   const gchar *album)
 {
@@ -84,6 +56,8 @@ media_art_remove (const gchar *artist,
 	GDir *dir;
 	gchar *dirname;
 	GList *to_remove = NULL;
+	gchar *target = NULL;
+	gchar *album_path = NULL;
 
 	g_return_if_fail (artist != NULL && artist[0] != '\0');
 
