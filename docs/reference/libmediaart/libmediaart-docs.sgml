@@ -30,9 +30,9 @@
 
     <chapter>
       <title>Reference</title>
-      <xi:include href="xml/extract.xml" title="Extraction"/>
-      <xi:include href="xml/cache.xml" title="Lookup and caching"/>
-      <xi:include href="xml/utils.xml" title="Utilities"/>
+      <xi:include href="xml/extract.xml"/>
+      <xi:include href="xml/cache.xml"/>
+      <xi:include href="xml/utils.xml"/>
     </chapter>
 
   </part>

@@ -32,6 +32,13 @@
 #define ALBUMARTER_PATH       "/com/nokia/albumart/Requester"
 #define ALBUMARTER_INTERFACE  "com.nokia.albumart.Requester"
 
+/**
+ * SECTION:extract
+ * @title: Extraction
+ * @short_description: Extraction of music and movie art.
+ * @include: libmediaart/mediaart.h
+ **/
+
 static const gchar *media_art_type_name[MEDIA_ART_TYPE_COUNT] = {
 	"invalid",
 	"album",

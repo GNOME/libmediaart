@@ -23,6 +23,13 @@
 
 #include <gio/gio.h>
 
+/**
+ * SECTION:utils
+ * @title: Utilities
+ * @short_description: Functions to look up cached media art
+ * @include: libmediaart/mediaart.h
+ **/
+
 static gboolean
 media_art_strip_find_next_block (const gchar    *original,
                                 const gunichar  open_char,
@@ -65,11 +72,11 @@ media_art_strip_find_next_block (const gchar    *original,
  *
  * Strip a albumname or artistname string to prepare it for calculating the
  * media art path with it. Certain characters and charactersets will be stripped
- * and a newly allocated string returned which you must free with g_free.
+ * and a newly allocated string returned which you must free with g_free().
  *
  * Returns: copy of original but then stripped
  *
- * Since: 0.10.14
+ * Since: 0.2.0
  */
 gchar *
 media_art_strip_invalid_entities (const gchar *original)
@@ -195,9 +202,9 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * @local_uri: the location to store the local uri or NULL
  *
  * Get the path to media art for a given resource. Newly allocated data in
- * @path and @local_uri must be freed with g_free.
+ * @path and @local_uri must be freed with g_free().
  *
- * Since: 0.10.14
+ * Since: 0.2.0
  */
 void
 media_art_get_path (const gchar  *artist,

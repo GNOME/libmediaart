@@ -28,10 +28,20 @@
 
 G_BEGIN_DECLS
 
+/**
+ * MediaArtType:
+ * @MEDIA_ART_NONE: No media art is available
+ * @MEDIA_ART_ALBUM: Media art is an album
+ * @MEDIA_ART_VIDEO: Media art is a movie or video
+ *
+ * This type categorized the type of media art we're dealing with.
+ */
 typedef enum {
 	MEDIA_ART_NONE,
 	MEDIA_ART_ALBUM,
 	MEDIA_ART_VIDEO,
+
+	/*< private >*/
 	MEDIA_ART_TYPE_COUNT
 } MediaArtType;
 

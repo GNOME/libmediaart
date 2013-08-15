@@ -27,16 +27,14 @@
 #include "utils.h"
 
 /**
- * SECTION:media-art
- * @title: Media art management
- * @short_description: Media art request and management.
+ * SECTION:cache
+ * @title: Caching and Management
+ * @short_description: Caching and management of stored media art.
  * @include: libmediaart/mediaart.h
- *
- * This is a convenience API using D-Bus to talk to the media management service.
  **/
 
 /**
- * media_art_remove():
+ * media_art_remove:
  * @artist: Artist the media art belongs to
  * @album: Album the media art belongs to (optional)
  *
