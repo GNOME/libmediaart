@@ -990,14 +990,82 @@ media_art_shutdown (void)
 }
 
 static void
-set_mtime (const gchar *filename, guint64 mtime)
+set_mtime (const gchar *filename,
+           guint64      mtime)
 {
-
 	struct utimbuf buf;
 
 	buf.actime = buf.modtime = mtime;
 	utime (filename, &buf);
 }
+
+static
+guint64
+get_mtime (GFile *file)
+{
+	GFileInfo *info;
+	GError    *error = NULL;
+	guint64    mtime;
+
+	info = g_file_query_info (file,
+	                          G_FILE_ATTRIBUTE_TIME_MODIFIED,
+	                          G_FILE_QUERY_INFO_NONE,
+	                          NULL,
+	                          &error);
+
+	if (G_UNLIKELY (error)) {
+		gchar *uri;
+
+		uri = g_file_get_uri (file);
+		g_message ("Could not get mtime for '%s': %s",
+		           uri,
+		           error->message);
+		g_free (uri);
+		g_error_free (error);
+		mtime = 0;
+	} else {
+		mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+		g_object_unref (info);
+	}
+
+	return mtime;
+}
+
+guint64
+get_mtime_by_path (const gchar *path)
+{
+	GFile *file;
+	guint64 mtime;
+
+	g_return_val_if_fail (path != NULL, 0);
+
+	file = g_file_new_for_path (path);
+
+	mtime = get_mtime (file);
+
+	g_object_unref (file);
+
+	return mtime;
+}
+
+
+guint64
+get_mtime_by_uri (const gchar *uri)
+{
+	GFile *file;
+	guint64 mtime;
+
+	g_return_val_if_fail (uri != NULL, 0);
+
+	file = g_file_new_for_uri (uri);
+
+	mtime = get_mtime (file);
+
+	g_object_unref (file);
+
+	return mtime;
+}
+
 
 gboolean
 media_art_process (const unsigned char *buffer,
@@ -1025,7 +1093,7 @@ media_art_process (const unsigned char *buffer,
 
 	/* TODO: We can definitely work with GFiles better here */
 
-	mtime = tracker_file_get_mtime_uri (uri);
+	mtime = get_mtime_by_uri (uri);
 
 	media_art_get_path (artist,
 	                    title,
@@ -1045,7 +1113,7 @@ media_art_process (const unsigned char *buffer,
 	a_exists = g_file_test (art_path, G_FILE_TEST_EXISTS);
 
 	if (a_exists) {
-		a_mtime = tracker_file_get_mtime (art_path);
+		a_mtime = get_mtime_by_path (art_path);
 	}
 
 	if ((buffer && len > 0) && ((!a_exists) || (a_exists && mtime > a_mtime))) {
