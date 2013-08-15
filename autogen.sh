@@ -5,7 +5,10 @@
 test -n "$srcdir" || srcdir=`dirname "$0"`
 test -n "$srcdir" || srcdir=.
 (
-  touch ChangeLog # Required by automake.
+  cd "$srcdir" &&
+  touch ChangeLog && # Required by automake.
+  (test -d m4 || mkdir m4) && # Required by gtkdocize
+  gtkdocize &&
   autoreconf --verbose --force --install
 ) || exit
 

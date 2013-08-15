@@ -1,6 +1,6 @@
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = libmediaart
+SUBDIRS = libmediaart docs
 
 if HAVE_UNIT_TESTS
 SUBDIRS += tests

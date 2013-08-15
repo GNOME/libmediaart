@@ -157,6 +157,23 @@ AC_SUBST(BUILD_VALAFLAGS)
 AC_SUBST(BUILD_CFLAGS)
 AC_SUBST(BUILD_LIBS)
 
+####################################################################
+# Check for gtk-doc and docbook-tools
+####################################################################
+
+# Check for GTK_DOC_CHECK availability. The GTK_DOC_CHECK invocation
+# must be on its own line, gtkdocize relies on it
+m4_ifdef([GTK_DOC_CHECK], [
+GTK_DOC_CHECK([1.8])
+
+# NOTE: We need to use a separate automake conditional for this
+#       to make this work with the tarballs.
+AM_CONDITIONAL([ENABLE_GTK_DOC], test "x$enable_gtk_doc" = xyes)
+],
+[
+AM_CONDITIONAL([ENABLE_GTK_DOC], false)
+])
+
 ##################################################################
 # Check for tracker-extract: GdkPixbuf for MP3 album art
 ##################################################################
@@ -263,6 +280,10 @@ AC_CONFIG_FILES([
 	Makefile
 	libmediaart/Makefile
 	tests/Makefile
+	docs/Makefile
+	docs/reference/Makefile
+	docs/reference/libmediaart/Makefile
+	docs/reference/libmediaart/version.xml
 ])
 
 AC_OUTPUT
@@ -276,6 +297,7 @@ Build Configuration:
 	Compiler Warnings:                      $enable_compile_warnings
 
 	Enable unit tests:                      $have_unit_tests
+	Enable documentation:                   $enable_gtk_doc
 
 	Support media art processing:           $selected_for_media_art
 "
