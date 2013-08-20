@@ -10,5 +10,6 @@ EXTRA_DIST =                                           \
 	libmediaart.doap
 
 DISTCHECK_CONFIGURE_FLAGS =                            \
-	--enable-unit-tests
+	--enable-unit-tests                            \
+	--enable-introspection
 
