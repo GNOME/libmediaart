@@ -200,10 +200,12 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * media_art_get_path:
  * @artist: the artist
  * @title: the title
- * @prefix: For example "album"
- * @uri: NULL or the uri of the file
- * @path: the location to store the local path
- * @local_uri: the location to store the local uri or NULL
+ * @prefix: the prefix, for example "album"
+ * @uri: (allow-none): the uri of the file or %NULL
+ * @path: (out) (transfer full) (allow-none): the location to store the local
+ * path or %NULL
+ * @local_uri: (out) (transfer full) (allow-none): the location to store the
+ * local uri or %NULL
  *
  * Get the path to media art for a given resource. Newly allocated data in
  * @path and @local_uri must be freed with g_free().
@@ -325,8 +327,8 @@ media_art_get_path (const gchar  *artist,
 
 /**
  * media_art_remove:
- * @artist: Artist the media art belongs to
- * @album: Album the media art belongs to (optional)
+ * @artist: artist the media art belongs to
+ * @album: (allow-none): album the media art belongs or %NULL
  *
  * Removes media art for given album/artist/etc provided.
  *

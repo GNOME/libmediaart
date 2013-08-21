@@ -71,6 +71,7 @@ AC_SUBST(LIBMEDIAART_BINARY_AGE)
 AC_SUBST(LIBMEDIAART_API_VERSION)
 AC_SUBST(LIBMEDIAART_VERSION)
 AC_SUBST(LIBMEDIAART_BINARY_VERSION)
+AC_SUBST(LIBMEDIAART_API_VERSION_U,[AS_TR_SH([$LIBMEDIAART_API_VERSION])])
 
 AC_DEFINE(LIBMEDIAART_MAJOR_VERSION, [libmediaart_major_version],
           [Define to the Libmediaart major version])
@@ -173,6 +174,15 @@ AM_CONDITIONAL([ENABLE_GTK_DOC], test "x$enable_gtk_doc" = xyes)
 [
 AM_CONDITIONAL([ENABLE_GTK_DOC], false)
 ])
+
+####################################################################
+# Build introspectable bindings
+####################################################################
+
+GOBJECT_INTROSPECTION_CHECK([1.30.0])
+
+# Vala bindings
+VAPIGEN_CHECK([0.16])
 
 ##################################################################
 # Check for tracker-extract: GdkPixbuf for MP3 album art
