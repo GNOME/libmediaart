@@ -292,7 +292,7 @@ AM_CONDITIONAL(HAVE_UNIT_TESTS, test "x$have_unit_tests" = "xyes")
 
 AC_CONFIG_FILES([
 	Makefile
-	libmediaart-0.2.pc
+	libmediaart.pc
 	libmediaart/Makefile
 	tests/Makefile
 	docs/Makefile
