@@ -6,8 +6,12 @@ if HAVE_UNIT_TESTS
 SUBDIRS += tests
 endif
 
+pkgconfig_DATA = libmediaart-@LIBMEDIAART_API_VERSION@.pc
+pkgconfigdir = $(libdir)/pkgconfig
+
 EXTRA_DIST =                                           \
-	libmediaart.doap
+	libmediaart.doap                               \
+	libmediaart-@LIBMEDIAART_API_VERSION@.pc.in
 
 DISTCHECK_CONFIGURE_FLAGS =                            \
 	--enable-unit-tests                            \

@@ -219,6 +219,7 @@ if test "x$enable_qt" != "xno" && test "x$enable_gdkpixbuf" != "xyes"; then
 
    if test "x$have_qt" = "xyes"; then
       AC_DEFINE(HAVE_QT, [], [Define if we have Qt])
+      LIBMEDIAART_BACKEND=QtGui
       selected_for_media_art="yes (qt)"
    fi
 else
@@ -244,6 +245,7 @@ if test "x$enable_gdkpixbuf" != "xno" && test "x$enable_quill" != "xyes"; then
 
    if test "x$have_gdkpixbuf" = "xyes"; then
       AC_DEFINE(HAVE_GDKPIXBUF, [], [Define if we have GdkPixbuf])
+      LIBMEDIAART_BACKEND=gdk-pixbuf-2.0
       selected_for_media_art="yes (GdkPixbuf)"
    fi
 else
@@ -257,6 +259,8 @@ if test "x$enable_gdkpixbuf" = "xyes"; then
 fi
 
 AM_CONDITIONAL(HAVE_GDKPIXBUF, test "x$have_gdkpixbuf" = "xyes")
+
+AC_SUBST(LIBMEDIAART_BACKEND)
 
 ####################################################################
 # Should we build GLib based unit tests
@@ -288,6 +292,7 @@ AM_CONDITIONAL(HAVE_UNIT_TESTS, test "x$have_unit_tests" = "xyes")
 
 AC_CONFIG_FILES([
 	Makefile
+	libmediaart-0.2.pc
 	libmediaart/Makefile
 	tests/Makefile
 	docs/Makefile
