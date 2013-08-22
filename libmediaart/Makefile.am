@@ -10,7 +10,7 @@ AM_CPPFLAGS = \
 lib_LTLIBRARIES = libmediaart-@LIBMEDIAART_API_VERSION@.la
 
 libmediaartdir = $(libdir)/libmediaart-$(LIBMEDIAART_API_VERSION)/
-libmediaartincludedir=$(includedir)/libmediaart-$(LIBMEDIAART_API_VERSION)/
+libmediaartincludedir=$(includedir)/libmediaart-$(LIBMEDIAART_API_VERSION)/libmediaart/
 
 libmediaart_sources = \
 	cache.c \
