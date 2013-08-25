@@ -77,7 +77,7 @@ INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 if HAVE_INTROSPECTION
 introspection_sources = $(libmediaart_sources) extractdummy.c
 
-MediaArt-@LIBMEDIAART_API_VERSION_U@.gir: libmediaart-@LIBMEDIAART_API_VERSION@.la
+MediaArt-@LIBMEDIAART_API_VERSION@.gir: libmediaart-@LIBMEDIAART_API_VERSION@.la
 MediaArt_@LIBMEDIAART_API_VERSION_U@_gir_INCLUDES = GObject-2.0
 MediaArt_@LIBMEDIAART_API_VERSION_U@_gir_CFLAGS = $(INCLUDES) -DLIBMEDIAART_COMPILATION
 MediaArt_@LIBMEDIAART_API_VERSION_U@_gir_LIBS = libmediaart-@LIBMEDIAART_API_VERSION@.la
@@ -106,4 +106,6 @@ libmediaart_@LIBMEDIAART_API_VERSION_U@_vapi_FILES = MediaArt-@LIBMEDIAART_API_V
 
 vapidir = $(datadir)/vala/vapi
 vapi_DATA = $(VAPIGEN_VAPIS)
+
+BUILT_SOURCES += $(vapi_DATA)
 endif
