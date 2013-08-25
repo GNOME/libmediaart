@@ -25,6 +25,8 @@
 
 #include <gio/gio.h>
 
+#include "tracker-storage.h"
+
 #include "extract.h"
 #include "cache.h"
 
@@ -69,6 +71,7 @@ static gboolean disable_requests;
 
 static GHashTable *media_art_cache;
 static GDBusConnection *connection;
+static TrackerStorage *storage;
 
 static void media_art_queue_cb (GObject      *source_object,
                                 GAsyncResult *res,
@@ -825,12 +828,9 @@ media_art_request_download (MediaArtType  type,
 	}
 }
 
-#if 0
-
 static void
-media_art_copy_to_local (TrackerStorage *storage,
-                         const gchar    *filename,
-                         const gchar    *local_uri)
+media_art_copy_to_local (const gchar *filename,
+                         const gchar *local_uri)
 {
 	GSList *roots, *l;
 	gboolean on_removable_device = FALSE;
@@ -897,18 +897,6 @@ media_art_copy_to_local (TrackerStorage *storage,
 	}
 }
 
-#else
-#warning "FIXME: WE don't have TrackerStorage, media_art_copy_to_local() does nothing."
-
-static void
-media_art_copy_to_local (const gchar *filename,
-                         const gchar *local_uri)
-{
-	g_warning ("FIXME: WE don't have TrackerStorage, media_art_copy_to_local() does nothing.");
-}
-
-#endif
-
 static void
 media_art_queue_cb (GObject      *source_object,
                     GAsyncResult *res,
@@ -935,10 +923,7 @@ media_art_queue_cb (GObject      *source_object,
 		g_variant_unref (v);
 	}
 
-	/* FIXME: was TrackerStorage ...*/
-#warning "FIXME: check for non-existant TrackerStorage"
-
-	if (NULL &&
+	if (storage &&
 	    fi->art_path &&
 	    g_file_test (fi->art_path, G_FILE_TEST_EXISTS)) {
 		media_art_copy_to_local (fi->art_path,
@@ -973,6 +958,8 @@ media_art_init (void)
 		return FALSE;
 	}
 
+	storage = tracker_storage_new ();
+
 	initialized = TRUE;
 
 	return TRUE;
@@ -982,6 +969,10 @@ void
 media_art_shutdown (void)
 {
 	g_return_if_fail (initialized == TRUE);
+
+	if (storage) {
+		g_object_unref (storage);
+	}
 
 	if (connection) {
 		g_object_unref (connection);
