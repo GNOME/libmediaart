@@ -24,10 +24,7 @@
 #include <gio/gio.h>
 #include <gio/gunixmounts.h>
 
-#include <libtracker-common/tracker-log.h>
-
 #include "tracker-storage.h"
-#include "tracker-utils.h"
 #include "tracker-marshal.h"
 
 /**

@@ -25,7 +25,10 @@ libmediaartinclude_HEADERS = \
 	extract.h \
 	extractgeneric.h
 
-libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES = $(libmediaart_sources)
+libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES = \
+	$(libmediaart_sources) \
+	tracker-storage.c \
+	tracker-storage.h
 
 if HAVE_GDKPIXBUF
 libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES += extractpixbuf.c
