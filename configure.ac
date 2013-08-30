@@ -146,6 +146,9 @@ TRACKER_REQUIRED=0.16.0
 LIBMEDIAART_REQUIRED="glib-2.0 >= $GLIB_REQUIRED tracker-sparql-0.16 >= $TRACKER_REQUIRED"
 PKG_CHECK_MODULES(LIBMEDIAART, [$LIBMEDIAART_REQUIRED])
 
+GLIB_GENMARSHAL=`$PKG_CONFIG glib-2.0 --variable=glib_genmarshal`
+AC_SUBST(GLIB_GENMARSHAL)
+
 LIBMEDIAART_LIBS="$LIBMEDIAART_LIBS -lz -lm"
 
 ####################################################################

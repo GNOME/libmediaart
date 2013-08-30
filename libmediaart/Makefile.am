@@ -27,6 +27,8 @@ libmediaartinclude_HEADERS = \
 
 libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES = \
 	$(libmediaart_sources) \
+	marshal.c \
+	marshal.h \
 	tracker-storage.c \
 	tracker-storage.h
 
@@ -47,6 +49,24 @@ libmediaart_@LIBMEDIAART_API_VERSION@_la_LIBADD = \
 	-lm \
 	$(BUILD_LIBS) \
 	$(LIBMEDIAART_LIBS)
+
+
+marshal.h: marshal.list
+	$(AM_V_GEN)$(GLIB_GENMARSHAL) $< --prefix=media_art_marshal --header > $@
+
+marshal.c: marshal.list
+	$(AM_V_GEN)(echo "#include \"marshal.h\""; \
+	    $(GLIB_GENMARSHAL) $< --prefix=media_art_marshal --body) > $@
+
+
+BUILT_SOURCES = \
+	marshal.c \
+	marshal.h
+
+CLEANFILES = $(BUILT_SOURCES)
+
+EXTRA_DIST = \
+	marshal.list
 
 
 -include $(INTROSPECTION_MAKEFILE)
@@ -71,7 +91,7 @@ gir_DATA = $(INTROSPECTION_GIRS)
 typelibdir = $(libdir)/girepository-1.0
 typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
 
-CLEANFILES = $(gir_DATA) $(typelib_DATA)
+BUILT_SOURCES += $(gir_DATA) $(typelib_DATA)
 endif
 
 if ENABLE_VAPIGEN

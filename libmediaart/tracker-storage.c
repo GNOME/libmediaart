@@ -25,7 +25,7 @@
 #include <gio/gunixmounts.h>
 
 #include "tracker-storage.h"
-#include "tracker-marshal.h"
+#include "marshal.h"
 
 /**
  * SECTION:tracker-storage
@@ -111,7 +111,7 @@ tracker_storage_class_init (TrackerStorageClass *klass)
 		              G_SIGNAL_RUN_LAST,
 		              0,
 		              NULL, NULL,
-		              tracker_marshal_VOID__STRING_STRING_STRING_BOOLEAN_BOOLEAN,
+		              media_art_marshal_VOID__STRING_STRING_STRING_BOOLEAN_BOOLEAN,
 		              G_TYPE_NONE,
 		              5,
 		              G_TYPE_STRING,
@@ -126,7 +126,7 @@ tracker_storage_class_init (TrackerStorageClass *klass)
 		              G_SIGNAL_RUN_LAST,
 		              0,
 		              NULL, NULL,
-		              tracker_marshal_VOID__STRING_STRING,
+		              media_art_marshal_VOID__STRING_STRING,
 		              G_TYPE_NONE,
 		              2,
 		              G_TYPE_STRING,
