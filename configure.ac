@@ -145,8 +145,7 @@ TRACKER_REQUIRED=0.16.0
 # Check requirements for libmediaart
 LIBMEDIAART_REQUIRED="glib-2.0 >= $GLIB_REQUIRED
                       gio-2.0 >= $GLIB_REQUIRED
-                      gio-unix-2.0 >= $GLIB_REQUIRED
-                      tracker-sparql-0.16 >= $TRACKER_REQUIRED"
+                      gio-unix-2.0 >= $GLIB_REQUIRED"
 PKG_CHECK_MODULES(LIBMEDIAART, [$LIBMEDIAART_REQUIRED])
 
 GLIB_GENMARSHAL=`$PKG_CONFIG glib-2.0 --variable=glib_genmarshal`
