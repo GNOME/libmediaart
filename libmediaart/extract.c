@@ -25,7 +25,7 @@
 
 #include <gio/gio.h>
 
-#include "tracker-storage.h"
+#include "storage.h"
 
 #include "extract.h"
 #include "cache.h"
@@ -71,7 +71,7 @@ static gboolean disable_requests;
 
 static GHashTable *media_art_cache;
 static GDBusConnection *connection;
-static TrackerStorage *storage;
+static Storage *storage;
 
 static void media_art_queue_cb (GObject      *source_object,
                                 GAsyncResult *res,
@@ -845,7 +845,7 @@ media_art_copy_to_local (const gchar *filename,
 		return;
 	}
 
-	roots = tracker_storage_get_device_roots (storage, TRACKER_STORAGE_REMOVABLE, FALSE);
+	roots = storage_get_device_roots (storage, STORAGE_REMOVABLE, FALSE);
 	flen = strlen (filename);
 
 	for (l = roots; l; l = l->next) {
@@ -958,7 +958,7 @@ media_art_init (void)
 		return FALSE;
 	}
 
-	storage = tracker_storage_new ();
+	storage = storage_new ();
 
 	initialized = TRUE;
 
