@@ -21,5 +21,6 @@ CLEANFILES = \
 
 DISTCHECK_CONFIGURE_FLAGS =                            \
 	--enable-unit-tests                            \
-	--enable-introspection
+	--enable-introspection                         \
+	--enable-gtk-doc
 

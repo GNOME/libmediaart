@@ -8,7 +8,7 @@ AM_CPPFLAGS = \
 	-DTOP_SRCDIR=\"$(abs_top_srcdir)\" \
 	-DTOP_BUILDDIR=\"$(abs_top_builddir)\" \
 	$(BUILD_CFLAGS) \
-	-I$(top_srcdir)/libmediaart \
+	-I$(top_srcdir) \
 	$(LIBMEDIAART_CFLAGS)                    
 
 LDADD = \
