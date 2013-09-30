@@ -32,7 +32,7 @@
     <foaf:Person>
       <foaf:name>Sam Thursfield</foaf:name>
       <foaf:mbox rdf:resource="mailto:sam.thursfield@codethink.co.uk" />
-      <gnome:userid>ssam2</gnome:userid>
+      <gnome:userid>sthursfield</gnome:userid>
     </foaf:Person>
   </maintainer>
 
