@@ -43,6 +43,7 @@ struct {
         { "Unbalanced brackets]", "unbalanced brackets" },
         { "Unbalanced brackets>", "unbalanced brackets" },
         { "Live at *WEMBLEY* dude!", "live at wembley dude" },
+        { "met[xX[x]alli]ca", "metallica" },
         { NULL, NULL}
 };
 
