@@ -197,34 +197,41 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
 }
 
 /**
- * media_art_get_path:
+ * media_art_get_file:
  * @artist: the artist
  * @title: the title
- * @prefix: the prefix, for example "album"
- * @uri: (allow-none): the uri of the file or %NULL
- * @path: (out) (transfer full) (allow-none): the location to store the local
- * path or %NULL
- * @local_uri: (out) (transfer full) (allow-none): the location to store the
- * local uri or %NULL
+ * @prefix: the prefix for cache files, for example "album"
+ * @file: (allow-none): the file or %NULL
+ * @cache_file: (out) (transfer full) (allow-none): the location to store
+ * a #GFile pointing to the user cache path, or %NULL
+ * @local_file: (out) (transfer full) (allow-none): the location to store
+ * a #GFile pointing to a cache file in the same filesystem than @file,
+ * or %NULL.
  *
- * Get the path to media art for a given resource. Newly allocated data in
- * @path and @local_uri must be freed with g_free().
+ * Gets the files pointing to cache files suitable for storing the media
+ * art provided by the @artist, @title and @file arguments. @cache_file
+ * will point to a location in the XDG user cache directory, meanwhile
+ * @local_file will point to a cache file that resides in the same
+ * filesystem than @file.
+ *
+ * When done, both #GFile<!-- -->s must be freed with g_object_unref if
+ * non-%NULL.
  *
  * Since: 0.2.0
  */
 void
-media_art_get_path (const gchar  *artist,
+media_art_get_file (const gchar  *artist,
                     const gchar  *title,
                     const gchar  *prefix,
-                    const gchar  *uri,
-                    gchar       **path,
-                    gchar       **local_uri)
+		    GFile        *file,
+		    GFile       **cache_file,
+		    GFile       **local_file)
 {
 	const gchar *space_checksum = "7215ee9c7d9dc229d2921a40e899ec5f";
 	const gchar *a, *b;
 
 	gchar *art_filename;
-	gchar *dir;
+	gchar *dir, *filename;
 	gchar *artist_down, *title_down;
 	gchar *artist_stripped, *title_stripped;
 	gchar *artist_norm, *title_norm;
@@ -232,12 +239,12 @@ media_art_get_path (const gchar  *artist,
 
 	/* http://live.gnome.org/MediaArtStorageSpec */
 
-	if (path) {
-		*path = NULL;
+	if (cache_file) {
+		*cache_file = NULL;
 	}
 
-	if (local_uri) {
-		*local_uri = NULL;
+	if (local_file) {
+		*local_file = NULL;
 	}
 
 	if (!artist && !title) {
@@ -294,35 +301,71 @@ media_art_get_path (const gchar  *artist,
 		g_free (title_norm);
 	}
 
-	if (path) {
-		*path = g_build_filename (dir, art_filename, NULL);
+	if (cache_file) {
+		filename = g_build_filename (dir, art_filename, NULL);
+		*cache_file = g_file_new_for_path (filename);
+		g_free (filename);
 	}
 
-	if (local_uri) {
-		gchar *local_dir;
-		GFile *file, *parent;
-
-		if (strstr (uri, "://")) {
-			file = g_file_new_for_uri (uri);
-		} else {
-			file = g_file_new_for_path (uri);
-		}
+	if (local_file) {
+		GFile *parent;
 
 		parent = g_file_get_parent (file);
 		if (parent) {
-			local_dir = g_file_get_uri (parent);
+			filename = g_build_filename (".mediaartlocal", art_filename, NULL);
+			*local_file = g_file_resolve_relative_path (parent, filename);
+			g_free (filename);
 
-			/* This is a URI, don't use g_build_filename here */
-			*local_uri = g_strdup_printf ("%s/.mediaartlocal/%s", local_dir, art_filename);
-
-			g_free (local_dir);
 			g_object_unref (parent);
 		}
-		g_object_unref (file);
 	}
 
 	g_free (dir);
 	g_free (art_filename);
+}
+
+/**
+ * media_art_get_path:
+ * @artist: the artist
+ * @title: the title
+ * @prefix: the prefix, for example "album"
+ * @uri: (allow-none): the uri of the file or %NULL
+ * @path: (out) (transfer full) (allow-none): the location to store the local
+ * path or %NULL
+ * @local_uri: (out) (transfer full) (allow-none): the location to store the
+ * local uri or %NULL
+ *
+ * Get the path to media art for a given resource. Newly allocated data in
+ * @path and @local_uri must be freed with g_free().
+ *
+ * Since: 0.2.0
+ */
+void
+media_art_get_path (const gchar  *artist,
+                    const gchar  *title,
+                    const gchar  *prefix,
+                    const gchar  *uri,
+                    gchar       **path,
+                    gchar       **local_uri)
+{
+	GFile *file = NULL, *cache_file = NULL, *local_file = NULL;
+
+	if (uri) {
+		file = g_file_new_for_uri (uri);
+	}
+
+	media_art_get_file (artist, title, prefix, file,
+			    (path) ? &cache_file : NULL,
+			    (local_uri) ? &local_file : NULL);
+	if (path) {
+		*path = cache_file ? g_file_get_path (cache_file) : NULL;
+	}
+
+	if (local_uri) {
+		*local_uri = local_file ? g_file_get_uri (local_file) : NULL;
+	}
+
+	g_object_unref (file);
 }
 
 /**

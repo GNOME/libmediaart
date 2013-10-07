@@ -21,6 +21,7 @@
 #define __LIBMEDIAART_CACHE_H__
 
 #include <glib.h>
+#include <gio/gio.h>
 
 #if !defined (__LIBMEDIAART_INSIDE__) && !defined (LIBMEDIAART_COMPILATION)
 #error "Only <libmediaart/mediaart.h> must be included directly."
@@ -36,6 +37,13 @@ void     media_art_get_path               (const gchar          *artist,
                                            const gchar          *uri,
                                            gchar               **path,
                                            gchar               **local_uri);
+
+void     media_art_get_file               (const gchar          *artist,
+                                           const gchar          *title,
+                                           const gchar          *prefix,
+                                           GFile                *file,
+                                           GFile               **cache_file,
+                                           GFile               **local_file);
 
 gboolean media_art_remove                 (const gchar          *artist,
                                            const gchar          *album);
