@@ -161,7 +161,7 @@ file_get_checksum_if_exists (GChecksumType   checksum_type,
 		retval = TRUE;
 
 		if (check_jpeg) {
-			if (g_input_stream_read_all (G_INPUT_STREAM (stream), buffer, 3, &rsize, NULL, NULL)) {
+			if (g_input_stream_read_all (G_INPUT_STREAM (stream), buffer, 3, (gsize *) &rsize, NULL, NULL)) {
 				if (rsize >= 3 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff) {
 					if (is_jpeg) {
 						*is_jpeg = TRUE;

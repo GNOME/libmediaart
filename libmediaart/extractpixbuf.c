@@ -103,7 +103,7 @@ media_art_buffer_to_jpeg (const unsigned char *buffer,
 	     g_strcmp0 (buffer_mime, "JPG") == 0) &&
 	    (buffer && len > 2 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff)) {
 		g_debug ("Saving album art using raw data as uri:'%s'", target);
-		g_file_set_contents (target, buffer, (gssize) len, NULL);
+		g_file_set_contents (target, (const gchar *) buffer, (gssize) len, NULL);
 	} else {
 		GdkPixbuf *pixbuf;
 		GdkPixbufLoader *loader;
