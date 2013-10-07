@@ -21,6 +21,7 @@
 #define __LIBMEDIAART_EXTRACT_H__
 
 #include <glib.h>
+#include <gio/gio.h>
 
 #if !defined (__LIBMEDIAART_INSIDE__) && !defined (LIBMEDIAART_COMPILATION)
 #error "Only <libmediaart/mediaart.h> must be included directly."
@@ -55,6 +56,14 @@ gboolean media_art_process  (const unsigned char  *buffer,
                              const gchar          *artist,
                              const gchar          *title,
                              const gchar          *uri);
+
+gboolean media_art_process_file (const guchar *buffer,
+				 gsize         len,
+				 MediaArtType  type,
+				 const gchar  *mimetype,
+				 const gchar  *artist,
+				 const gchar  *title,
+				 GFile        *file);
 
 G_END_DECLS
 
