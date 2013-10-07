@@ -660,8 +660,7 @@ media_art_set (const unsigned char *buffer,
                const gchar         *mime,
                MediaArtType         type,
                const gchar         *artist,
-               const gchar         *title,
-               const gchar         *uri)
+               const gchar         *title)
 {
 	gchar *local_path;
 	gboolean retval = FALSE;
@@ -1150,7 +1149,7 @@ media_art_process_file (const guchar *buffer,
 	local_art_uri = g_file_get_uri (local_art_file);
 
 	if ((buffer && len > 0) && ((!a_exists) || (a_exists && mtime > a_mtime))) {
-		processed = media_art_set (buffer, len, mime, type, artist, title, uri);
+		processed = media_art_set (buffer, len, mime, type, artist, title);
 		set_mtime (art_path, mtime);
 		created = TRUE;
 	}
@@ -1284,7 +1283,7 @@ media_art_process (const unsigned char *buffer,
 	}
 
 	if ((buffer && len > 0) && ((!a_exists) || (a_exists && mtime > a_mtime))) {
-		processed = media_art_set (buffer, len, mime, type, artist, title, uri);
+		processed = media_art_set (buffer, len, mime, type, artist, title);
 		set_mtime (art_path, mtime);
 		created = TRUE;
 	}
