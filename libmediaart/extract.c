@@ -23,8 +23,10 @@
 #include <string.h>
 #include <errno.h>
 
+#include <glib/gstdio.h>
 #include <gio/gio.h>
 
+#include "extractgeneric.h"
 #include "storage.h"
 
 #include "extract.h"
@@ -939,7 +941,7 @@ media_art_init (void)
 
 	g_return_val_if_fail (initialized == FALSE, FALSE);
 
-	media_art_plugin_init ();
+	media_art_plugin_init (0);
 
 	/* Cache to know if we have already handled uris */
 	media_art_cache = g_hash_table_new_full (g_str_hash,
