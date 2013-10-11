@@ -71,27 +71,45 @@ test_mediaart_stripping_null (void)
         //g_assert (!mediaart_strip_invalid_entities (NULL));
 }
 
-struct {
+typedef struct {
+        const gchar *prefix;
         const gchar *artist;
-        const gchar *album;
+        const gchar *title;
         const gchar *filename;
-} mediaart_test_cases [] = {
-        {"Beatles", "Sgt. Pepper", 
-         "album-2a9ea35253dbec60e76166ec8420fbda-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
+} MediaArtTestCase;
 
-        { "", "sgt. pepper",
+MediaArtTestCase mediaart_test_cases [] = {
+        { "album", "Beatles", "Sgt. Pepper",
+          "album-2a9ea35253dbec60e76166ec8420fbda-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
+
+        { "album", "", "sgt. pepper",
           "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
 
-        { " ", "sgt. pepper",
+        { "album", " ", "sgt. pepper",
           "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
 
-        { NULL, "sgt. pepper",
-          "album-cfba4326a32b44b8760b3a2fc827a634-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"}, 
+        { "album", NULL, "sgt. pepper",
+          "album-7215ee9c7d9dc229d2921a40e899ec5f-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
 
-        { "Beatles", NULL,
+        { "album", "Beatles", NULL,
           "album-2a9ea35253dbec60e76166ec8420fbda-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"},
 
-        { NULL, NULL, NULL }
+        { "album", NULL, NULL, NULL },
+
+        { "podcast", NULL, "Podcast example",
+          "podcast-10ca71a13bbd1a2af179f6d5a4dea118-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"},
+
+        { "radio", NULL, "Radio Free Europe",
+          "radio-79577732dda605d0f953f6479ff1f42e-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"},
+
+        { "radio", "Artist is ignored", NULL, NULL },
+
+        { "x-video", NULL, "Test extension of spec",
+          "x-video-51110ae14ce4bbeb68335366289acdd1-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"},
+
+        /* Currently we raise a warning to advise the user that we don't
+         * support this part of the media art spec, which isn't tested here. */
+        /*{ "track", "Ignored", "Ignored", NULL},*/
 };
 
 static void
@@ -100,21 +118,37 @@ test_mediaart_location (void)
         gchar *path = NULL, *local_uri = NULL;
         gchar *expected;
         gint i;
-     
-        for (i = 0; mediaart_test_cases[i].filename != NULL; i++) {
-                media_art_get_path (mediaart_test_cases[i].artist,
-                                    mediaart_test_cases[i].album,
-                                    "album",
+
+        for (i = 0; i < G_N_ELEMENTS(mediaart_test_cases); i++) {
+                MediaArtTestCase *testcase = &mediaart_test_cases[i];
+
+                media_art_get_path (testcase->artist,
+                                    testcase->title,
+                                    testcase->prefix,
                                     "file:///home/test/a.mp3",
                                     &path,
                                     &local_uri);
-                expected = g_build_path (G_DIR_SEPARATOR_S, 
-                                         g_get_user_cache_dir (),
-                                         "media-art",
-                                         mediaart_test_cases[i].filename, 
-                                         NULL);
-                g_assert_cmpstr (path, ==, expected);
-                
+
+                if (testcase->filename == NULL) {
+                    expected = NULL;
+                } else {
+                    expected = g_build_path (G_DIR_SEPARATOR_S,
+                                             g_get_user_cache_dir (),
+                                             "media-art",
+                                             testcase->filename,
+                                             NULL);
+                }
+
+                if (g_strcmp0(path, expected) != 0) {
+                    g_error ("Incorrect path for prefix: '%s' artist: '%s' "
+                             "title: '%s'. Expected %s, got %s",
+                             testcase->prefix,
+                             testcase->artist,
+                             testcase->title,
+                             expected,
+                             path);
+                }
+
                 g_free (expected);
                 g_free (path);
                 g_free (local_uri);
@@ -142,8 +176,8 @@ test_mediaart_location_path (void)
 
         /* Use path instead of URI */
         media_art_get_path (mediaart_test_cases[0].artist,
-                            mediaart_test_cases[0].album,
-                            "album",
+                            mediaart_test_cases[0].title,
+                            mediaart_test_cases[0].prefix,
                             "/home/test/a.mp3",
                             &path,
                             &local_uri);

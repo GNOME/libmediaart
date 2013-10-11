@@ -228,7 +228,6 @@ media_art_get_file (const gchar  *artist,
 		    GFile       **local_file)
 {
 	const gchar *space_checksum = "7215ee9c7d9dc229d2921a40e899ec5f";
-	const gchar *a, *b;
 
 	gchar *art_filename;
 	gchar *dir, *filename;
@@ -236,6 +235,7 @@ media_art_get_file (const gchar  *artist,
 	gchar *artist_stripped, *title_stripped;
 	gchar *artist_norm, *title_norm;
 	gchar *artist_checksum = NULL, *title_checksum = NULL;
+	gboolean title_only;
 
 	/* http://live.gnome.org/MediaArtStorageSpec */
 
@@ -247,7 +247,21 @@ media_art_get_file (const gchar  *artist,
 		*local_file = NULL;
 	}
 
-	if (!artist && !title) {
+	g_return_if_fail (prefix != NULL);
+
+	if (strcmp(prefix, "track") == 0) {
+		/* Specified by media art storage spec, but not implemented yet */
+		g_warning ("libmediaart does not support 'track' type media art.");
+		return;
+	}
+
+	if (strcmp (prefix, "album") == 0) {
+		title_only = FALSE;
+	} else {
+		title_only = TRUE;
+	}
+
+	if ((title_only && !title) || (!title && !artist)) {
 		return;
 	}
 
@@ -277,15 +291,20 @@ media_art_get_file (const gchar  *artist,
 		g_mkdir_with_parents (dir, 0770);
 	}
 
-	if (artist) {
-		a = artist_checksum;
-		b = title ? title_checksum : space_checksum;
+	if (title_only) {
+		/* The media art spec describes two types other than "artist":
+		 * "podcast", and "radio", both of which have just the "title"
+		 * attribute. For the sake of flexibility we allow any prefix to be
+		 * used here, so applications can implement simple extentions like a
+		 * 'video' media art type.
+		 */
+		art_filename = g_strdup_printf ("%s-%s-%s.jpeg", prefix,
+		                                title_checksum, space_checksum);
 	} else {
-		a = title_checksum;
-		b = space_checksum;
+		art_filename = g_strdup_printf ("%s-%s-%s.jpeg", prefix,
+		                                artist ? artist_checksum : space_checksum,
+		                                title ? title_checksum : space_checksum);
 	}
-
-	art_filename = g_strdup_printf ("%s-%s-%s.jpeg", prefix ? prefix : "album", a, b);
 
 	if (artist) {
 		g_free (artist_checksum);
@@ -392,7 +411,7 @@ media_art_remove (const gchar *artist,
 	gchar *target = NULL;
 	gchar *album_path = NULL;
 
-	g_return_if_fail (artist != NULL && artist[0] != '\0');
+	g_return_val_if_fail (artist != NULL && artist[0] != '\0', FALSE);
 
 	dirname = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
 
