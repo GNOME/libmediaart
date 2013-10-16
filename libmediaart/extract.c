@@ -41,6 +41,31 @@
  * @title: Extraction
  * @short_description: Extraction of music and movie art.
  * @include: libmediaart/mediaart.h
+ *
+ * The libmediaart library supports taking image data that you have extracted
+ * from a media file and saving it into the media art cache, so that in future
+ * applications can display the media art without having to extract the image
+ * again. This is done using the media_art_process_file() function.
+ *
+ * Extracting the media art from the file needs to be done by your application.
+ * Usually, when an application loads a media file any embedded images will be
+ * made available as a side effect. For example, if you are using GStreamer any
+ * images will be returned through the #GstTagList interface as %GST_TAG_IMAGE
+ * tags.
+ *
+ * The media art cache requires that all images are saved as 'application/jpeg'
+ * files. Embedded images can be in several formats, and
+ * media_art_process_file() will convert the supplied image data into the
+ * correct format if necessary. There are multiple backends that can be used
+ * for this, and you can choose which is used at build time using the library's
+ * 'configure' script.
+ *
+ * If there is no embedded media art in a file, media_art_process_file() will
+ * look in the directory that contains the media file for likely media art
+ * using a simple heuristic.
+ *
+ * You must call media_art_init() before using the functions in libmediaart,
+ * and call media_art_shutdown() to free the resources it uses.
  **/
 
 static const gchar *media_art_type_name[MEDIA_ART_TYPE_COUNT] = {
@@ -934,6 +959,13 @@ media_art_queue_cb (GObject      *source_object,
 	file_info_free (fi);
 }
 
+/**
+ * media_art_init:
+ *
+ * Initialise libmediaart.
+ *
+ * Returns: %TRUE if initialisation was successful, %FALSE otherwise.
+ */
 gboolean
 media_art_init (void)
 {
@@ -966,6 +998,11 @@ media_art_init (void)
 	return TRUE;
 }
 
+/**
+ * media_art_shutdown:
+ *
+ * Free the image processing backend and other resources used by libmediaart.
+ */
 void
 media_art_shutdown (void)
 {
@@ -1071,17 +1108,24 @@ get_mtime_by_uri (const gchar *uri)
  * @buffer: (allow-none): a buffer containing @file data, or %NULL
  * @len: length of @buffer, or 0
  * @type: The type of media
- * @mime: MIME type of @file, or %NULL
+ * @mime: MIME type of @buffer, or %NULL
  * @artist: The media file artist name, or %NULL
  * @title: The media file title, or %NULL
  * @file: File to be processed
  *
- * Processes a media file, extracting any found media art. If @file
- * is on a removable filesystem, the saved cache file will be local
- * to it.
+ * Processes a media file. If you have extracted any embedded media art and
+ * passed this in as @buffer, the image data will be converted to the correct
+ * format and saved in the media art cache.
+ *
+ * If @buffer is %NULL, libmediaart will search the parent directory of @file
+ * for image files that are likely to be media art for @file, and if one is
+ * found it will be saved in the media art cache.
+ *
+ * If @file is on a removable filesystem, the media art file will be saved in a
+ * cache on the removable file system rather than on the host machine.
  *
  * Returns: #TRUE if the file could be processed.
- **/
+ */
 gboolean
 media_art_process_file (const guchar *buffer,
 			gsize         len,
@@ -1235,6 +1279,21 @@ media_art_process_file (const guchar *buffer,
 }
 
 
+/**
+ * media_art_process:
+ * @buffer: A buffer of binary image data
+ * @len: The length of @buffer, in bytes
+ * @mime: The MIME type of the data stored in @buffer
+ * @type: The type of media that contained the image data
+ * @artist: (allow-none): Artist name of the media
+ * @title: (allow-none): Title of the media
+ * @uri: URI of the media file that contained the image data
+ *
+ * This function is the same as media_art_process_file(), but takes the URI as
+ * a string rather than a #GFile object.
+ *
+ * Returns: %TRUE in case of success, %FALSE otherwise.
+ */
 gboolean
 media_art_process (const unsigned char *buffer,
                    size_t               len,

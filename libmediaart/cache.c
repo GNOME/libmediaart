@@ -32,6 +32,19 @@
  * @title: Caching and Management
  * @short_description: Caching and management of stored media art.
  * @include: libmediaart/mediaart.h
+ *
+ * These functions give you access to the media art that has been extracted
+ * and saved in the user's XDG_CACHE_HOME directory.
+ *
+ * To find the media art for a given media file, use the function
+ * media_art_get_file() (you can also use media_art_get_path(), which does the
+ * same thing but for path strings instead of #GFile objects).
+ *
+ * If media art for the file is not found in the cache, these functions will
+ * return %NULL. You may find some embedded media art upon loading the file,
+ * and you can use media_art_process() to convert it to the correct format and
+ * save it in the cache for next time. The media_art_process() function also
+ * supports searching for external media art images using a basic heuristic.
  **/
 
 static gboolean
@@ -77,6 +90,9 @@ media_art_strip_find_next_block (const gchar    *original,
  * Strip a albumname or artistname string to prepare it for calculating the
  * media art path with it. Certain characters and charactersets will be stripped
  * and a newly allocated string returned which you must free with g_free().
+ *
+ * This functions is used internally by media_art_get_file() and
+ * media_art_get_path(). You will not normally need to call it yourself.
  *
  * Returns: copy of original but then stripped
  *
@@ -214,7 +230,7 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * @local_file will point to a cache file that resides in the same
  * filesystem than @file.
  *
- * When done, both #GFile<!-- -->s must be freed with g_object_unref if
+ * When done, both #GFile<!-- -->s must be freed with g_object_unref() if
  * non-%NULL.
  *
  * Since: 0.2.0

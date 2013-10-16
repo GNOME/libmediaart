@@ -1,16 +1,18 @@
 <SECTION>
 <FILE>cache</FILE>
+media_art_get_file
 media_art_get_path
-media_art_strip_invalid_entities
 media_art_remove
+media_art_strip_invalid_entities
 </SECTION>
 
 <SECTION>
 <FILE>extract</FILE>
 MediaArtType
 media_art_init
-media_art_process
 media_art_shutdown
+media_art_process_file
+media_art_process
 </SECTION>
 
 <SECTION>
