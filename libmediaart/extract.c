@@ -1155,17 +1155,6 @@ media_art_process_file (const guchar *buffer,
 
 	mtime = get_mtime (file);
 
-	if (!mime) {
-		GFileInfo *info;
-
-		info = g_file_query_info (file,
-					  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
-					  G_FILE_QUERY_INFO_NONE,
-					  NULL, NULL);
-		mime = g_file_info_get_attribute_string (info, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE);
-		g_object_unref (info);
-	}
-
 	media_art_get_file (artist,
 	                    title,
 	                    media_art_type_name[type],
