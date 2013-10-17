@@ -1281,7 +1281,7 @@ media_art_process_file (const guchar *buffer,
 
 /**
  * media_art_process:
- * @buffer: A buffer of binary image data
+ * @buffer: (array length=len): A buffer of binary image data
  * @len: The length of @buffer, in bytes
  * @mime: The MIME type of the data stored in @buffer
  * @type: The type of media that contained the image data
