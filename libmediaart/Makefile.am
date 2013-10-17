@@ -78,7 +78,7 @@ if HAVE_INTROSPECTION
 introspection_sources = $(libmediaart_sources) extractdummy.c
 
 MediaArt-@LIBMEDIAART_API_VERSION@.gir: libmediaart-@LIBMEDIAART_API_VERSION@.la
-MediaArt_@LIBMEDIAART_API_VERSION_U@_gir_INCLUDES = GObject-2.0
+MediaArt_@LIBMEDIAART_API_VERSION_U@_gir_INCLUDES = GObject-2.0 Gio-2.0
 MediaArt_@LIBMEDIAART_API_VERSION_U@_gir_CFLAGS = $(INCLUDES) -DLIBMEDIAART_COMPILATION
 MediaArt_@LIBMEDIAART_API_VERSION_U@_gir_LIBS = libmediaart-@LIBMEDIAART_API_VERSION@.la
 MediaArt_@LIBMEDIAART_API_VERSION_U@_gir_SCANNERFLAGS = --c-include=libmediaart/mediaart.h
@@ -102,6 +102,7 @@ libmediaart-@LIBMEDIAART_API_VERSION@.vapi: MediaArt-@LIBMEDIAART_API_VERSION@.g
 VAPIGEN_VAPIS = libmediaart-@LIBMEDIAART_API_VERSION@.vapi
 
 libmediaart_@LIBMEDIAART_API_VERSION_U@_vapi_METADATADIRS = $(srcdir)
+libmediaart_@LIBMEDIAART_API_VERSION_U@_vapi_DEPS = gio-2.0
 libmediaart_@LIBMEDIAART_API_VERSION_U@_vapi_FILES = MediaArt-@LIBMEDIAART_API_VERSION@.gir
 
 vapidir = $(datadir)/vala/vapi
