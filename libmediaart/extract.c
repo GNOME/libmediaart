@@ -1105,7 +1105,7 @@ get_mtime_by_uri (const gchar *uri)
 
 /**
  * media_art_process_file:
- * @buffer: (allow-none): a buffer containing @file data, or %NULL
+ * @buffer: (array length=len)(allow-none): a buffer containing @file data, or %NULL
  * @len: length of @buffer, or 0
  * @type: The type of media
  * @mime: MIME type of @buffer, or %NULL
