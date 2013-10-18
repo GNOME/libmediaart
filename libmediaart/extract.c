@@ -1396,5 +1396,5 @@ media_art_process (const unsigned char *buffer,
 
 	g_object_unref (file);
 
-	return file;
+	return result;
 }
