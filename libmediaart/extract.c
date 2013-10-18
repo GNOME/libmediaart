@@ -118,10 +118,12 @@ get_parent_g_dir (const gchar  *uri,
 
 	file = g_file_new_for_uri (uri);
 	dirf = g_file_get_parent (file);
+
 	if (dirf) {
 		*dirname = g_file_get_path (dirf);
 		g_object_unref (dirf);
 	}
+
 	g_object_unref (file);
 
 	if (*dirname == NULL) {
@@ -188,11 +190,20 @@ file_get_checksum_if_exists (GChecksumType   checksum_type,
 		retval = TRUE;
 
 		if (check_jpeg) {
-			if (g_input_stream_read_all (G_INPUT_STREAM (stream), buffer, 3, (gsize *) &rsize, NULL, NULL)) {
-				if (rsize >= 3 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff) {
+			if (g_input_stream_read_all (G_INPUT_STREAM (stream),
+			                             buffer,
+			                             3,
+			                             (gsize *) &rsize,
+			                             NULL,
+			                             NULL)) {
+				if (rsize >= 3 &&
+				    buffer[0] == 0xff &&
+				    buffer[1] == 0xd8 &&
+				    buffer[2] == 0xff) {
 					if (is_jpeg) {
 						*is_jpeg = TRUE;
 					}
+
 					/* Add the read bytes to the checksum */
 					g_checksum_update (checksum, buffer, rsize);
 				} else {
@@ -211,7 +222,11 @@ file_get_checksum_if_exists (GChecksumType   checksum_type,
 			}
 		}
 
-		while ((rsize = g_input_stream_read (G_INPUT_STREAM (stream), buffer, 1024, NULL, NULL)) > 0) {
+		while ((rsize = g_input_stream_read (G_INPUT_STREAM (stream),
+		                                     buffer,
+		                                     1024,
+		                                     NULL,
+		                                     NULL)) > 0) {
 			g_checksum_update (checksum, buffer, rsize);
 		}
 
@@ -226,10 +241,10 @@ file_get_checksum_if_exists (GChecksumType   checksum_type,
 	}
 
 end:
-
 	if (stream) {
 		g_object_unref (stream);
 	}
+
 	g_checksum_free (checksum);
 	g_object_unref (file);
 
@@ -248,57 +263,78 @@ convert_from_other_format (const gchar *found,
 
 	target_temp = g_strdup_printf ("%s-tmp", target);
 
-	retval = media_art_file_to_jpeg (found, target_temp);
+	if (!media_art_file_to_jpeg (found, target_temp)) {
+		g_free (target_temp);
+		return FALSE;
+	}
 
-	if (retval && (artist == NULL || g_strcmp0 (artist, " ") == 0)) {
+	if (artist == NULL || g_strcmp0 (artist, " ") == 0) {
 		if (g_rename (target_temp, album_path) == -1) {
-			g_debug ("rename(%s, %s) error: %s", target_temp, album_path, g_strerror (errno));
+			g_debug ("rename(%s, %s) error: %s",
+			         target_temp,
+			         album_path,
+			         g_strerror (errno));
 		}
-	} else if (retval && file_get_checksum_if_exists (G_CHECKSUM_MD5, target_temp, &sum1, FALSE, NULL)) {
+	} else if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
+	                                        target_temp,
+	                                        &sum1,
+	                                        FALSE,
+	                                        NULL)) {
 		gchar *sum2 = NULL;
-		if (file_get_checksum_if_exists (G_CHECKSUM_MD5, album_path, &sum2, FALSE, NULL)) {
+
+		if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
+		                                 album_path,
+		                                 &sum2,
+		                                 FALSE,
+		                                 NULL)) {
 			if (g_strcmp0 (sum1, sum2) == 0) {
 
 				/* If album-space-md5.jpg is the same as found,
 				 * make a symlink */
 
 				if (symlink (album_path, target) != 0) {
-					g_debug ("symlink(%s, %s) error: %s", album_path, target, g_strerror (errno));
+					g_debug ("symlink(%s, %s) error: %s",
+					         album_path,
+					         target,
+					         g_strerror (errno));
 					retval = FALSE;
 				} else {
 					retval = TRUE;
 				}
 
 				g_unlink (target_temp);
-
 			} else {
 
 				/* If album-space-md5.jpg isn't the same as found,
 				 * make a new album-md5-md5.jpg (found -> target) */
 
 				if (g_rename (target_temp, album_path) == -1) {
-					g_debug ("rename(%s, %s) error: %s", target_temp, album_path, g_strerror (errno));
+					g_debug ("rename(%s, %s) error: %s",
+					         target_temp,
+					         album_path,
+					         g_strerror (errno));
 				}
 			}
+
 			g_free (sum2);
 		} else {
-
 			/* If there's not yet a album-space-md5.jpg, make one,
 			 * and symlink album-md5-md5.jpg to it */
-
 			g_rename (target_temp, album_path);
 
 			if (symlink (album_path, target) != 0) {
-				g_debug ("symlink(%s,%s) error: %s", album_path, target, g_strerror (errno));
+				g_debug ("symlink(%s,%s) error: %s",
+				         album_path,
+				         target,
+				         g_strerror (errno));
 				retval = FALSE;
 			} else {
 				retval = TRUE;
 			}
-
 		}
 
 		g_free (sum1);
-	} else if (retval) {
+	} else {
 		g_debug ("Can't read %s while calculating checksum", target_temp);
 		/* Can't read the file that it was converted to, strange ... */
 		g_unlink (target_temp);
@@ -442,11 +478,12 @@ media_art_find_by_artist_and_title (const gchar  *uri,
 		name_strdown = g_utf8_strdown (name_utf8, -1);
 
 		if (g_str_has_suffix (name_strdown, "jpeg") ||
-			g_str_has_suffix (name_strdown, "jpg") ||
-			g_str_has_suffix (name_strdown, "png")) {
+		    g_str_has_suffix (name_strdown, "jpg") ||
+		    g_str_has_suffix (name_strdown, "png")) {
 
 			priority = classify_image_file (search, name_strdown);
-			image_list[priority] = g_list_prepend (image_list[priority], name_strdown);
+			image_list[priority] = g_list_prepend (image_list[priority],
+			                                       name_strdown);
 		} else {
 			g_free (name_strdown);
 		}
@@ -532,8 +569,15 @@ media_art_heuristic (const gchar  *artist,
 
 			file = g_file_new_for_path (target);
 
-			g_file_copy_async (local_file, file, 0, 0,
-			                   NULL, NULL, NULL, NULL, NULL);
+			g_file_copy_async (local_file,
+			                   file,
+			                   0,
+			                   0,
+			                   NULL,
+			                   NULL,
+			                   NULL,
+			                   NULL,
+			                   NULL);
 
 			g_object_unref (file);
 			g_object_unref (local_file);
@@ -548,7 +592,10 @@ media_art_heuristic (const gchar  *artist,
 		g_object_unref (local_file);
 	}
 
-	art_file_path = media_art_find_by_artist_and_title (filename_uri, type, artist, title);
+	art_file_path = media_art_find_by_artist_and_title (filename_uri,
+	                                                    type,
+	                                                    artist,
+	                                                    title);
 
 	if (art_file_path != NULL) {
 		if (g_str_has_suffix (art_file_path, "jpeg") ||
@@ -557,24 +604,38 @@ media_art_heuristic (const gchar  *artist,
 			gboolean is_jpeg = FALSE;
 			gchar *sum1 = NULL;
 
-			if (type != MEDIA_ART_ALBUM || (artist == NULL || g_strcmp0 (artist, " ") == 0)) {
+			if (type != MEDIA_ART_ALBUM ||
+			    (artist == NULL || g_strcmp0 (artist, " ") == 0)) {
 				GFile *art_file;
 				GFile *target_file;
 				GError *err = NULL;
 
-				g_debug ("Album art (JPEG) found in same directory being used:'%s'", art_file_path);
+				g_debug ("Album art (JPEG) found in same directory being used:'%s'",
+				         art_file_path);
 
 				target_file = g_file_new_for_path (target);
 				art_file = g_file_new_for_path (art_file_path);
 
-				g_file_copy (art_file, target_file, 0, NULL, NULL, NULL, &err);
+				g_file_copy (art_file,
+				             target_file,
+				             0,
+				             NULL,
+				             NULL,
+				             NULL,
+				             &err);
+
 				if (err) {
 					g_debug ("%s", err->message);
 					g_clear_error (&err);
 				}
+
 				g_object_unref (art_file);
 				g_object_unref (target_file);
-			} else if (file_get_checksum_if_exists (G_CHECKSUM_MD5, art_file_path, &sum1, TRUE, &is_jpeg)) {
+			} else if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
+			                                        art_file_path,
+			                                        &sum1,
+			                                        TRUE,
+			                                        &is_jpeg)) {
 				/* Avoid duplicate artwork for each track in an album */
 				media_art_get_path (NULL,
 				                    title_stripped,
@@ -588,13 +649,20 @@ media_art_heuristic (const gchar  *artist,
 
 					g_debug ("Album art (JPEG) found in same directory being used:'%s'", art_file_path);
 
-					if (file_get_checksum_if_exists (G_CHECKSUM_MD5, album_art_file_path, &sum2, FALSE, NULL)) {
+					if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
+					                                 album_art_file_path,
+					                                 &sum2,
+					                                 FALSE,
+					                                 NULL)) {
 						if (g_strcmp0 (sum1, sum2) == 0) {
 							/* If album-space-md5.jpg is the same as found,
 							 * make a symlink */
 
 							if (symlink (album_art_file_path, target) != 0) {
-								g_debug ("symlink(%s, %s) error: %s", album_art_file_path, target, g_strerror (errno));
+								g_debug ("symlink(%s, %s) error: %s",
+								         album_art_file_path,
+								         target,
+								         g_strerror (errno));
 								retval = FALSE;
 							} else {
 								retval = TRUE;
@@ -609,7 +677,13 @@ media_art_heuristic (const gchar  *artist,
 
 							target_file = g_file_new_for_path (target);
 							art_file = g_file_new_for_path (art_file_path);
-							retval = g_file_copy (art_file, target_file, 0, NULL, NULL, NULL, &err);
+							retval = g_file_copy (art_file,
+							                      target_file,
+							                      0,
+							                      NULL,
+							                      NULL,
+							                      NULL,
+							                      &err);
 							if (err) {
 								g_debug ("%s", err->message);
 								g_clear_error (&err);
@@ -628,11 +702,19 @@ media_art_heuristic (const gchar  *artist,
 
 						album_art_file = g_file_new_for_path (album_art_file_path);
 						art_file = g_file_new_for_path (art_file_path);
-						retval = g_file_copy (art_file, album_art_file, 0, NULL, NULL, NULL, &err);
+						retval = g_file_copy (art_file,
+						                      album_art_file,
+						                      0,
+						                      NULL,
+						                      NULL,
+						                      NULL,
+						                      &err);
 
 						if (err == NULL) {
 							if (symlink (album_art_file_path, target) != 0) {
-								g_debug ("symlink(%s, %s) error: %s", album_art_file_path, target, g_strerror (errno));
+								g_debug ("symlink(%s, %s) error: %s",
+								         album_art_file_path, target,
+								         g_strerror (errno));
 								retval = FALSE;
 							} else {
 								retval = TRUE;
@@ -648,7 +730,10 @@ media_art_heuristic (const gchar  *artist,
 					}
 				} else {
 					g_debug ("Album art found in same directory but not a real JPEG file (trying to convert): '%s'", art_file_path);
-					retval = convert_from_other_format (art_file_path, target, album_art_file_path, artist);
+					retval = convert_from_other_format (art_file_path,
+					                                    target,
+					                                    album_art_file_path,
+					                                    artist);
 				}
 
 				g_free (sum1);
@@ -667,7 +752,10 @@ media_art_heuristic (const gchar  *artist,
 			}
 
 			g_debug ("Album art (PNG) found in same directory being used:'%s'", art_file_path);
-			retval = convert_from_other_format (art_file_path, target, album_art_file_path, artist);
+			retval = convert_from_other_format (art_file_path,
+			                                    target,
+			                                    album_art_file_path,
+			                                    artist);
 		}
 
 		g_free (art_file_path);
@@ -724,8 +812,8 @@ media_art_set (const unsigned char *buffer,
 			gchar *sum2 = NULL;
 
 			if (file_get_checksum_if_exists (G_CHECKSUM_MD5, album_path, &sum2, FALSE, NULL)) {
-				if ( !(g_strcmp0 (mime, "image/jpeg") == 0 || g_strcmp0 (mime, "JPG") == 0) ||
-			       ( !(len > 2 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff) )) {
+				if (!(g_strcmp0 (mime, "image/jpeg") == 0 || g_strcmp0 (mime, "JPG") == 0) ||
+				    (!(len > 2 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff))) {
 					gchar *sum1 = NULL;
 					gchar *temp = g_strdup_printf ("%s-tmp", album_path);
 
@@ -735,7 +823,6 @@ media_art_set (const unsigned char *buffer,
 
 					if (retval && file_get_checksum_if_exists (G_CHECKSUM_MD5, temp, &sum1, FALSE, NULL)) {
 						if (g_strcmp0 (sum1, sum2) == 0) {
-
 							/* If album-space-md5.jpg is the same as buffer, make a symlink
 							 * to album-md5-md5.jpg */
 
@@ -1128,12 +1215,12 @@ get_mtime_by_uri (const gchar *uri)
  */
 gboolean
 media_art_process_file (const guchar *buffer,
-			gsize         len,
-			const gchar  *mime,
-			MediaArtType  type,
-			const gchar  *artist,
-			const gchar  *title,
-			GFile        *file)
+                        gsize         len,
+                        const gchar  *mime,
+                        MediaArtType  type,
+                        const gchar  *artist,
+                        const gchar  *title,
+                        GFile        *file)
 {
 	GFile *cache_art_file, *local_art_file;
 	gchar *art_path, *uri;
@@ -1297,17 +1384,17 @@ media_art_process (const unsigned char *buffer,
 
 	g_return_val_if_fail (uri != NULL, FALSE);
 
-	file = g_file_new_for_uri(uri);
+	file = g_file_new_for_uri (uri);
 
-	result = media_art_process_file(buffer,
-	                                len,
-	                                mime,
-	                                type,
-	                                artist,
-	                                title,
-	                                file);
+	result = media_art_process_file (buffer,
+	                                 len,
+	                                 mime,
+	                                 type,
+	                                 artist,
+	                                 title,
+	                                 file);
 
-	g_object_unref(file);
+	g_object_unref (file);
 
 	return file;
 }
