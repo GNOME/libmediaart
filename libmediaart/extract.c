@@ -1107,8 +1107,8 @@ get_mtime_by_uri (const gchar *uri)
  * media_art_process_file:
  * @buffer: (array length=len)(allow-none): a buffer containing @file data, or %NULL
  * @len: length of @buffer, or 0
- * @type: The type of media
  * @mime: MIME type of @buffer, or %NULL
+ * @type: The type of media
  * @artist: The media file artist name, or %NULL
  * @title: The media file title, or %NULL
  * @file: File to be processed
@@ -1129,8 +1129,8 @@ get_mtime_by_uri (const gchar *uri)
 gboolean
 media_art_process_file (const guchar *buffer,
 			gsize         len,
-			MediaArtType  type,
 			const gchar  *mime,
+			MediaArtType  type,
 			const gchar  *artist,
 			const gchar  *title,
 			GFile        *file)
@@ -1155,23 +1155,12 @@ media_art_process_file (const guchar *buffer,
 
 	mtime = get_mtime (file);
 
-	if (!mime) {
-		GFileInfo *info;
-
-		info = g_file_query_info (file,
-					  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
-					  G_FILE_QUERY_INFO_NONE,
-					  NULL, NULL);
-		mime = g_file_info_get_attribute_string (info, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE);
-		g_object_unref (info);
-	}
-
 	media_art_get_file (artist,
 	                    title,
 	                    media_art_type_name[type],
 	                    file,
-			    &cache_art_file,
-			    &local_art_file);
+	                    &cache_art_file,
+	                    &local_art_file);
 
 	if (!cache_art_file) {
 		g_debug ("Album art path could not be obtained, not processing any further");
@@ -1303,119 +1292,22 @@ media_art_process (const unsigned char *buffer,
                    const gchar         *title,
                    const gchar         *uri)
 {
-	gchar *art_path;
-	gchar *local_art_uri = NULL;
-	gboolean processed = TRUE, a_exists, created = FALSE;
-	guint64 mtime, a_mtime = 0;
+	GFile *file;
+	gboolean result;
 
-	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
+	g_return_val_if_fail (uri != NULL, FALSE);
 
-	g_debug ("Processing media art: artist:'%s', title:'%s', type:'%s', uri:'%s'. Buffer is %ld bytes, mime:'%s'",
-	         artist ? artist : "",
-	         title ? title : "",
-	         media_art_type_name[type],
-	         uri,
-	         (long int) len,
-	         mime);
+	file = g_file_new_for_uri(uri);
 
-	/* TODO: We can definitely work with GFiles better here */
+	result = media_art_process_file(buffer,
+	                                len,
+	                                mime,
+	                                type,
+	                                artist,
+	                                title,
+	                                file);
 
-	mtime = get_mtime_by_uri (uri);
+	g_object_unref(file);
 
-	media_art_get_path (artist,
-	                    title,
-	                    media_art_type_name[type],
-	                    uri,
-	                    &art_path,
-	                    &local_art_uri);
-
-	if (!art_path) {
-		g_debug ("Album art path could not be obtained, not processing any further");
-
-		g_free (local_art_uri);
-
-		return FALSE;
-	}
-
-	a_exists = g_file_test (art_path, G_FILE_TEST_EXISTS);
-
-	if (a_exists) {
-		a_mtime = get_mtime_by_path (art_path);
-	}
-
-	if ((buffer && len > 0) && ((!a_exists) || (a_exists && mtime > a_mtime))) {
-		processed = media_art_set (buffer, len, mime, type, artist, title);
-		set_mtime (art_path, mtime);
-		created = TRUE;
-	}
-
-	if ((!created) && ((!a_exists) || (a_exists && mtime > a_mtime))) {
-		/* If not, we perform a heuristic on the dir */
-		gchar *key;
-		gchar *dirname = NULL;
-		GFile *file, *dirf;
-
-		file = g_file_new_for_uri (uri);
-		dirf = g_file_get_parent (file);
-		if (dirf) {
-			dirname = g_file_get_path (dirf);
-			g_object_unref (dirf);
-		}
-		g_object_unref (file);
-
-		key = g_strdup_printf ("%i-%s-%s-%s",
-		                       type,
-		                       artist ? artist : "",
-		                       title ? title : "",
-		                       dirname ? dirname : "");
-
-		g_free (dirname);
-
-		if (!g_hash_table_lookup (media_art_cache, key)) {
-			if (!media_art_heuristic (artist,
-			                          title,
-			                          type,
-			                          uri,
-			                          local_art_uri)) {
-				/* If the heuristic failed, we
-				 * request the download the
-				 * media-art to the media-art
-				 * downloaders
-				 */
-				media_art_request_download (type,
-				                            artist,
-				                            title,
-				                            local_art_uri,
-				                            art_path);
-			}
-
-			set_mtime (art_path, mtime);
-
-			g_hash_table_insert (media_art_cache,
-			                     key,
-			                     GINT_TO_POINTER(TRUE));
-		} else {
-			g_free (key);
-		}
-	} else {
-		if (!created) {
-			g_debug ("Album art already exists for uri:'%s' as '%s'",
-			         uri,
-			         art_path);
-		}
-	}
-
-	if (local_art_uri && !g_file_test (local_art_uri, G_FILE_TEST_EXISTS)) {
-		/* We can't reuse art_exists here because the
-		 * situation might have changed
-		 */
-		if (g_file_test (art_path, G_FILE_TEST_EXISTS)) {
-			media_art_copy_to_local (art_path, local_art_uri);
-		}
-	}
-
-	g_free (art_path);
-	g_free (local_art_uri);
-
-	return processed;
+	return file;
 }

@@ -59,8 +59,8 @@ gboolean media_art_process  (const unsigned char  *buffer,
 
 gboolean media_art_process_file (const guchar *buffer,
 				 gsize         len,
-				 MediaArtType  type,
 				 const gchar  *mime,
+				 MediaArtType  type,
 				 const gchar  *artist,
 				 const gchar  *title,
 				 GFile        *file);
