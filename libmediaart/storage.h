@@ -36,7 +36,7 @@ G_BEGIN_DECLS
  *
  * Flags specifying properties of the type of storage.
  *
- * Since: 0.8
+ * Since: 0.2.0
  */
 typedef enum {
 	STORAGE_REMOVABLE = 1 << 0,
@@ -51,7 +51,7 @@ typedef enum {
  *
  * Returns: %TRUE if the storage is marked as removable media, %FALSE otherwise
  *
- * Since: 0.10
+ * Since: 0.2.0
  */
 #define STORAGE_TYPE_IS_REMOVABLE(type) ((type & STORAGE_REMOVABLE) ? TRUE : FALSE)
 
@@ -63,7 +63,7 @@ typedef enum {
  *
  * Returns: %TRUE if the storage is marked as optical disc, %FALSE otherwise
  *
- * Since: 0.10
+ * Since: 0.2.0
  */
 #define STORAGE_TYPE_IS_OPTICAL(type) ((type & STORAGE_OPTICAL) ? TRUE : FALSE)
 

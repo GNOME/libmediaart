@@ -30,7 +30,7 @@
 /**
  * SECTION:-storage
  * @short_description: Removable storage and mount point convenience API
- * @include: lib-miner/-miner.h
+ * @include: libmediaart/mediaart.h
  *
  * This API is a convenience to to be able to keep track of volumes
  * which are mounted and also the type of removable media available.
@@ -845,7 +845,7 @@ mount_pre_removed_cb (GVolumeMonitor *monitor,
  *
  * Returns: The newly created #Storage.
  *
- * Since: 0.2
+ * Since: 0.2.0
  **/
 Storage *
 storage_new (void)
@@ -897,7 +897,7 @@ get_mount_point_by_uuid_foreach (gpointer key,
  * @exact_match. Each element must be freed using g_free() and the
  * list itself through g_slist_free().
  *
- * Since: 0.2
+ * Since: 0.2.0
  **/
 GSList *
 storage_get_device_roots (Storage     *storage,
@@ -933,7 +933,7 @@ storage_get_device_roots (Storage     *storage,
  * on @exact_match. Each element must be freed using g_free()
  * and the list itself through g_slist_free().
  *
- * Since: 0.2
+ * Since: 0.2.0
  **/
 GSList *
 storage_get_device_uuids (Storage     *storage,
@@ -982,7 +982,7 @@ storage_get_device_uuids (Storage     *storage,
  *
  * Returns: The mount point for @uuid, this should not be freed.
  *
- * Since: 0.2
+ * Since: 0.2.0
  **/
 const gchar *
 storage_get_mount_point_for_uuid (Storage     *storage,
@@ -1015,7 +1015,7 @@ storage_get_mount_point_for_uuid (Storage     *storage,
  *
  * Returns: The type flags for @uuid.
  *
- * Since: 0.2
+ * Since: 0.2.0
  **/
 StorageType
 storage_get_type_for_uuid (Storage     *storage,
@@ -1058,7 +1058,7 @@ storage_get_type_for_uuid (Storage     *storage,
  * Returns: Returns the UUID of the removable device for @file, this
  * should not be freed.
  *
- * Since: 0.2
+ * Since: 0.2.0
  **/
 const gchar *
 storage_get_uuid_for_file (Storage *storage,

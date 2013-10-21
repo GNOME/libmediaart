@@ -43,11 +43,12 @@
  * @include: libmediaart/mediaart.h
  *
  * The libmediaart library supports taking image data that you have extracted
- * from a media file and saving it into the media art cache, so that in future
+ * from a media file and saving it into the media art cache, so that future
  * applications can display the media art without having to extract the image
- * again. This is done using the media_art_process_file() function.
+ * again. This is done using the media_art_process_file() or
+ * media_art_process() functions.
  *
- * Extracting the media art from the file needs to be done by your application.
+ * Extracting new media art from a file needs to be done by your application.
  * Usually, when an application loads a media file any embedded images will be
  * made available as a side effect. For example, if you are using GStreamer any
  * images will be returned through the #GstTagList interface as %GST_TAG_IMAGE
@@ -55,14 +56,16 @@
  *
  * The media art cache requires that all images are saved as 'application/jpeg'
  * files. Embedded images can be in several formats, and
- * media_art_process_file() will convert the supplied image data into the
- * correct format if necessary. There are multiple backends that can be used
- * for this, and you can choose which is used at build time using the library's
+ * media_art_process_file() and media_art_process() functions will
+ * convert the supplied image data into the correct format if
+ * necessary. There are multiple backends that can be used for this,
+ * and you can choose which is used at build time using the library's
  * 'configure' script.
  *
- * If there is no embedded media art in a file, media_art_process_file() will
- * look in the directory that contains the media file for likely media art
- * using a simple heuristic.
+ * If there is no embedded media art in a file,
+ * media_art_process_file() and media_art_process() functions will
+ * look in the directory that contains the media file for likely media
+ * art using a simple heuristic.
  *
  * You must call media_art_init() before using the functions in libmediaart,
  * and call media_art_shutdown() to free the resources it uses.
@@ -1049,9 +1052,14 @@ media_art_queue_cb (GObject      *source_object,
 /**
  * media_art_init:
  *
- * Initialise libmediaart.
+ * Initialize libmediaart.
+ *
+ * This function initializes cache hash tables, backend plugins,
+ * storage modules used for removable devices and connections to D-Bus.
  *
  * Returns: %TRUE if initialisation was successful, %FALSE otherwise.
+ *
+ * Since: 0.2.0
  */
 gboolean
 media_art_init (void)
@@ -1088,7 +1096,9 @@ media_art_init (void)
 /**
  * media_art_shutdown:
  *
- * Free the image processing backend and other resources used by libmediaart.
+ * Clean up and free the resources created and mentioned in media_art_init().
+ *
+ * Since: 0.2.0
  */
 void
 media_art_shutdown (void)
@@ -1212,6 +1222,8 @@ get_mtime_by_uri (const gchar *uri)
  * cache on the removable file system rather than on the host machine.
  *
  * Returns: #TRUE if the file could be processed.
+ *
+ * Since: 0.2.0
  */
 gboolean
 media_art_process_file (const guchar *buffer,
@@ -1369,6 +1381,8 @@ media_art_process_file (const guchar *buffer,
  * a string rather than a #GFile object.
  *
  * Returns: %TRUE in case of success, %FALSE otherwise.
+ *
+ * Since: 0.2.0
  */
 gboolean
 media_art_process (const unsigned char *buffer,
