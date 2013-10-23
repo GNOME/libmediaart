@@ -17,6 +17,11 @@
  * Boston, MA  02110-1301, USA.
  */
 
+#include "config.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <glib-object.h>
 
 #include <libmediaart/mediaart.h>
@@ -47,6 +52,35 @@ struct {
         { NULL, NULL}
 };
 
+struct {
+        const gchar *artist;
+        const gchar *album;
+        const gchar *filename;
+} mediaart_test_cases [] = {
+        {"Beatles", "Sgt. Pepper",
+         "album-2a9ea35253dbec60e76166ec8420fbda-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
+
+        { "", "sgt. pepper",
+          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
+
+        { " ", "sgt. pepper",
+          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
+
+        { NULL, "sgt. pepper",
+          "album-cfba4326a32b44b8760b3a2fc827a634-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"}, 
+
+        { "Beatles", NULL,
+          "album-2a9ea35253dbec60e76166ec8420fbda-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"},
+
+        { NULL, NULL, NULL }
+};
+
+static void
+test_mediaart_init (void)
+{
+	g_assert_true (media_art_init ());
+}
+
 static void
 test_mediaart_stripping (void)
 {
@@ -71,29 +105,6 @@ test_mediaart_stripping_null (void)
         //g_assert (!mediaart_strip_invalid_entities (NULL));
 }
 
-struct {
-        const gchar *artist;
-        const gchar *album;
-        const gchar *filename;
-} mediaart_test_cases [] = {
-        {"Beatles", "Sgt. Pepper", 
-         "album-2a9ea35253dbec60e76166ec8420fbda-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
-
-        { "", "sgt. pepper",
-          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
-
-        { " ", "sgt. pepper",
-          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
-
-        { NULL, "sgt. pepper",
-          "album-cfba4326a32b44b8760b3a2fc827a634-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"}, 
-
-        { "Beatles", NULL,
-          "album-2a9ea35253dbec60e76166ec8420fbda-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"},
-
-        { NULL, NULL, NULL }
-};
-
 static void
 test_mediaart_location (void)
 {
@@ -108,7 +119,7 @@ test_mediaart_location (void)
                                     "file:///home/test/a.mp3",
                                     &path,
                                     &local_uri);
-                expected = g_build_path (G_DIR_SEPARATOR_S, 
+                expected = g_build_path (G_DIR_SEPARATOR_S,
                                          g_get_user_cache_dir (),
                                          "media-art",
                                          mediaart_test_cases[i].filename, 
@@ -159,11 +170,117 @@ test_mediaart_location_path (void)
         g_free (local_uri);
 }
 
-gint
-main (gint argc, gchar **argv)
+static void
+test_mediaart_embedded_mp3 (void)
 {
+	GError *error = NULL;
+	GFile *file = NULL;
+	gchar *dir, *path;
+	gboolean retval;
+
+	/* FIXME: Handle 'buffer' AND 'file/path', is broken currently */
+
+	dir = g_get_current_dir ();
+	path = g_build_filename (G_DIR_SEPARATOR_S, dir, "543249_King-Kilo---Radium.mp3", NULL);
+	file = g_file_new_for_path (path);
+	g_free (path);
+
+	retval = media_art_process_file (NULL,
+	                                 0,
+	                                 "audio/mp3", /* mime */
+	                                 MEDIA_ART_ALBUM,
+	                                 "King Kilo", /* artist */
+	                                 "Lanedo", /* title */
+	                                 file);
+
+	g_assert_true (retval);
+
+	g_object_unref (file);
+	g_free (dir);
+}
+
+static void
+test_mediaart_png (void)
+{
+	GError *error = NULL;
+	GFile *file = NULL;
+	gchar *dir, *path;
+	gchar *out_path = NULL;
+	gchar *out_uri = NULL;
+	gchar *expected;
+	gboolean retval;
+
+	dir = g_get_current_dir ();
+	path = g_build_filename (G_DIR_SEPARATOR_S, dir, "LanedoIconHKS43-64².png", NULL);
+	file = g_file_new_for_path (path);
+	g_free (dir);
+
+	/* Check data is not cached currently */
+	media_art_get_path ("Lanedo", /* artist / title */
+	                    NULL, /* album */
+	                    NULL, /* prefix */
+                            path,
+                            &out_path,
+                            &out_uri);
+	g_assert (g_file_test (out_path, G_FILE_TEST_EXISTS) == FALSE);
+	g_free (out_path);
+	g_free (out_uri);
+
+	/* Process data */
+	retval = media_art_process_file (NULL,
+	                                 0,
+	                                 "image/png", /* mime */
+	                                 MEDIA_ART_ALBUM,
+	                                 NULL, /* album */
+	                                 "Lanedo", /* title */
+	                                 file);
+
+	g_assert_true (retval);
+
+	/* Check cache exists */
+	media_art_get_path ("Lanedo", /* artist / title */
+	                    NULL, /* album */
+	                    NULL, /* prefix */
+                            path,
+                            &out_path,
+                            &out_uri);
+
+        expected = g_build_path (G_DIR_SEPARATOR_S,
+                                 g_get_user_cache_dir (),
+                                 "media-art",
+                                 "album-be60c84852d9762b0a896ba9ba24245e-7215ee9c7d9dc229d2921a40e899ec5f.jpeg",
+                                 NULL);
+        g_assert_cmpstr (out_path, ==, expected);
+        /* FIXME: Why is out_uri NULL? */
+        /* FIXME: Why does this next test fail - i.e. file does not
+         * exist if we've processed it?
+         */
+        g_assert (g_file_test (out_path, G_FILE_TEST_EXISTS) == TRUE);
+
+        g_free (out_path);
+        g_free (out_uri);
+        g_free (expected);
+
+        /* Remove album art */
+        retval = media_art_remove ("Lanedo", "");
+        g_assert_true (retval);
+
+        /* FIXME: This breaks, passing NULL for second param */
+        /* retval = media_art_remove ("Lanedo", NULL); */
+
+        g_object_unref (file);
+        g_free (path);
+}
+
+int
+main (int argc, char **argv)
+{
+	int success = EXIT_SUCCESS;
+
         g_test_init (&argc, &argv, NULL);
 
+        g_test_add_func ("/mediaart/init",
+                         test_mediaart_init);
         g_test_add_func ("/mediaart/stripping",
                          test_mediaart_stripping);
         g_test_add_func ("/mediaart/stripping_null",
@@ -174,6 +291,14 @@ main (gint argc, gchar **argv)
                          test_mediaart_location_null);
         g_test_add_func ("/mediaart/location_path",
                          test_mediaart_location_path);
+        g_test_add_func ("/mediaart/embedded_mp3",
+                         test_mediaart_embedded_mp3);
+        g_test_add_func ("/mediaart/png",
+                         test_mediaart_png);
 
-        return g_test_run ();
+        success = g_test_run ();
+
+        media_art_shutdown ();
+
+        return success;
 }

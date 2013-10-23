@@ -381,7 +381,9 @@ media_art_get_path (const gchar  *artist,
 		*local_uri = local_file ? g_file_get_uri (local_file) : NULL;
 	}
 
-	g_object_unref (file);
+	if (file) {
+		g_object_unref (file);
+	}
 }
 
 /**
