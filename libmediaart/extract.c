@@ -952,15 +952,6 @@ media_art_copy_to_local (const gchar *filename,
 	gboolean on_removable_device = FALSE;
 	guint flen;
 
-	/* Determining if we are on a removable device */
-	if (!storage) {
-		/* This is usually because we are running on the
-		 * command line, so we don't error here with
-		 * g_return_if_fail().
-		 */
-		return;
-	}
-
 	roots = storage_get_device_roots (storage, STORAGE_REMOVABLE, FALSE);
 	flen = strlen (filename);
 
@@ -1087,6 +1078,10 @@ media_art_init (void)
 	}
 
 	storage = storage_new ();
+	if (!storage) {
+		g_critical ("Could not start storage module for removable media detection");
+		return FALSE;
+	}
 
 	initialized = TRUE;
 
