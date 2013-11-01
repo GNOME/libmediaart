@@ -1,0 +1,8 @@
+NEW in 0.1 - 2013-11-01
+=======================
+
+First release!
+
+The code for this project has been extracted from Tracker and inserted into
+its own library because there is call for this functionality in other places
+on the desktop.
