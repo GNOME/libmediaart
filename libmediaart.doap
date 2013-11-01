@@ -10,7 +10,8 @@
   <homepage rdf:resource="https://github.com/curlybeast/libmediaart" />
   <mailing-list rdf:resource="http://mail.gnome.org/mailman/listinfo/tracker-list" />
   <category rdf:resource="http://api.gnome.org/doap-extensions#platform" />
-  <bug-database rdf:resource="http://bugzilla.gnome.org/browse.cgi?product=tracker" />
+  <bug-database
+rdf:resource="https://bugzilla.gnome.org/buglist.cgi?product=libmediaart"/>
 
   <maintainer>
     <foaf:Person>
