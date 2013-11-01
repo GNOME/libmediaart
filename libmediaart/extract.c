@@ -772,6 +772,31 @@ media_art_heuristic (const gchar  *artist,
 	return retval;
 }
 
+static inline gboolean
+is_buffer_jpeg (const gchar         *mime,
+                const unsigned char *buffer,
+                size_t               buffer_len)
+{
+	gboolean is_jpeg;
+
+	if (buffer == NULL || buffer_len < 3) {
+		return FALSE;
+	}
+
+	if (g_strcmp0 (mime, "image/jpeg") == 0 ||
+	    g_strcmp0 (mime, "JPG") == 0) {
+		return TRUE;
+	}
+
+	if (buffer[0] == 0xff &&
+	    buffer[1] == 0xd8 &&
+	    buffer[2] == 0xff) {
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
 static gboolean
 media_art_set (const unsigned char *buffer,
                size_t               len,
@@ -781,102 +806,201 @@ media_art_set (const unsigned char *buffer,
                const gchar         *title)
 {
 	gchar *local_path;
+	gchar *album_path;
+	gchar *md5_album = NULL;
+	gchar *md5_tmp = NULL;
+	gchar *temp;
+	const gchar *save_path = NULL;
+	gboolean save_buffer = FALSE;
+	gboolean need_symlink = FALSE;
 	gboolean retval = FALSE;
 
 	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
+	g_return_val_if_fail (artist == NULL, FALSE);
+	g_return_val_if_fail (title == NULL, FALSE);
 
-	if (!artist && !title) {
-		g_warning ("Could not save embedded album art, not enough metadata supplied");
+	/* What we do here:
+	 *
+	 * NOTE: local_path is the final location for the media art
+	 * always here.
+	 *
+	 * 1. Get details based on artist and title.
+	 * 2. If not ALBUM! or artist is unknown:
+	 *       i) save buffer to jpeg only.
+	 * 3. If no cache for ALBUM!:
+	 *       i) save buffer to jpeg.
+	 *      ii) symlink to local_path.
+	 * 4. If buffer is jpeg:
+	 *       i) If the MD5sum is the same for buffer and existing
+	 *          file, symlink to local_path.
+	 *      ii) Otherwise, save buffer to jpeg and call it local_path.
+	 * 5. If buffer is not jpeg, save to disk:
+	 *       i) Compare to existing md5sum cache for ALBUM.
+	 *      ii) If same, unlink new jpeg from buffer and symlink to local_path.
+	 *     iii) If not same, rename new buffer to local_path.
+	 *      iv) If we couldn't save the buffer or read from the new
+	 *          cache, unlink it...
+	 */
+
+	/* 1. Get details based on artist and title */
+	media_art_get_path (artist,
+	                    title,
+	                    media_art_type_name[type],
+	                    NULL,
+	                    &local_path,
+	                    NULL);
+
+	/* 2. If not ALBUM! or artist is unknown:
+	 *       i) save buffer to jpeg only.
+	 */
+	if (type != MEDIA_ART_ALBUM || (artist == NULL || g_strcmp0 (artist, " ") == 0)) {
+		retval = media_art_buffer_to_jpeg (buffer, len, mime, local_path);
+		g_debug ("Saving buffer to jpeg (%ld bytes) --> '%s'", len, local_path);
+		g_free (local_path);
+
+		return retval;
+	}
+
+	/* 3. If no cache for ALBUM!:
+	 *       i) save buffer to jpeg.
+	 *      ii) symlink to local_path.
+	 */
+	media_art_get_path (NULL,
+	                    title,
+	                    media_art_type_name[type],
+	                    NULL,
+	                    &album_path,
+	                    NULL);
+
+	if (!g_file_test (album_path, G_FILE_TEST_EXISTS)) {
+		retval = TRUE;
+
+		if (media_art_buffer_to_jpeg (buffer, len, mime, album_path)) {
+			g_debug ("Saving buffer to jpeg (%ld bytes) --> '%s'", len, album_path);
+
+			/* If album-space-md5.jpg doesn't
+			 * exist, make one and make a symlink
+			 * to album-md5-md5.jpg
+			 */
+			if (symlink (album_path, local_path) != 0) {
+				g_debug ("Creating symlink '%s' --> '%s', %s",
+				         album_path,
+				         local_path,
+				         retval ? g_strerror (errno) : "no error given");
+
+				retval = FALSE;
+			}
+		}
+
+		g_free (album_path);
+		g_free (local_path);
+
+		return retval;
+	}
+
+	if (!file_get_checksum_if_exists (G_CHECKSUM_MD5,
+	                                  album_path,
+	                                  &md5_album,
+	                                  FALSE,
+	                                  NULL)) {
+		g_debug ("No MD5 checksum found for album path:'%s'", album_path);
+
+		g_free (album_path);
+		g_free (local_path);
+
+		return TRUE;
+	}
+
+	/* 4. If buffer is jpeg:
+	 *       i) If the MD5sum is the same for buffer and existing
+	 *          file, symlink to local_path.
+	 *      ii) Otherwise, save buffer to jpeg and call it local_path.
+	 */
+	if (is_buffer_jpeg (mime, buffer, len)) {
+		gchar *md5_data;
+
+		md5_data = checksum_for_data (G_CHECKSUM_MD5, buffer, len);
+
+		/* If album-space-md5.jpg is the same as buffer, make
+		 * a symlink to album-md5-md5.jpg
+		 */
+		if (g_strcmp0 (md5_data, md5_album) == 0) {
+			retval = symlink (album_path, local_path) == 0;
+			g_debug ("Creating symlink '%s' --> '%s', %s",
+			         album_path,
+			         local_path,
+			         retval ? g_strerror (errno) : "no error given");
+		} else {
+			/* If album-space-md5.jpg isn't the same as
+			 * buffer, make a new album-md5-md5.jpg
+			 */
+			retval = media_art_buffer_to_jpeg (buffer, len, mime, local_path);
+			g_debug ("Saving buffer to jpeg (%ld bytes) --> '%s'", len, local_path);
+		}
+
+		g_free (md5_data);
+		g_free (album_path);
+		g_free (local_path);
+
+		return retval;
+	}
+
+	/* 5. If buffer is not jpeg:
+	 *       i) Compare to existing md5sum data with cache for ALBUM.
+	 *      ii) If same, unlink new jpeg from buffer and symlink to local_path.
+	 *     iii) If not same, rename new buffer to local_path.
+	 *      iv) If we couldn't save the buffer or read from the new
+	 *          cache, unlink it...
+	 */
+	temp = g_strdup_printf ("%s-tmp", album_path);
+
+	/* If buffer isn't a JPEG */
+	if (!media_art_buffer_to_jpeg (buffer, len, mime, temp)) {
+		/* Can't read temp file ... */
+		g_unlink (temp);
+
+		g_free (temp);
+		g_free (md5_album);
+		g_free (album_path);
+		g_free (local_path);
+
 		return FALSE;
 	}
 
-	media_art_get_path (artist, title, media_art_type_name[type], NULL, &local_path, NULL);
-
-	if (type != MEDIA_ART_ALBUM || (artist == NULL || g_strcmp0 (artist, " ") == 0)) {
-		retval = media_art_buffer_to_jpeg (buffer, len, mime, local_path);
-	} else {
-		gchar *album_path;
-
-		media_art_get_path (NULL, title, media_art_type_name[type], NULL, &album_path, NULL);
-
-		if (!g_file_test (album_path, G_FILE_TEST_EXISTS)) {
-			retval = media_art_buffer_to_jpeg (buffer, len, mime, album_path);
-
-			/* If album-space-md5.jpg doesn't exist, make one and make a symlink
-			 * to album-md5-md5.jpg */
-
-			if (retval && symlink (album_path, local_path) != 0) {
-				g_debug ("symlink(%s, %s) error: %s", album_path, local_path, g_strerror (errno));
-				retval = FALSE;
-			} else {
-				retval = TRUE;
-			}
+	if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
+	                                 temp,
+	                                 &md5_tmp,
+	                                 FALSE,
+	                                 NULL)) {
+		if (g_strcmp0 (md5_tmp, md5_album) == 0) {
+			/* If album-space-md5.jpg is the same as
+			 * buffer, make a symlink to album-md5-md5.jpg
+			 */
+			retval = symlink (album_path, local_path) == 0;
+			g_debug ("Creating symlink '%s' --> '%s', %s",
+			         album_path,
+			         local_path,
+			         retval ? g_strerror (errno) : "no error given");
 		} else {
-			gchar *sum2 = NULL;
-
-			if (file_get_checksum_if_exists (G_CHECKSUM_MD5, album_path, &sum2, FALSE, NULL)) {
-				if (!(g_strcmp0 (mime, "image/jpeg") == 0 || g_strcmp0 (mime, "JPG") == 0) ||
-				    (!(len > 2 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff))) {
-					gchar *sum1 = NULL;
-					gchar *temp = g_strdup_printf ("%s-tmp", album_path);
-
-					/* If buffer isn't a JPEG */
-
-					retval = media_art_buffer_to_jpeg (buffer, len, mime, temp);
-
-					if (retval && file_get_checksum_if_exists (G_CHECKSUM_MD5, temp, &sum1, FALSE, NULL)) {
-						if (g_strcmp0 (sum1, sum2) == 0) {
-							/* If album-space-md5.jpg is the same as buffer, make a symlink
-							 * to album-md5-md5.jpg */
-
-							g_unlink (temp);
-							if (symlink (album_path, local_path) != 0) {
-								g_debug ("symlink(%s, %s) error: %s", album_path, local_path, g_strerror (errno));
-								retval = FALSE;
-							} else {
-								retval = TRUE;
-							}
-						} else {
-							/* If album-space-md5.jpg isn't the same as buffer, make a
-							 * new album-md5-md5.jpg */
-							if (g_rename (temp, local_path) == -1) {
-								g_debug ("rename(%s, %s) error: %s", temp, local_path, g_strerror (errno));
-							}
-						}
-						g_free (sum1);
-					} else {
-						/* Can't read temp file ... */
-						g_unlink (temp);
-					}
-
-					g_free (temp);
-				} else {
-					gchar *sum1 = NULL;
-
-					sum1 = checksum_for_data (G_CHECKSUM_MD5, buffer, len);
-					/* If album-space-md5.jpg is the same as buffer, make a symlink
-					 * to album-md5-md5.jpg */
-
-					if (g_strcmp0 (sum1, sum2) == 0) {
-						if (symlink (album_path, local_path) != 0) {
-							g_debug ("symlink(%s, %s) error: %s", album_path, local_path, g_strerror (errno));
-							retval = FALSE;
-						} else {
-							retval = TRUE;
-						}
-					} else {
-						/* If album-space-md5.jpg isn't the same as buffer, make a
-						 * new album-md5-md5.jpg */
-						retval = media_art_buffer_to_jpeg (buffer, len, mime, local_path);
-					}
-					g_free (sum1);
-				}
-				g_free (sum2);
-			}
-			g_free (album_path);
+			/* If album-space-md5.jpg isn't the same as
+			 * buffer, make a new album-md5-md5.jpg
+			 */
+			retval = g_rename (temp, local_path) == 0;
+			g_debug ("Renaming temp file '%s' --> '%s', %s",
+			         temp,
+			         local_path,
+			         retval ? g_strerror (errno) : "no error given");
 		}
+
+		g_free (md5_tmp);
 	}
 
+	/* Clean up */
+	g_unlink (temp);
+	g_free (temp);
+
+	g_free (md5_album);
+	g_free (album_path);
 	g_free (local_path);
 
 	return retval;
