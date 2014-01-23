@@ -20,12 +20,12 @@
 #ifndef __LIBMEDIAART_H__
 #define __LIBMEDIAART_H__
 
-#define __LIBMEDIAART_H_INSIDE__
+#define __LIBMEDIAART_INSIDE__
 
 #include <libmediaart/extract.h>
 #include <libmediaart/extractgeneric.h>
 #include <libmediaart/cache.h>
 
-#undef __LIBMEDIAART_H_INSIDE__
+#undef __LIBMEDIAART_INSIDE__
 
 #endif /* __LIBMEDIAART_H__ */
