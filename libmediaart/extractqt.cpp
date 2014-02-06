@@ -48,11 +48,17 @@ static QGuiApplication *app = NULL;
 static QApplication *app = NULL;
 #endif /* HAVE_QT5 */
 
+static gint max_width_in_bytes = 0;
+
 void
-media_art_plugin_init (void)
+media_art_plugin_init (gint max_width)
 {
 	int argc = 1;
 	char *argv[2] = { (char*) "libmediaart", NULL };
+
+	g_return_if_fail (max_width >= 0);
+
+	max_width_in_bytes = max_width;
 
 #ifdef HAVE_QT5
 
@@ -79,10 +85,7 @@ gboolean
 media_art_file_to_jpeg (const gchar *filename,
                         const gchar *target)
 {
-	TrackerConfig *config = tracker_main_get_config ();
-	gint max_media_art_width = tracker_config_get_max_media_art_width (config);
-
-	if (max_media_art_width < 0) {
+	if (max_width_in_bytes < 0) {
 		g_debug ("Not saving album art from file, disabled in config");
 		return TRUE;
 	}
@@ -126,21 +129,18 @@ media_art_file_to_jpeg (const gchar *filename,
 }
 
 gboolean
-tracker_media_art_buffer_to_jpeg (const unsigned char *buffer,
-                                  size_t               len,
-                                  const gchar         *buffer_mime,
-                                  const gchar         *target)
+media_art_buffer_to_jpeg (const unsigned char *buffer,
+                          size_t               len,
+                          const gchar         *buffer_mime,
+                          const gchar         *target)
 {
-	TrackerConfig *config = tracker_main_get_config ();
-	gint max_media_art_width = tracker_config_get_max_media_art_width (config);
-
-	if (max_media_art_width < 0) {
+	if (max_width_in_bytes < 0) {
 		g_debug ("Not saving album art from buffer, disabled in config");
 		return TRUE;
 	}
 
 	/* FF D8 FF are the three first bytes of JPeg images */
-	if (max_media_art_width == 0 &&
+	if (max_width_in_bytes == 0 &&
 	    (g_strcmp0 (buffer_mime, "image/jpeg") == 0 ||
 	     g_strcmp0 (buffer_mime, "JPG") == 0) &&
 	    (buffer && len > 2 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff)) {
