@@ -1,3 +1,18 @@
+NEW in 0.2 - 2014-02-06
+=======================
+
+The main changes since 0.1.0 are:
+
+  * build: Remove all 'tracker' uses in configure.ac.
+  * build: Fix selection between backends Qt and GdkPixbuf
+  * build: Fix requirement on tracker-0.16 in pkgconfig file
+  * build: Make sure pkgconfig file uses -1.0 to avoid minor ver changes
+  * extract: Port Qt backend to Qt5 and NEMO platform
+  * extract: Fixed Qt(4) backend to compile and removed all Tracker references
+  * libmediaart: Fix include which incorrectly defined _INSIDE in main header
+  * docs: Remove reference to Tracker in reference overview
+
+
 NEW in 0.1 - 2013-11-01
 =======================
 
