@@ -213,6 +213,10 @@ selected_for_media_art="no  (disabled)"
 # Choose between backends (GdkPixbuf/Qt/etc)
 ##################################################################
 
+if test "x$enable_qt" == "xyes" && test "x$enable_gdkpixbuf" == "xyes"; then
+   AC_MSG_ERROR([Can not enable both Qt and GdkPixbuf backends, please pick one])
+fi
+
 if test "x$enable_qt" != "xno" && test "x$enable_gdkpixbuf" != "xyes"; then
    PKG_CHECK_MODULES(QT5,
                      [Qt5Gui >= $QT5_REQUIRED],
@@ -260,7 +264,7 @@ AM_CONDITIONAL(HAVE_QT4, test "x$have_qt4" = "xyes")
 AM_CONDITIONAL(HAVE_QT5, test "x$have_qt5" = "xyes")
 AM_CONDITIONAL(HAVE_QT, test "x$have_qt5" = "xyes" || test "x$have_qt4" = "xyes")
 
-if test "x$enable_gdkpixbuf" != "xno" && test "x$enable_quill" != "xyes"; then
+if test "x$enable_gdkpixbuf" != "xno" && test "x$enable_qt" != "xyes"; then
    PKG_CHECK_MODULES(GDKPIXBUF,
                      [gdk-pixbuf-2.0 >= $GDKPIXBUF_REQUIRED],
                      [have_gdkpixbuf=yes],
