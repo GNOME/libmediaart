@@ -140,7 +140,6 @@ CFLAGS="$CFLAGS"
 GLIB_REQUIRED=2.35.1
 GDKPIXBUF_REQUIRED=2.12.0
 QT_REQUIRED=4.7.1
-TRACKER_REQUIRED=0.16.0
 
 # Check requirements for libmediaart
 LIBMEDIAART_REQUIRED="glib-2.0 >= $GLIB_REQUIRED
@@ -190,7 +189,7 @@ GOBJECT_INTROSPECTION_CHECK([1.30.0])
 VAPIGEN_CHECK([0.16])
 
 ##################################################################
-# Check for tracker-extract: GdkPixbuf for MP3 album art
+# Check for GdkPixbuf for MP3 album art
 ##################################################################
 
 AC_ARG_ENABLE(gdkpixbuf,
@@ -210,7 +209,7 @@ AC_ARG_ENABLE(qt,
 selected_for_media_art="no  (disabled)"
 
 ##################################################################
-# Check for tracker-extract: Choose between GdkPixbuf/Qt
+# Choose between backends (GdkPixbuf/Qt/etc)
 ##################################################################
 
 if test "x$enable_qt" != "xno" && test "x$enable_gdkpixbuf" != "xyes"; then
