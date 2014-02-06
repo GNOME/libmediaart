@@ -13,4 +13,4 @@ test -n "$srcdir" || srcdir=.
 ) || exit
 
 # Run configure
-"$srcdir/configure" "$@"
+test -n "$NOCONFIGURE" || "$srcdir/configure" "$@"
