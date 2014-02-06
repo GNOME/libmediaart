@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding="ISO-8859-1"?>
 
-<part id="tracker-overview">
+<part id="overview">
   <title>Overview</title>
   <partintro>
     <para>
@@ -9,11 +9,11 @@
     </para>
   </partintro>
 
-  <chapter id="tracker-overview-compiling">
+  <chapter id="overview-compiling">
     <title>Compiling applications</title>
 
     <para>
-      To compile applications using libtracker-miner, you
+      To compile applications using libmediaart, you
       need to tell the compiler where to find the proper header files
       and libraries. This is done with the
       <application>pkg-config</application> utility.
