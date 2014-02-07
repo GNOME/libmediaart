@@ -228,8 +228,8 @@ if test "x$enable_qt" != "xno" && test "x$enable_gdkpixbuf" != "xyes"; then
                      [have_qt4=no])
 
    if test "x$have_qt5" = "xyes"; then
-      LIBMEDIAART_CFLAGS="$LIBMEDIAART_CFLAGS $QT5_CFLAGS -fPIC"
-      LIBMEDIAART_LIBS="$LIBMEDIAART_LIBS $QT5_LIBS"
+      BACKEND_CFLAGS="$QT5_CFLAGS -fPIC"
+      BACKEND_LIBS="$QT5_LIBS"
 
       AC_DEFINE(HAVE_QT5, [], [Define if we have Qt5])
       AC_DEFINE(HAVE_QT, [], [Define if we have Qt])
@@ -238,8 +238,8 @@ if test "x$enable_qt" != "xno" && test "x$enable_gdkpixbuf" != "xyes"; then
       selected_for_media_art="yes (qt5)"
    else
       if test "x$have_qt4" = "xyes"; then
-         LIBMEDIAART_CFLAGS="$LIBMEDIAART_CFLAGS $QT4_CFLAGS -fPIC"
-         LIBMEDIAART_LIBS="$LIBMEDIAART_LIBS $QT4_LIBS"
+         BACKEND_CFLAGS="$QT4_CFLAGS -fPIC"
+         BACKEND_LIBS="$QT4_LIBS"
 
          AC_DEFINE(HAVE_QT4, [], [Define if we have Qt4])
          AC_DEFINE(HAVE_QT, [], [Define if we have Qt])
@@ -270,8 +270,8 @@ if test "x$enable_gdkpixbuf" != "xno" && test "x$enable_qt" != "xyes"; then
                      [have_gdkpixbuf=yes],
                      [have_gdkpixbuf=no])
 
-   LIBMEDIAART_CFLAGS="$LIBMEDIAART_CFLAGS $GDKPIXBUF_CFLAGS"
-   LIBMEDIAART_LIBS="$LIBMEDIAART_LIBS $GDKPIXBUF_LIBS"
+   BACKEND_CFLAGS="$GDKPIXBUF_CFLAGS"
+   BACKEND_LIBS="$GDKPIXBUF_LIBS"
 
    if test "x$have_gdkpixbuf" = "xyes"; then
       AC_DEFINE(HAVE_GDKPIXBUF, [], [Define if we have GdkPixbuf])
@@ -290,6 +290,8 @@ fi
 
 AM_CONDITIONAL(HAVE_GDKPIXBUF, test "x$have_gdkpixbuf" = "xyes")
 
+LIBMEDIAART_CFLAGS="$LIBMEDIAART_CFLAGS $BACKEND_CFLAGS"
+LIBMEDIAART_LIBS="$LIBMEDIAART_LIBS $BACKEND_LIBS"
 AC_SUBST(LIBMEDIAART_BACKEND)
 
 #################################################################
