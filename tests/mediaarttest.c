@@ -99,10 +99,29 @@ test_mediaart_stripping (void)
 static void
 test_mediaart_stripping_null (void)
 {
-        // FIXME: Decide what is the expected behaviour here...
-        //   a. Return NULL
-        //   b. Return ""
-        //g_assert (!mediaart_strip_invalid_entities (NULL));
+}
+
+static void
+test_mediaart_stripping_failures_subprocess (void)
+{
+	g_assert (!media_art_strip_invalid_entities (NULL));
+}
+
+static void
+test_mediaart_stripping_failures (void)
+{
+	gchar *stripped = NULL;
+
+	/* a. Return NULL for NULL (subprocess)
+	 * b. Return NULL for ""
+	 */
+        stripped = media_art_strip_invalid_entities ("");
+        g_assert (stripped);
+        g_assert_cmpstr (stripped, ==, "");
+
+	g_test_trap_subprocess ("/mediaart/stripping_failures/subprocess", 0, 0);
+	g_test_trap_assert_failed ();
+	g_test_trap_assert_stderr ("*assertion 'original != NULL' failed*");
 }
 
 static void
@@ -283,8 +302,10 @@ main (int argc, char **argv)
                          test_mediaart_init);
         g_test_add_func ("/mediaart/stripping",
                          test_mediaart_stripping);
-        g_test_add_func ("/mediaart/stripping_null",
-                         test_mediaart_stripping_null);
+        g_test_add_func ("/mediaart/stripping_failures",
+                         test_mediaart_stripping_failures);
+        g_test_add_func ("/mediaart/stripping_failures/subprocess",
+                         test_mediaart_stripping_failures_subprocess);
         g_test_add_func ("/mediaart/location",
                          test_mediaart_location);
         g_test_add_func ("/mediaart/location_null",

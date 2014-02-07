@@ -94,7 +94,13 @@ media_art_strip_find_next_block (const gchar    *original,
  * This functions is used internally by media_art_get_file() and
  * media_art_get_path(). You will not normally need to call it yourself.
  *
- * Returns: copy of original but then stripped
+ * This function provides the following features:
+ * 1. Invalid characters include: ()[]<>{}_!@#$^&*+=|\/"'?~;
+ * 2. Text inside brackets of (), {}, [] and <> pairs are removed.
+ * 3. Multiples of space characters are removed.
+ *
+ * Returns: @original stripped of invalid characters which must be
+ * freed. On error or if @original is empty, %NULL is returned.
  *
  * Since: 0.2.0
  */
@@ -117,6 +123,8 @@ media_art_strip_invalid_entities (const gchar *original)
 		{ '<', '>' },
 		{  0,   0  }
 	};
+
+	g_return_val_if_fail (original != NULL, NULL);
 
 	str_no_blocks = g_string_new ("");
 
