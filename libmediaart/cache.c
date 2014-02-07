@@ -394,6 +394,24 @@ media_art_get_path (const gchar  *artist,
 	}
 }
 
+static void
+media_art_remove_foreach (gpointer data,
+                          gpointer user_data)
+{
+	gchar *filename = data;
+	gboolean total_success = * (gboolean *) user_data;
+	gboolean success;
+
+	success = g_unlink (filename) == 0;
+	total_success &= success;
+
+	if (!success) {
+		g_warning ("Could not delete file '%s'", filename);
+	}
+
+	g_free (filename);
+}
+
 /**
  * media_art_remove:
  * @artist: artist the media art belongs to
@@ -416,32 +434,28 @@ media_art_remove (const gchar *artist,
 	gchar *dirname;
 	GList *to_remove = NULL;
 	gchar *target = NULL;
-	gchar *album_path = NULL;
+	gboolean success = TRUE;
 
 	g_return_val_if_fail (artist != NULL && artist[0] != '\0', FALSE);
 
 	dirname = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
 
-	if (!g_file_test (dirname, G_FILE_TEST_EXISTS)) {
-		/* Ignore this and just quit the function */
-		g_debug ("Nothing to do, media-art cache directory '%s' doesn't exist", dirname);
-		g_free (dirname);
-		return TRUE;
-	}
-
 	dir = g_dir_open (dirname, 0, &error);
+	if (!dir || error) {
+		/* Nothing to do if there is no directory in the first place. */
+		g_debug ("Removing media-art for artist:'%s', album:'%s': directory could not be opened, %s",
+		         artist, album, error ? error->message : "no error given");
 
-	if (error) {
-		g_critical ("Call to g_dir_open() failed, %s", error->message);
-
-		g_error_free (error);
-		g_free (dirname);
-
+		g_clear_error (&error);
 		if (dir) {
 			g_dir_close (dir);
 		}
+		g_free (dirname);
 
-		return FALSE;
+		/* We wanted to remove media art, so if there is no
+		 * media art, the caller has achieved what they wanted.
+		 */
+		return TRUE;
 	}
 
 	table = g_hash_table_new_full (g_str_hash,
@@ -451,11 +465,15 @@ media_art_remove (const gchar *artist,
 
 	/* The get_path API does stripping itself */
 	media_art_get_path (artist, album, "album", NULL, &target, NULL);
-	g_hash_table_replace (table, target, target);
+	if (target) {
+		g_hash_table_replace (table, target, target);
+	}
 
-	/* Also add the file to which the symlinks are made */
-	media_art_get_path (NULL, album, "album", NULL, &album_path, NULL);
-	g_hash_table_replace (table, album_path, album_path);
+	/* Add the album path also (to which the symlinks are made) */
+	media_art_get_path (NULL, album, "album", NULL, &target, NULL);
+	if (target) {
+		g_hash_table_replace (table, target, target);
+	}
 
 	/* Perhaps we should have an internal list of media art files that we made,
 	 * instead of going over all the media art (which could also have been made
@@ -465,30 +483,24 @@ media_art_remove (const gchar *artist,
 		gchar *full;
 
 		full = g_build_filename (dirname, name, NULL);
-
 		value = g_hash_table_lookup (table, full);
 
 		if (!value) {
-			g_message ("Removing media-art file '%s': no album exists with songs for this media-art cache", name);
+			g_message ("Removing media-art for artist:'%s', album:'%s': deleting file '%s'",
+			           artist, album, name);
 			to_remove = g_list_prepend (to_remove, (gpointer) full);
 		} else {
 			g_free (full);
 		}
 	}
 
-	if (dir) {
-		g_dir_close (dir);
-	}
-
-	g_free (dirname);
-
-	g_list_foreach (to_remove, (GFunc) g_unlink, NULL);
-	g_list_foreach (to_remove, (GFunc) g_free, NULL);
+	g_list_foreach (to_remove, media_art_remove_foreach, &success);
 	g_list_free (to_remove);
 
-	if (table) {
-		g_hash_table_unref (table);
-	}
+	g_hash_table_unref (table);
 
-	return TRUE;
+	g_dir_close (dir);
+	g_free (dirname);
+
+	return success;
 }

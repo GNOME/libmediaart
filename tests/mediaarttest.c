@@ -284,8 +284,7 @@ test_mediaart_png (void)
         retval = media_art_remove ("Lanedo", "");
         g_assert_true (retval);
 
-        /* FIXME: This breaks, passing NULL for second param */
-        /* retval = media_art_remove ("Lanedo", NULL); */
+        retval = media_art_remove ("Lanedo", NULL);
 
         g_object_unref (file);
         g_free (path);
