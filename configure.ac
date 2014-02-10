@@ -151,8 +151,6 @@ PKG_CHECK_MODULES(LIBMEDIAART, [$LIBMEDIAART_REQUIRED])
 GLIB_GENMARSHAL=`$PKG_CONFIG glib-2.0 --variable=glib_genmarshal`
 AC_SUBST(GLIB_GENMARSHAL)
 
-LIBMEDIAART_LIBS="$LIBMEDIAART_LIBS -lz -lm"
-
 ####################################################################
 # General CFLAGS/LIBS
 ####################################################################

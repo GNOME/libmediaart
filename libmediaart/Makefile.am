@@ -46,7 +46,6 @@ libmediaart_@LIBMEDIAART_API_VERSION@_la_LDFLAGS = \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 libmediaart_@LIBMEDIAART_API_VERSION@_la_LIBADD = \
-	-lm \
 	$(BUILD_LIBS) \
 	$(LIBMEDIAART_LIBS)
 
