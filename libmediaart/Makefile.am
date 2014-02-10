@@ -34,11 +34,14 @@ libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES = \
 
 if HAVE_GDKPIXBUF
 libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES += extractpixbuf.c
+libmediaart_@LIBMEDIAART_API_VERSION@_la_LINK = $(LINK) $(libmediaart_@LIBMEDIAART_API_VERSION@_la_LDFLAGS)
 else
 if HAVE_QT
 libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES += extractqt.cpp
+libmediaart_@LIBMEDIAART_API_VERSION@_la_LINK = $(CXXLINK) $(libmediaart_@LIBMEDIAART_API_VERSION@_la_LDFLAGS)
 else
 libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES += extractdummy.c
+libmediaart_@LIBMEDIAART_API_VERSION@_la_LINK = $(LINK) $(libmediaart_@LIBMEDIAART_API_VERSION@_la_LDFLAGS)
 endif
 endif
 
