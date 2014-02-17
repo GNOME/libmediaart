@@ -203,7 +203,8 @@ test_mediaart_embedded_mp3 (void)
 	                                 "audio/mp3", /* mime */
 	                                 MEDIA_ART_ALBUM,
 	                                 "King Kilo", /* artist */
-	                                 "Lanedo");   /* title */
+	                                 "Lanedo",    /* title */
+	                                 NULL);   
 
 	g_assert_true (retval);
 
@@ -245,7 +246,8 @@ test_mediaart_png (void)
 	                                 "image/png", /* mime */
 	                                 MEDIA_ART_ALBUM,
 	                                 NULL, /* album */
-	                                 "Lanedo");  /* title */
+	                                 "Lanedo",    /* title */
+	                                 NULL);
 
 	g_assert_true (retval);
 
@@ -283,6 +285,58 @@ test_mediaart_png (void)
         g_free (path);
 }
 
+static void
+test_mediaart_process_failures (void)
+{
+	GError *error = NULL;
+
+	g_test_trap_subprocess ("/mediaart/process_failures/subprocess", 0, 0 /*G_TEST_SUBPROCESS_INHERIT_STDOUT | G_TEST_SUBPROCESS_INHERIT_STDERR*/);
+	g_test_trap_assert_failed ();
+	g_test_trap_assert_stderr ("*assertion 'uri != NULL' failed*");
+
+	/* Test: invalid file */
+	g_assert (!media_art_process ("file:///invalid/path.png",
+	                              NULL,
+	                              0,
+	                              "image/png", /* mime */
+	                              MEDIA_ART_ALBUM,
+	                              "Foo",       /* album */
+	                              "Bar",       /* title */
+	                              &error));
+	
+	g_assert_error (error, g_io_error_quark(), G_IO_ERROR_NOT_FOUND);
+	g_clear_error (&error);
+
+
+	/* Test: Invalid mime type */
+	/* g_assert (!media_art_process ("file:///invalid/path.png", */
+	/*                               NULL, */
+	/*                               0, */
+	/*                               "image/png", /\* mime *\/ */
+	/*                               MEDIA_ART_ALBUM, */
+	/*                               "Foo",       /\* album *\/ */
+	/*                               "Bar",       /\* title *\/ */
+	/*                               &error)); */
+
+	/* g_message ("code:%d, domain:%d, error:'%s'\n", error->code, error->domain, error->message); */
+}
+
+static void
+test_mediaart_process_failures_subprocess (void)
+{
+	GError *error = NULL;
+
+	g_assert (!media_art_process (NULL,
+	                              NULL,
+	                              0,
+	                              "image/png", /* mime */
+	                              MEDIA_ART_ALBUM,
+	                              "Foo",       /* album */
+	                              "Bar",       /* title */
+	                              &error));
+	g_assert_no_error (error);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -308,6 +362,10 @@ main (int argc, char **argv)
                          test_mediaart_embedded_mp3);
         g_test_add_func ("/mediaart/png",
                          test_mediaart_png);
+        g_test_add_func ("/mediaart/process_failures",
+                         test_mediaart_process_failures);
+        g_test_add_func ("/mediaart/process_failures/subprocess",
+                         test_mediaart_process_failures_subprocess);
 
         success = g_test_run ();
 

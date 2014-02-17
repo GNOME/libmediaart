@@ -46,24 +46,47 @@ typedef enum {
 	MEDIA_ART_TYPE_COUNT
 } MediaArtType;
 
+#define TRACKER_MINER_MANAGER_ERROR tracker_miner_manager_error_quark ()
+
+/**
+ * MediaArtError:
+ * @MEDIA_ART_ERROR_NOENT: The resource that the was passed (for example a
+ * file or URI) does not exist.
+ * @MEDIA_ART_ERROR_NOENT: The URI or GFile provided
+ * points to a file that does not exist. 
+ *
+ * Enumeration values used in errors returned by the
+ * #MediaArtError API.
+ *
+ * Since: 0.2
+ **/
+typedef enum {
+	MEDIA_ART_ERROR_NOENT,
+} MediaArtError;
+
+
 gboolean media_art_init     (void);
 void     media_art_shutdown (void);
 
-gboolean media_art_process  (const unsigned char  *buffer,
-                             size_t                len,
-                             const gchar          *mime,
-                             MediaArtType          type,
-                             const gchar          *artist,
-                             const gchar          *title,
-                             const gchar          *uri);
+GQuark   media_art_error_quark  (void) G_GNUC_CONST;
 
-gboolean media_art_process_file (GFile        *file,
-                                 const guchar *buffer,
-				 gsize         len,
-				 const gchar  *mime,
-				 MediaArtType  type,
-				 const gchar  *artist,
-                                 const gchar  *title);
+gboolean media_art_process      (const gchar          *uri,
+                                 const unsigned char  *buffer,
+                                 size_t                len,
+                                 const gchar          *mime,
+                                 MediaArtType          type,
+                                 const gchar          *artist,
+                                 const gchar          *title,
+                                 GError              **error);
+
+gboolean media_art_process_file (GFile         *file,
+                                 const guchar  *buffer,
+				 gsize          len,
+				 const gchar   *mime,
+				 MediaArtType   type,
+				 const gchar   *artist,
+                                 const gchar   *title,
+                                 GError       **error);
 
 G_END_DECLS
 

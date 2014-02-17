@@ -1241,6 +1241,26 @@ media_art_shutdown (void)
 	initialized = FALSE;
 }
 
+/**
+ * media_art_error_quark:
+ *
+ * Returns: the #GQuark used to identify media art errors in
+ * GError structures.
+ *
+ * Since: 0.2
+ **/
+GQuark
+media_art_error_quark (void)
+{
+	static GQuark error_quark = 0;
+
+	if (G_UNLIKELY (error_quark == 0)) {
+		error_quark = g_quark_from_static_string ("media-art-error-quark");
+	}
+
+	return error_quark;
+}
+
 static void
 set_mtime (const gchar *filename,
            guint64      mtime)
@@ -1253,27 +1273,21 @@ set_mtime (const gchar *filename,
 
 static
 guint64
-get_mtime (GFile *file)
+get_mtime (GFile   *file,
+           GError **error)
 {
 	GFileInfo *info;
-	GError    *error = NULL;
-	guint64    mtime;
+	GError *local_error = NULL;
+	guint64 mtime;
 
 	info = g_file_query_info (file,
 	                          G_FILE_ATTRIBUTE_TIME_MODIFIED,
 	                          G_FILE_QUERY_INFO_NONE,
 	                          NULL,
-	                          &error);
+	                          &local_error);
 
-	if (G_UNLIKELY (error)) {
-		gchar *uri;
-
-		uri = g_file_get_uri (file);
-		g_message ("Could not get mtime for '%s': %s",
-		           uri,
-		           error->message);
-		g_free (uri);
-		g_error_free (error);
+	if (G_UNLIKELY (local_error != NULL)) {
+		g_propagate_error (error, local_error);
 		mtime = 0;
 	} else {
 		mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
@@ -1282,42 +1296,6 @@ get_mtime (GFile *file)
 
 	return mtime;
 }
-
-guint64
-get_mtime_by_path (const gchar *path)
-{
-	GFile *file;
-	guint64 mtime;
-
-	g_return_val_if_fail (path != NULL, 0);
-
-	file = g_file_new_for_path (path);
-
-	mtime = get_mtime (file);
-
-	g_object_unref (file);
-
-	return mtime;
-}
-
-
-guint64
-get_mtime_by_uri (const gchar *uri)
-{
-	GFile *file;
-	guint64 mtime;
-
-	g_return_val_if_fail (uri != NULL, 0);
-
-	file = g_file_new_for_uri (uri);
-
-	mtime = get_mtime (file);
-
-	g_object_unref (file);
-
-	return mtime;
-}
-
 
 /**
  * media_art_process_file:
@@ -1328,6 +1306,7 @@ get_mtime_by_uri (const gchar *uri)
  * @type: The type of media
  * @artist: The media file artist name, or %NULL
  * @title: The media file title, or %NULL
+ * @error: Pointer to potential GLib / MediaArt error, or %NULL
  *
  * Processes a media file. If you have extracted any embedded media art and
  * passed this in as @buffer, the image data will be converted to the correct
@@ -1340,20 +1319,22 @@ get_mtime_by_uri (const gchar *uri)
  * If @file is on a removable filesystem, the media art file will be saved in a
  * cache on the removable file system rather than on the host machine.
  *
- * Returns: #TRUE if the file could be processed.
+ * Returns: %TRUE if @file could be processed or %FALSE if @error is set.
  *
  * Since: 0.2.0
  */
 gboolean
-media_art_process_file (GFile        *file,
-                        const guchar *buffer,
-                        gsize         len,
-                        const gchar  *mime,
-                        MediaArtType  type,
-                        const gchar  *artist,
-                        const gchar  *title)
+media_art_process_file (GFile         *file,
+                        const guchar  *buffer,
+                        gsize          len,
+                        const gchar   *mime,
+                        MediaArtType   type,
+                        const gchar   *artist,
+                        const gchar   *title,
+                        GError       **error)
 {
 	GFile *cache_art_file, *local_art_file;
+	GError *local_error = NULL;
 	gchar *art_path, *uri;
 	gchar *local_art_uri = NULL;
 	gboolean processed = TRUE, a_exists, created = FALSE;
@@ -1371,7 +1352,16 @@ media_art_process_file (GFile        *file,
 	         (long int) len,
 	         mime);
 
-	mtime = get_mtime (file);
+	mtime = get_mtime (file, &local_error);
+	if (local_error != NULL) {
+		g_debug ("Could not get mtime for '%s': %s",
+		         uri,
+		         local_error->message);
+		g_propagate_error (error, local_error);
+		g_free (uri);
+
+		return FALSE;
+	}
 
 	media_art_get_file (artist,
 	                    title,
@@ -1395,7 +1385,7 @@ media_art_process_file (GFile        *file,
 	a_exists = g_file_query_exists (cache_art_file, NULL);
 
 	if (a_exists) {
-		a_mtime = get_mtime (cache_art_file);
+		a_mtime = get_mtime (cache_art_file, &local_error);
 	}
 
 	art_path = g_file_get_path (cache_art_file);
@@ -1488,29 +1478,30 @@ media_art_process_file (GFile        *file,
 
 /**
  * media_art_process:
- * @buffer: (array length=len): A buffer of binary image data
+ * @uri: URI of the media file that contained the data
+ * @buffer: (array length=len): A buffer of binary data
  * @len: The length of @buffer, in bytes
  * @mime: The MIME type of the data stored in @buffer
  * @type: The type of media that contained the image data
  * @artist: (allow-none): Artist name of the media
  * @title: (allow-none): Title of the media
- * @uri: URI of the media file that contained the image data
  *
  * This function is the same as media_art_process_file(), but takes the URI as
  * a string rather than a #GFile object.
  *
- * Returns: %TRUE in case of success, %FALSE otherwise.
+ * Returns: %TRUE if @uri could be processed or %FALSE if @error is set.
  *
  * Since: 0.2.0
  */
 gboolean
-media_art_process (const unsigned char *buffer,
-                   size_t               len,
-                   const gchar         *mime,
-                   MediaArtType         type,
-                   const gchar         *artist,
-                   const gchar         *title,
-                   const gchar         *uri)
+media_art_process (const gchar          *uri,
+                   const unsigned char  *buffer,
+                   size_t                len,
+                   const gchar          *mime,
+                   MediaArtType          type,
+                   const gchar          *artist,
+                   const gchar          *title,
+                   GError              **error)
 {
 	GFile *file;
 	gboolean result;
@@ -1525,7 +1516,8 @@ media_art_process (const unsigned char *buffer,
 	                                 mime,
 	                                 type,
 	                                 artist,
-	                                 title);
+	                                 title, 
+	                                 error);
 
 	g_object_unref (file);
 
