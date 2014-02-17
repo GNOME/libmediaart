@@ -197,13 +197,13 @@ test_mediaart_embedded_mp3 (void)
 	file = g_file_new_for_path (path);
 	g_free (path);
 
-	retval = media_art_process_file (NULL,
+	retval = media_art_process_file (file,
+	                                 NULL,
 	                                 0,
 	                                 "audio/mp3", /* mime */
 	                                 MEDIA_ART_ALBUM,
 	                                 "King Kilo", /* artist */
-	                                 "Lanedo", /* title */
-	                                 file);
+	                                 "Lanedo");   /* title */
 
 	g_assert_true (retval);
 
@@ -239,13 +239,13 @@ test_mediaart_png (void)
 	g_free (out_uri);
 
 	/* Process data */
-	retval = media_art_process_file (NULL,
+	retval = media_art_process_file (file,
+	                                 NULL,
 	                                 0,
 	                                 "image/png", /* mime */
 	                                 MEDIA_ART_ALBUM,
 	                                 NULL, /* album */
-	                                 "Lanedo", /* title */
-	                                 file);
+	                                 "Lanedo");  /* title */
 
 	g_assert_true (retval);
 

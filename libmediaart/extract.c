@@ -1321,13 +1321,13 @@ get_mtime_by_uri (const gchar *uri)
 
 /**
  * media_art_process_file:
+ * @file: File to be processed
  * @buffer: (array length=len)(allow-none): a buffer containing @file data, or %NULL
  * @len: length of @buffer, or 0
  * @mime: MIME type of @buffer, or %NULL
  * @type: The type of media
  * @artist: The media file artist name, or %NULL
  * @title: The media file title, or %NULL
- * @file: File to be processed
  *
  * Processes a media file. If you have extracted any embedded media art and
  * passed this in as @buffer, the image data will be converted to the correct
@@ -1345,13 +1345,13 @@ get_mtime_by_uri (const gchar *uri)
  * Since: 0.2.0
  */
 gboolean
-media_art_process_file (const guchar *buffer,
+media_art_process_file (GFile        *file,
+                        const guchar *buffer,
                         gsize         len,
                         const gchar  *mime,
                         MediaArtType  type,
                         const gchar  *artist,
-                        const gchar  *title,
-                        GFile        *file)
+                        const gchar  *title)
 {
 	GFile *cache_art_file, *local_art_file;
 	gchar *art_path, *uri;
@@ -1359,8 +1359,8 @@ media_art_process_file (const guchar *buffer,
 	gboolean processed = TRUE, a_exists, created = FALSE;
 	guint64 mtime, a_mtime = 0;
 
-	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
 	g_return_val_if_fail (G_IS_FILE (file), FALSE);
+	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
 
 	uri = g_file_get_uri (file);
 	g_debug ("Processing media art: artist:'%s', title:'%s', type:'%s', uri:'%s'. Buffer is %ld bytes, mime:'%s'",
@@ -1519,13 +1519,13 @@ media_art_process (const unsigned char *buffer,
 
 	file = g_file_new_for_uri (uri);
 
-	result = media_art_process_file (buffer,
+	result = media_art_process_file (file,
+	                                 buffer,
 	                                 len,
 	                                 mime,
 	                                 type,
 	                                 artist,
-	                                 title,
-	                                 file);
+	                                 title);
 
 	g_object_unref (file);
 

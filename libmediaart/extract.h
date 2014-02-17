@@ -57,13 +57,13 @@ gboolean media_art_process  (const unsigned char  *buffer,
                              const gchar          *title,
                              const gchar          *uri);
 
-gboolean media_art_process_file (const guchar *buffer,
+gboolean media_art_process_file (GFile        *file,
+                                 const guchar *buffer,
 				 gsize         len,
 				 const gchar  *mime,
 				 MediaArtType  type,
 				 const gchar  *artist,
-				 const gchar  *title,
-				 GFile        *file);
+                                 const gchar  *title);
 
 G_END_DECLS
 
