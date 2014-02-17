@@ -97,11 +97,6 @@ test_mediaart_stripping (void)
 }
 
 static void
-test_mediaart_stripping_null (void)
-{
-}
-
-static void
 test_mediaart_stripping_failures_subprocess (void)
 {
 	g_assert (!media_art_strip_invalid_entities (NULL));
@@ -150,8 +145,6 @@ test_mediaart_location (void)
                 g_free (local_uri);
         }
         g_print ("(%d test cases) ", i);
-
-
 }
 
 static void
