@@ -1297,6 +1297,37 @@ get_mtime (GFile   *file,
 	return mtime;
 }
 
+gchar *
+get_heuristic_for_parent_path (GFile        *file,
+                               MediaArtType  type,
+                               const gchar  *artist,
+                               const gchar  *title)
+{
+	gchar *key;
+	gchar *parent_path = NULL;
+	GFile *parent;
+
+	if (!file) {
+		return NULL;
+	}
+
+	parent = g_file_get_parent (file);
+	if (parent) {
+		parent_path = g_file_get_path (parent);
+		g_object_unref (parent);
+	}
+
+	key = g_strdup_printf ("%i-%s-%s-%s",
+	                       type,
+	                       artist ? artist : "",
+	                       title ? title : "",
+	                       parent_path ? parent_path : "");
+
+	g_free (parent_path);
+
+	return key;
+}
+
 /**
  * media_art_process_file:
  * @file: File to be processed
@@ -1335,13 +1366,14 @@ media_art_process_file (GFile         *file,
 {
 	GFile *cache_art_file, *local_art_file;
 	GError *local_error = NULL;
-	gchar *art_path, *uri;
-	gchar *local_art_uri = NULL;
-	gboolean processed = TRUE, a_exists, created = FALSE;
-	guint64 mtime, a_mtime = 0;
+	gchar *cache_art_path, *uri;
+	gboolean processed, created, no_cache_or_old;
+	guint64 mtime, cache_mtime = 0;
 
 	g_return_val_if_fail (G_IS_FILE (file), FALSE);
 	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
+
+	processed = created = FALSE;
 
 	uri = g_file_get_uri (file);
 	g_debug ("Processing media art: artist:'%s', title:'%s', type:'%s', uri:'%s'. Buffer is %ld bytes, mime:'%s'",
@@ -1354,7 +1386,7 @@ media_art_process_file (GFile         *file,
 
 	mtime = get_mtime (file, &local_error);
 	if (local_error != NULL) {
-		g_debug ("Could not get mtime for '%s': %s",
+		g_debug ("Could not get mtime for file '%s': %s",
 		         uri,
 		         local_error->message);
 		g_propagate_error (error, local_error);
@@ -1370,59 +1402,62 @@ media_art_process_file (GFile         *file,
 	                    &cache_art_file,
 	                    &local_art_file);
 
-	if (!cache_art_file) {
-		g_debug ("Album art path could not be obtained, not processing any further");
+	cache_mtime = get_mtime (cache_art_file, &local_error);
+
+	if (local_error &&
+	    local_error->domain == g_io_error_quark () &&
+	    local_error->code == G_IO_ERROR_NOT_FOUND) {
+		/* cache_art_file not existing is the only error we
+		 * accept here, anything else and we return.
+		 */
+		gchar *path;
+
+		path = g_file_get_uri (cache_art_file);
+		g_debug ("Cache for media art didn't exist (%s)",
+		         path);
+		g_free (path);
+		g_clear_error (&local_error);
+	}
+
+	if (local_error) {
+		g_free (uri);
+
+		uri = g_file_get_uri (cache_art_file);
+		g_debug ("Could not get mtime for cache '%s': %s",
+		         uri,
+		         local_error->message);
+		g_free (uri);
 
 		if (local_art_file) {
 			g_object_unref (local_art_file);
 		}
 
-		g_free (uri);
+		g_propagate_error (error, local_error);
 
 		return FALSE;
 	}
 
-	a_exists = g_file_query_exists (cache_art_file, NULL);
+	cache_art_path = g_file_get_path (cache_art_file);
+	no_cache_or_old = cache_mtime == 0 || mtime > cache_mtime;
 
-	if (a_exists) {
-		a_mtime = get_mtime (cache_art_file, &local_error);
-	}
-
-	art_path = g_file_get_path (cache_art_file);
-	local_art_uri = g_file_get_uri (local_art_file);
-
-	if ((buffer && len > 0) && ((!a_exists) || (a_exists && mtime > a_mtime))) {
+	if ((buffer && len > 0) && no_cache_or_old) {
 		processed = media_art_set (buffer, len, mime, type, artist, title);
-		set_mtime (art_path, mtime);
+		set_mtime (cache_art_path, mtime);
 		created = TRUE;
 	}
 
-	if ((!created) && ((!a_exists) || (a_exists && mtime > a_mtime))) {
+	if (!created && no_cache_or_old) {
 		/* If not, we perform a heuristic on the dir */
 		gchar *key;
-		gchar *dirname = NULL;
-		GFile *dirf;
 
-		dirf = g_file_get_parent (file);
-		if (dirf) {
-			dirname = g_file_get_path (dirf);
-			g_object_unref (dirf);
-		}
-
-		key = g_strdup_printf ("%i-%s-%s-%s",
-		                       type,
-		                       artist ? artist : "",
-		                       title ? title : "",
-		                       dirname ? dirname : "");
-
-		g_free (dirname);
+		key = get_heuristic_for_parent_path (file, type, artist, title);
 
 		if (!g_hash_table_lookup (media_art_cache, key)) {
-			if (!media_art_heuristic (artist,
-			                          title,
-			                          type,
-			                          uri,
-			                          local_art_uri)) {
+			gchar *local_art_uri;
+
+			local_art_uri = g_file_get_uri (local_art_file);
+
+			if (!media_art_heuristic (artist, title, type, uri, local_art_uri)) {
 				/* If the heuristic failed, we
 				 * request the download the
 				 * media-art to the media-art
@@ -1432,23 +1467,22 @@ media_art_process_file (GFile         *file,
 				                            artist,
 				                            title,
 				                            local_art_uri,
-				                            art_path);
+				                            cache_art_path);
 			}
 
-			set_mtime (art_path, mtime);
+			set_mtime (cache_art_path, mtime);
 
 			g_hash_table_insert (media_art_cache,
 			                     key,
 			                     GINT_TO_POINTER(TRUE));
+			g_free (local_art_uri);
 		} else {
 			g_free (key);
 		}
-	} else {
-		if (!created) {
-			g_debug ("Album art already exists for uri:'%s' as '%s'",
-			         uri,
-			         art_path);
-		}
+	} else if (!created) {
+		g_debug ("Album art already exists for uri:'%s' as '%s'",
+		         uri,
+		         cache_art_path);
 	}
 
 	if (local_art_file && !g_file_query_exists (local_art_file, NULL)) {
@@ -1456,7 +1490,11 @@ media_art_process_file (GFile         *file,
 		 * situation might have changed
 		 */
 		if (g_file_query_exists (cache_art_file, NULL)) {
-			media_art_copy_to_local (art_path, local_art_uri);
+			gchar *local_art_uri;
+
+			local_art_uri = g_file_get_uri (local_art_file);
+			media_art_copy_to_local (cache_art_path, local_art_uri);
+			g_free (local_art_uri);
 		}
 	}
 
@@ -1468,8 +1506,7 @@ media_art_process_file (GFile         *file,
 		g_object_unref (local_art_file);
 	}
 
-	g_free (art_path);
-	g_free (local_art_uri);
+	g_free (cache_art_path);
 	g_free (uri);
 
 	return processed;
@@ -1516,7 +1553,7 @@ media_art_process (const gchar          *uri,
 	                                 mime,
 	                                 type,
 	                                 artist,
-	                                 title, 
+	                                 title,
 	                                 error);
 
 	g_object_unref (file);

@@ -53,7 +53,7 @@ typedef enum {
  * @MEDIA_ART_ERROR_NOENT: The resource that the was passed (for example a
  * file or URI) does not exist.
  * @MEDIA_ART_ERROR_NOENT: The URI or GFile provided
- * points to a file that does not exist. 
+ * points to a file that does not exist.
  *
  * Enumeration values used in errors returned by the
  * #MediaArtError API.
