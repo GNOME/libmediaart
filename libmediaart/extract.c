@@ -666,7 +666,10 @@ get_heuristic (MediaArtType   type,
 	gboolean retval = FALSE;
 
 	if (title == NULL || title[0] == '\0') {
-		g_debug ("Unable to fetch media art, no title specified");
+		g_set_error (error,
+		             MEDIA_ART_ERROR,
+		             MEDIA_ART_ERROR_NO_TITLE,
+		             "Title is required, but was not provided, or was empty");
 		return FALSE;
 	}
 

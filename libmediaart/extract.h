@@ -49,10 +49,9 @@ typedef enum {
 
 /**
  * MediaArtError:
- * @MEDIA_ART_ERROR_NOENT: The resource that the was passed (for example a
- * file or URI) does not exist.
  * @MEDIA_ART_ERROR_NO_STORAGE: Storage information is unknown, we
  * have no knowledge about removable media.
+ * @MEDIA_ART_ERROR_NO_TITLE: Title is required, but was not provided, or was empty.
  *
  * Enumeration values used in errors returned by the
  * #MediaArtError API.
@@ -60,8 +59,8 @@ typedef enum {
  * Since: 0.2
  **/
 typedef enum {
-	MEDIA_ART_ERROR_NOENT,
-	MEDIA_ART_ERROR_NO_STORAGE
+	MEDIA_ART_ERROR_NO_STORAGE,
+	MEDIA_ART_ERROR_NO_TITLE
 } MediaArtError;
 
 #define MEDIA_ART_ERROR media_art_error_quark ()
