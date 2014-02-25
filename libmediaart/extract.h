@@ -51,7 +51,11 @@ typedef enum {
  * MediaArtError:
  * @MEDIA_ART_ERROR_NO_STORAGE: Storage information is unknown, we
  * have no knowledge about removable media.
- * @MEDIA_ART_ERROR_NO_TITLE: Title is required, but was not provided, or was empty.
+ * @MEDIA_ART_ERROR_NO_TITLE: Title is required, but was not provided,
+ * or was empty.
+ * @MEDIA_ART_ERROR_SYMLINK_FAILED: A call to symlink() failed
+ * resulting in the incorrect storage of media art.
+ * @MEDIA_ART_ERROR_RENAME_FAILED: File could not be renamed.
  *
  * Enumeration values used in errors returned by the
  * #MediaArtError API.
@@ -60,7 +64,9 @@ typedef enum {
  **/
 typedef enum {
 	MEDIA_ART_ERROR_NO_STORAGE,
-	MEDIA_ART_ERROR_NO_TITLE
+	MEDIA_ART_ERROR_NO_TITLE,
+	MEDIA_ART_ERROR_SYMLINK_FAILED,
+	MEDIA_ART_ERROR_RENAME_FAILED
 } MediaArtError;
 
 #define MEDIA_ART_ERROR media_art_error_quark ()

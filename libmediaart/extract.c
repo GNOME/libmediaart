@@ -393,12 +393,22 @@ convert_from_other_format (const gchar  *found,
 	}
 
 	if (artist == NULL || g_strcmp0 (artist, " ") == 0) {
-		if (g_rename (target_temp, album_path) == -1) {
-			g_debug ("rename(%s, %s) error: %s",
-			         target_temp,
-			         album_path,
-			         g_strerror (errno));
+		retval = g_rename (target_temp, album_path) == 0;
+
+		if (!retval) {
+			g_set_error (error,
+			             MEDIA_ART_ERROR,
+			             MEDIA_ART_ERROR_RENAME_FAILED,
+			             "Could not rename '%s' to '%s': %s",
+			             target_temp,
+			             album_path,
+			             g_strerror (errno));
 		}
+
+		g_debug ("rename(%s, %s) error: %s",
+		         target_temp,
+		         album_path,
+		         g_strerror (errno));
 	} else if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
 	                                        target_temp,
 	                                        &sum1,
@@ -415,45 +425,77 @@ convert_from_other_format (const gchar  *found,
 
 				/* If album-space-md5.jpg is the same as found,
 				 * make a symlink */
+				retval = symlink (album_path, target) == 0;
 
-				if (symlink (album_path, target) != 0) {
-					g_debug ("symlink(%s, %s) error: %s",
-					         album_path,
-					         target,
-					         g_strerror (errno));
-					retval = FALSE;
-				} else {
-					retval = TRUE;
+				if (!retval) {
+					g_set_error (error,
+					             MEDIA_ART_ERROR,
+					             MEDIA_ART_ERROR_RENAME_FAILED,
+					             "Could not rename '%s' to '%s': %s",
+					             album_path,
+					             target,
+					             g_strerror (errno));
 				}
+
+				g_debug ("symlink(%s, %s) error: %s",
+				         album_path,
+				         target,
+				         g_strerror (errno));
 
 				g_unlink (target_temp);
 			} else {
 
 				/* If album-space-md5.jpg isn't the same as found,
 				 * make a new album-md5-md5.jpg (found -> target) */
+				retval = g_rename (target_temp, album_path) == 0;
 
-				if (g_rename (target_temp, album_path) == -1) {
-					g_debug ("rename(%s, %s) error: %s",
-					         target_temp,
-					         album_path,
-					         g_strerror (errno));
+				if (!retval) {
+					g_set_error (error,
+					             MEDIA_ART_ERROR,
+					             MEDIA_ART_ERROR_RENAME_FAILED,
+					             "Could not rename '%s' to '%s': %s",
+					             target_temp,
+					             album_path,
+					             g_strerror (errno));
 				}
+
+				g_debug ("rename(%s, %s) error: %s",
+				         target_temp,
+				         album_path,
+				         g_strerror (errno));
 			}
 
 			g_free (sum2);
 		} else {
 			/* If there's not yet a album-space-md5.jpg, make one,
 			 * and symlink album-md5-md5.jpg to it */
-			g_rename (target_temp, album_path);
+			retval = g_rename (target_temp, album_path) == 0;
 
-			if (symlink (album_path, target) != 0) {
-				g_debug ("symlink(%s,%s) error: %s",
-				         album_path,
-				         target,
-				         g_strerror (errno));
-				retval = FALSE;
+			if (!retval) {
+				g_set_error (error,
+				             MEDIA_ART_ERROR,
+				             MEDIA_ART_ERROR_RENAME_FAILED,
+				             "Could not rename '%s' to '%s': %s",
+				             album_path,
+				             target,
+				             g_strerror (errno));
 			} else {
-				retval = TRUE;
+				retval = symlink (album_path, target) == 0;
+
+				if (!retval) {
+					g_set_error (error,
+					             MEDIA_ART_ERROR,
+					             MEDIA_ART_ERROR_SYMLINK_FAILED,
+					             "Could not rename '%s' to '%s': %s",
+					             album_path,
+					             target,
+					             g_strerror (errno));
+				}
+
+				g_debug ("symlink(%s,%s) error: %s",
+					album_path,
+					target,
+					g_strerror (errno));
 			}
 		}
 
@@ -725,172 +767,187 @@ get_heuristic (MediaArtType   type,
 	                                                    artist,
 	                                                    title);
 
-	if (art_file_path != NULL) {
-		if (g_str_has_suffix (art_file_path, "jpeg") ||
-		    g_str_has_suffix (art_file_path, "jpg")) {
+	if (!art_file_path) {
+		// FIXME: Do we GError here?
 
-			gboolean is_jpeg = FALSE;
-			gchar *sum1 = NULL;
+		g_free (art_file_path);
+		g_free (album_art_file_path);
 
-			if (type != MEDIA_ART_ALBUM ||
-			    (artist == NULL || g_strcmp0 (artist, " ") == 0)) {
-				GFile *art_file;
-				GFile *target_file;
-				GError *err = NULL;
+		g_free (target);
+		g_free (artist_stripped);
+		g_free (title_stripped);
 
-				g_debug ("Album art (JPEG) found in same directory being used:'%s'",
-				         art_file_path);
+		return FALSE;
+	}
 
-				target_file = g_file_new_for_path (target);
-				art_file = g_file_new_for_path (art_file_path);
+	if (g_str_has_suffix (art_file_path, "jpeg") ||
+	    g_str_has_suffix (art_file_path, "jpg")) {
+		gboolean is_jpeg = FALSE;
+		gchar *sum1 = NULL;
 
-				g_file_copy (art_file,
-				             target_file,
-				             0,
-				             NULL,
-				             NULL,
-				             NULL,
-				             &err);
+		if (type != MEDIA_ART_ALBUM ||
+		    (artist == NULL || g_strcmp0 (artist, " ") == 0)) {
+			GFile *art_file;
+			GFile *target_file;
+			GError *local_error = NULL;
 
-				if (err) {
-					g_debug ("%s", err->message);
-					g_clear_error (&err);
-				}
+			g_debug ("Album art (JPEG) found in same directory being used:'%s'",
+			         art_file_path);
 
-				g_object_unref (art_file);
-				g_object_unref (target_file);
-			} else if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
-			                                        art_file_path,
-			                                        &sum1,
-			                                        TRUE,
-			                                        &is_jpeg)) {
-				/* Avoid duplicate artwork for each track in an album */
-				media_art_get_path (NULL,
-				                    title_stripped,
-				                    media_art_type_name [type],
-				                    NULL,
-				                    &album_art_file_path,
-				                    NULL);
+			target_file = g_file_new_for_path (target);
+			art_file = g_file_new_for_path (art_file_path);
 
-				if (is_jpeg) {
-					gchar *sum2 = NULL;
+			g_file_copy (art_file,
+			             target_file,
+			             0,
+			             NULL,
+			             NULL,
+			             NULL,
+			             &local_error);
 
-					g_debug ("Album art (JPEG) found in same directory being used:'%s'", art_file_path);
+			if (local_error) {
+				g_debug ("%s", local_error->message);
+				g_propagate_error (error, local_error);
+			}
 
-					if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
-					                                 album_art_file_path,
-					                                 &sum2,
-					                                 FALSE,
-					                                 NULL)) {
-						if (g_strcmp0 (sum1, sum2) == 0) {
-							/* If album-space-md5.jpg is the same as found,
-							 * make a symlink */
+			g_object_unref (art_file);
+			g_object_unref (target_file);
+		} else if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
+		                                        art_file_path,
+		                                        &sum1,
+		                                        TRUE,
+		                                        &is_jpeg)) {
+			/* Avoid duplicate artwork for each track in an album */
+			media_art_get_path (NULL,
+			                    title_stripped,
+			                    media_art_type_name [type],
+			                    NULL,
+			                    &album_art_file_path,
+			                    NULL);
 
-							if (symlink (album_art_file_path, target) != 0) {
-								g_debug ("symlink(%s, %s) error: %s",
-								         album_art_file_path,
-								         target,
-								         g_strerror (errno));
-								retval = FALSE;
-							} else {
-								retval = TRUE;
-							}
-						} else {
-							GFile *art_file;
-							GFile *target_file;
-							GError *err = NULL;
+			if (is_jpeg) {
+				gchar *sum2 = NULL;
 
-							/* If album-space-md5.jpg isn't the same as found,
-							 * make a new album-md5-md5.jpg (found -> target) */
+				g_debug ("Album art (JPEG) found in same directory being used:'%s'", art_file_path);
 
-							target_file = g_file_new_for_path (target);
-							art_file = g_file_new_for_path (art_file_path);
-							retval = g_file_copy (art_file,
-							                      target_file,
-							                      0,
-							                      NULL,
-							                      NULL,
-							                      NULL,
-							                      &err);
-							if (err) {
-								g_debug ("%s", err->message);
-								g_clear_error (&err);
-							}
-							g_object_unref (art_file);
-							g_object_unref (target_file);
+				if (file_get_checksum_if_exists (G_CHECKSUM_MD5,
+				                                 album_art_file_path,
+				                                 &sum2,
+				                                 FALSE,
+				                                 NULL)) {
+					if (g_strcmp0 (sum1, sum2) == 0) {
+						/* If album-space-md5.jpg is the same as found,
+						 * make a symlink */
+						retval = symlink (album_art_file_path, target) == 0;
+
+						if (!retval) {
+							g_set_error (error,
+							             MEDIA_ART_ERROR,
+							             MEDIA_ART_ERROR_SYMLINK_FAILED,
+							             "Could not link '%s' to '%s': %s",
+							             album_art_file_path,
+							             target,
+							             g_strerror (errno));
 						}
-						g_free (sum2);
+
+						g_debug ("symlink(%s, %s) error: %s",
+						         album_art_file_path,
+						         target,
+						         g_strerror (errno));
 					} else {
 						GFile *art_file;
-						GFile *album_art_file;
-						GError *err = NULL;
+						GFile *target_file;
+						GError *local_error = NULL;
 
-						/* If there's not yet a album-space-md5.jpg, make one,
-						 * and symlink album-md5-md5.jpg to it */
-
-						album_art_file = g_file_new_for_path (album_art_file_path);
+						/* If album-space-md5.jpg isn't the same as found,
+						 * make a new album-md5-md5.jpg (found -> target) */
+						target_file = g_file_new_for_path (target);
 						art_file = g_file_new_for_path (art_file_path);
 						retval = g_file_copy (art_file,
-						                      album_art_file,
+						                      target_file,
 						                      0,
 						                      NULL,
 						                      NULL,
 						                      NULL,
-						                      &err);
+						                      error);
 
-						if (err == NULL) {
-							if (symlink (album_art_file_path, target) != 0) {
-								g_debug ("symlink(%s, %s) error: %s",
-								         album_art_file_path, target,
-								         g_strerror (errno));
-								retval = FALSE;
-							} else {
-								retval = TRUE;
-							}
-						} else {
-							g_debug ("%s", err->message);
-							g_clear_error (&err);
-							retval = FALSE;
+						g_object_unref (art_file);
+						g_object_unref (target_file);
+					}
+
+					g_free (sum2);
+				} else {
+					GFile *art_file;
+					GFile *album_art_file;
+					GError *local_error = NULL;
+
+					/* If there's not yet a album-space-md5.jpg, make one,
+					 * and symlink album-md5-md5.jpg to it */
+					album_art_file = g_file_new_for_path (album_art_file_path);
+					art_file = g_file_new_for_path (art_file_path);
+					retval = g_file_copy (art_file,
+					                      album_art_file,
+					                      0,
+					                      NULL,
+					                      NULL,
+					                      NULL,
+					                      error);
+
+					if (retval) {
+						retval = symlink (album_art_file_path, target) == 0;
+
+						if (!retval) {
+							g_set_error (error,
+							             MEDIA_ART_ERROR,
+							             MEDIA_ART_ERROR_SYMLINK_FAILED,
+							             "Could not link '%s' to '%s': %s",
+							             album_art_file_path,
+							             target,
+							             g_strerror (errno));
 						}
 
-						g_object_unref (album_art_file);
-						g_object_unref (art_file);
+						g_debug ("symlink(%s, %s) error: %s",
+						         album_art_file_path, target,
+						         g_strerror (errno));
 					}
-				} else {
-					g_debug ("Album art found in same directory but not a real JPEG file (trying to convert): '%s'", art_file_path);
-					retval = convert_from_other_format (art_file_path,
-					                                    target,
-					                                    album_art_file_path,
-					                                    artist,
-					                                    error);
+
+					g_object_unref (album_art_file);
+					g_object_unref (art_file);
 				}
-
-				g_free (sum1);
 			} else {
-				/* Can't read contents of the cover.jpg file ... */
-				retval = FALSE;
-			}
-		} else if (g_str_has_suffix (art_file_path, "png")) {
-			if (!album_art_file_path) {
-				media_art_get_path (NULL,
-				                    title_stripped,
-				                    media_art_type_name[type],
-				                    NULL,
-				                    &album_art_file_path,
-				                    NULL);
+				g_debug ("Album art found in same directory but not a real JPEG file (trying to convert): '%s'", art_file_path);
+				retval = convert_from_other_format (art_file_path,
+				                                    target,
+				                                    album_art_file_path,
+				                                    artist,
+				                                    error);
 			}
 
-			g_debug ("Album art (PNG) found in same directory being used:'%s'", art_file_path);
-			retval = convert_from_other_format (art_file_path,
-			                                    target,
-			                                    album_art_file_path,
-			                                    artist,
-			                                    error);
+			g_free (sum1);
+		} else {
+			/* Can't read contents of the cover.jpg file ... */
+			retval = FALSE;
+		}
+	} else if (g_str_has_suffix (art_file_path, "png")) {
+		if (!album_art_file_path) {
+			media_art_get_path (NULL,
+			                    title_stripped,
+			                    media_art_type_name[type],
+			                    NULL,
+			                    &album_art_file_path,
+			                    NULL);
 		}
 
-		g_free (art_file_path);
-		g_free (album_art_file_path);
+		g_debug ("Album art (PNG) found in same directory being used:'%s'", art_file_path);
+		retval = convert_from_other_format (art_file_path,
+		                                    target,
+		                                    album_art_file_path,
+		                                    artist,
+		                                    error);
 	}
+
+	g_free (art_file_path);
+	g_free (album_art_file_path);
 
 	g_free (target);
 	g_free (artist_stripped);
@@ -1010,14 +1067,22 @@ media_art_set (const unsigned char  *buffer,
 			 * exist, make one and make a symlink
 			 * to album-md5-md5.jpg
 			 */
-			if (symlink (album_path, local_path) != 0) {
-				g_debug ("Creating symlink '%s' --> '%s', %s",
-				         album_path,
-				         local_path,
-				         retval ? g_strerror (errno) : "no error given");
+			retval = symlink (album_path, local_path) == 0;
 
-				retval = FALSE;
+			if (!retval) {
+				g_set_error (error,
+				             MEDIA_ART_ERROR,
+				             MEDIA_ART_ERROR_SYMLINK_FAILED,
+				             "Could not link '%s' to '%s': %s",
+				             album_path,
+				             local_path,
+				             g_strerror (errno));
 			}
+
+			g_debug ("Creating symlink '%s' --> '%s', %s",
+			         album_path,
+			         local_path,
+			         retval ? g_strerror (errno) : "no error given");
 		}
 
 		g_free (album_path);
@@ -1054,6 +1119,17 @@ media_art_set (const unsigned char  *buffer,
 		 */
 		if (g_strcmp0 (md5_data, md5_album) == 0) {
 			retval = symlink (album_path, local_path) == 0;
+
+			if (!retval) {
+				g_set_error (error,
+				             MEDIA_ART_ERROR,
+				             MEDIA_ART_ERROR_SYMLINK_FAILED,
+				             "Could not link '%s' to '%s': %s",
+				             album_path,
+				             local_path,
+				             g_strerror (errno));
+			}
+
 			g_debug ("Creating symlink '%s' --> '%s', %s",
 			         album_path,
 			         local_path,
@@ -1105,6 +1181,17 @@ media_art_set (const unsigned char  *buffer,
 			 * buffer, make a symlink to album-md5-md5.jpg
 			 */
 			retval = symlink (album_path, local_path) == 0;
+
+			if (!retval) {
+				g_set_error (error,
+				             MEDIA_ART_ERROR,
+				             MEDIA_ART_ERROR_SYMLINK_FAILED,
+				             "Could not link '%s' to '%s': %s",
+				             album_path,
+				             local_path,
+				             g_strerror (errno));
+			}
+
 			g_debug ("Creating symlink '%s' --> '%s', %s",
 			         album_path,
 			         local_path,
@@ -1114,6 +1201,17 @@ media_art_set (const unsigned char  *buffer,
 			 * buffer, make a new album-md5-md5.jpg
 			 */
 			retval = g_rename (temp, local_path) == 0;
+
+			if (!retval) {
+				g_set_error (error,
+				             MEDIA_ART_ERROR,
+				             MEDIA_ART_ERROR_RENAME_FAILED,
+				             "Could not rename '%s' to '%s': %s",
+				             temp,
+				             local_path,
+				             g_strerror (errno));
+			}
+
 			g_debug ("Renaming temp file '%s' --> '%s', %s",
 			         temp,
 			         local_path,
