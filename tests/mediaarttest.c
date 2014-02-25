@@ -204,8 +204,9 @@ test_mediaart_embedded_mp3 (void)
 	                                 MEDIA_ART_ALBUM,
 	                                 "King Kilo", /* artist */
 	                                 "Lanedo",    /* title */
-	                                 NULL);   
+	                                 &error);
 
+	g_assert_no_error (error);
 	g_assert_true (retval);
 
 	g_object_unref (file);
