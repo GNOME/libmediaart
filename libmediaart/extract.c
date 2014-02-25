@@ -1380,11 +1380,12 @@ get_heuristic_for_parent_path (GFile        *file,
 		g_object_unref (parent);
 	}
 
-	key = g_strdup_printf ("%i-%s-%s-%s",
-	                       type,
+	/* Just used for caching in our hash table */
+	key = g_strdup_printf ("%s:%s:%s:%s",
+	                       parent_path ? parent_path : "",
+	                       media_art_type_name[type],
 	                       artist ? artist : "",
-	                       title ? title : "",
-	                       parent_path ? parent_path : "");
+	                       title ? title : "");
 
 	g_free (parent_path);
 
