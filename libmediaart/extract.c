@@ -375,10 +375,11 @@ end:
 }
 
 static gboolean
-convert_from_other_format (const gchar *found,
-                           const gchar *target,
-                           const gchar *album_path,
-                           const gchar *artist)
+convert_from_other_format (const gchar  *found,
+                           const gchar  *target,
+                           const gchar  *album_path,
+                           const gchar  *artist,
+                           GError      **error)
 {
 	gboolean retval;
 	gchar *sum1 = NULL;
@@ -386,7 +387,7 @@ convert_from_other_format (const gchar *found,
 
 	target_temp = g_strdup_printf ("%s-tmp", target);
 
-	if (!media_art_file_to_jpeg (found, target_temp)) {
+	if (!media_art_file_to_jpeg (found, target_temp, error)) {
 		g_free (target_temp);
 		return FALSE;
 	}
@@ -650,11 +651,12 @@ media_art_find_by_artist_and_title (const gchar  *uri,
 }
 
 static gboolean
-get_heuristic (MediaArtType  type,
-               const gchar  *filename_uri,
-               const gchar  *local_uri,
-               const gchar  *artist,
-               const gchar  *title)
+get_heuristic (MediaArtType   type,
+               const gchar   *filename_uri,
+               const gchar   *local_uri,
+               const gchar   *artist,
+               const gchar   *title,
+               GError       **error)
 {
 	gchar *art_file_path = NULL;
 	gchar *album_art_file_path = NULL;
@@ -856,7 +858,8 @@ get_heuristic (MediaArtType  type,
 					retval = convert_from_other_format (art_file_path,
 					                                    target,
 					                                    album_art_file_path,
-					                                    artist);
+					                                    artist,
+					                                    error);
 				}
 
 				g_free (sum1);
@@ -878,7 +881,8 @@ get_heuristic (MediaArtType  type,
 			retval = convert_from_other_format (art_file_path,
 			                                    target,
 			                                    album_art_file_path,
-			                                    artist);
+			                                    artist,
+			                                    error);
 		}
 
 		g_free (art_file_path);
@@ -918,12 +922,13 @@ is_buffer_jpeg (const gchar         *mime,
 }
 
 static gboolean
-media_art_set (const unsigned char *buffer,
-               size_t               len,
-               const gchar         *mime,
-               MediaArtType         type,
-               const gchar         *artist,
-               const gchar         *title)
+media_art_set (const unsigned char  *buffer,
+               size_t                len,
+               const gchar          *mime,
+               MediaArtType          type,
+               const gchar          *artist,
+               const gchar          *title,
+               GError              **error)
 {
 	gchar *local_path;
 	gchar *album_path;
@@ -974,7 +979,7 @@ media_art_set (const unsigned char *buffer,
 	 *       i) save buffer to jpeg only.
 	 */
 	if (type != MEDIA_ART_ALBUM || (artist == NULL || g_strcmp0 (artist, " ") == 0)) {
-		retval = media_art_buffer_to_jpeg (buffer, len, mime, local_path);
+		retval = media_art_buffer_to_jpeg (buffer, len, mime, local_path, error);
 		g_debug ("Saving buffer to jpeg (%ld bytes) --> '%s'", len, local_path);
 		g_free (local_path);
 
@@ -995,7 +1000,7 @@ media_art_set (const unsigned char *buffer,
 	if (!g_file_test (album_path, G_FILE_TEST_EXISTS)) {
 		retval = TRUE;
 
-		if (media_art_buffer_to_jpeg (buffer, len, mime, album_path)) {
+		if (media_art_buffer_to_jpeg (buffer, len, mime, album_path, error)) {
 			g_debug ("Saving buffer to jpeg (%ld bytes) --> '%s'", len, album_path);
 
 			/* If album-space-md5.jpg doesn't
@@ -1054,7 +1059,7 @@ media_art_set (const unsigned char *buffer,
 			/* If album-space-md5.jpg isn't the same as
 			 * buffer, make a new album-md5-md5.jpg
 			 */
-			retval = media_art_buffer_to_jpeg (buffer, len, mime, local_path);
+			retval = media_art_buffer_to_jpeg (buffer, len, mime, local_path, error);
 			g_debug ("Saving buffer to jpeg (%ld bytes) --> '%s'", len, local_path);
 		}
 
@@ -1075,7 +1080,7 @@ media_art_set (const unsigned char *buffer,
 	temp = g_strdup_printf ("%s-tmp", album_path);
 
 	/* If buffer isn't a JPEG */
-	if (!media_art_buffer_to_jpeg (buffer, len, mime, temp)) {
+	if (!media_art_buffer_to_jpeg (buffer, len, mime, temp, error)) {
 		/* Can't read temp file ... */
 		g_unlink (temp);
 
@@ -1511,7 +1516,7 @@ media_art_process_file (MediaArtProcess  *process,
 	no_cache_or_old = cache_mtime == 0 || mtime > cache_mtime;
 
 	if ((buffer && len > 0) && no_cache_or_old) {
-		processed = media_art_set (buffer, len, mime, type, artist, title);
+		processed = media_art_set (buffer, len, mime, type, artist, title, error);
 		set_mtime (cache_art_path, mtime);
 		created = TRUE;
 	}
@@ -1527,7 +1532,7 @@ media_art_process_file (MediaArtProcess  *process,
 
 			local_art_uri = g_file_get_uri (local_art_file);
 
-			if (!get_heuristic (type, uri, local_art_uri, artist, title)) {
+			if (!get_heuristic (type, uri, local_art_uri, artist, title, error)) {
 				/* If the heuristic failed, we
 				 * request the download the
 				 * media-art to the media-art
