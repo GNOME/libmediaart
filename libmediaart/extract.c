@@ -530,11 +530,11 @@ media_art_find_by_artist_and_title (const gchar  *uri,
 }
 
 static gboolean
-media_art_heuristic (const gchar  *artist,
-                     const gchar  *title,
-                     MediaArtType  type,
-                     const gchar  *filename_uri,
-                     const gchar  *local_uri)
+get_heuristic (MediaArtType  type,
+               const gchar  *filename_uri,
+               const gchar  *local_uri,
+               const gchar  *artist,
+               const gchar  *title)
 {
 	gchar *art_file_path = NULL;
 	gchar *album_art_file_path = NULL;
@@ -1457,7 +1457,7 @@ media_art_process_file (GFile         *file,
 
 			local_art_uri = g_file_get_uri (local_art_file);
 
-			if (!media_art_heuristic (artist, title, type, uri, local_art_uri)) {
+			if (!get_heuristic (type, uri, local_art_uri, artist, title)) {
 				/* If the heuristic failed, we
 				 * request the download the
 				 * media-art to the media-art
