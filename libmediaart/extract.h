@@ -46,14 +46,13 @@ typedef enum {
 	MEDIA_ART_TYPE_COUNT
 } MediaArtType;
 
-#define TRACKER_MINER_MANAGER_ERROR tracker_miner_manager_error_quark ()
 
 /**
  * MediaArtError:
  * @MEDIA_ART_ERROR_NOENT: The resource that the was passed (for example a
  * file or URI) does not exist.
- * @MEDIA_ART_ERROR_NOENT: The URI or GFile provided
- * points to a file that does not exist.
+ * @MEDIA_ART_ERROR_NO_STORAGE: Storage information is unknown, we
+ * have no knowledge about removable media.
  *
  * Enumeration values used in errors returned by the
  * #MediaArtError API.
@@ -62,15 +61,50 @@ typedef enum {
  **/
 typedef enum {
 	MEDIA_ART_ERROR_NOENT,
+	MEDIA_ART_ERROR_NO_STORAGE
 } MediaArtError;
 
+#define MEDIA_ART_ERROR media_art_error_quark ()
 
-gboolean media_art_init     (void);
-void     media_art_shutdown (void);
+GQuark media_art_error_quark (void) G_GNUC_CONST;
 
-GQuark   media_art_error_quark  (void) G_GNUC_CONST;
 
-gboolean media_art_process      (const gchar          *uri,
+#define MEDIA_ART_TYPE_PROCESS         (media_art_process_get_type())
+#define MEDIA_ART_PROCESS(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), MEDIA_ART_TYPE_PROCESS, MediaArtProcess))
+#define MEDIA_ART_PROCESS_CLASS(c)     (G_TYPE_CHECK_CLASS_CAST ((c), MEDIA_ART_TYPE_PROCESS, MediaArtProcessClass))
+#define MEDIA_ART_IS_PROCESS(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), MEDIA_ART_TYPE_PROCESS))
+#define MEDIA_ART_IS_PROCESS_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c),  MEDIA_ART_TYPE_PROCESS))
+#define MEDIA_ART_PROCESS_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), MEDIA_ART_TYPE_PROCESS, MediaArtProcessClass))
+
+typedef struct _MediaArtProcess MediaArtProcess;
+typedef struct _MediaArtProcessClass MediaArtProcessClass;
+
+/**
+ * MediaArtProcess:
+ * @parent: parent object
+ *
+ * A class implementation for processing and extracting media art.
+ **/
+struct _MediaArtProcess {
+	GObject parent;
+};
+
+/**
+ * MediaArtProcessClass:
+ * @parent: parent object class
+ *
+ * Prototype for the class.
+ **/
+struct _MediaArtProcessClass {
+	GObjectClass parent;
+};
+
+GType    media_art_process_type (void) G_GNUC_CONST;
+MediaArtProcess *
+         media_art_process_new  (GError              **error);
+
+gboolean media_art_process_uri  (MediaArtProcess      *process,
+                                 const gchar          *uri,
                                  const unsigned char  *buffer,
                                  size_t                len,
                                  const gchar          *mime,
@@ -79,14 +113,15 @@ gboolean media_art_process      (const gchar          *uri,
                                  const gchar          *title,
                                  GError              **error);
 
-gboolean media_art_process_file (GFile         *file,
-                                 const guchar  *buffer,
-				 gsize          len,
-				 const gchar   *mime,
-				 MediaArtType   type,
-				 const gchar   *artist,
-                                 const gchar   *title,
-                                 GError       **error);
+gboolean media_art_process_file (MediaArtProcess      *process,
+                                 GFile                *file,
+                                 const guchar         *buffer,
+				 gsize                 len,
+				 const gchar          *mime,
+				 MediaArtType          type,
+				 const gchar          *artist,
+                                 const gchar          *title,
+                                 GError              **error);
 
 G_END_DECLS
 

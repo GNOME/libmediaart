@@ -71,6 +71,14 @@
  * and call media_art_shutdown() to free the resources it uses.
  **/
 
+typedef struct {
+	gboolean disable_requests;
+
+	GHashTable *media_art_cache;
+	GDBusConnection *connection;
+	Storage *storage;
+} MediaArtProcessPrivate;
+
 static const gchar *media_art_type_name[MEDIA_ART_TYPE_COUNT] = {
 	"invalid",
 	"album",
@@ -78,6 +86,7 @@ static const gchar *media_art_type_name[MEDIA_ART_TYPE_COUNT] = {
 };
 
 typedef struct {
+	MediaArtProcess *process;
 	gchar *art_path;
 	gchar *local_uri;
 } FileInfo;
@@ -96,16 +105,128 @@ typedef enum {
 	IMAGE_MATCH_TYPE_COUNT
 } ImageMatchType;
 
-static gboolean initialized = FALSE;
-static gboolean disable_requests;
+static void media_art_queue_cb                    (GObject        *source_object,
+                                                   GAsyncResult   *res,
+                                                   gpointer        user_data);
+static void media_art_process_initable_iface_init (GInitableIface *iface);
 
-static GHashTable *media_art_cache;
-static GDBusConnection *connection;
-static Storage *storage;
+G_DEFINE_TYPE_WITH_CODE (MediaArtProcess, media_art_process, G_TYPE_OBJECT,
+			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE,
+						media_art_process_initable_iface_init)
+			 G_ADD_PRIVATE (MediaArtProcess))
 
-static void media_art_queue_cb (GObject      *source_object,
-                                GAsyncResult *res,
-                                gpointer      user_data);
+static void
+media_art_process_finalize (GObject *object)
+{
+	MediaArtProcessPrivate *private;
+	MediaArtProcess *process;
+
+	process = MEDIA_ART_PROCESS (object);
+	private = media_art_process_get_instance_private (process);
+
+	if (private->storage) {
+		g_object_unref (private->storage);
+	}
+
+	if (private->connection) {
+		g_object_unref (private->connection);
+	}
+
+	if (private->media_art_cache) {
+		g_hash_table_unref (private->media_art_cache);
+	}
+
+	media_art_plugin_shutdown ();
+
+	G_OBJECT_CLASS (media_art_process_parent_class)->finalize (object);
+}
+
+static gboolean
+media_art_process_initable_init (GInitable     *initable,
+                                 GCancellable  *cancellable,
+                                 GError       **error)
+{
+	MediaArtProcessPrivate *private;
+	MediaArtProcess *process;
+	GError *local_error = NULL;
+
+	process = MEDIA_ART_PROCESS (initable);
+	private = media_art_process_get_instance_private (process);
+
+	g_debug ("Initializing media art processing requirements...");
+
+	media_art_plugin_init (0);
+
+	/* Cache to know if we have already handled uris */
+	private->media_art_cache = g_hash_table_new_full (g_str_hash,
+	                                                  g_str_equal,
+	                                                  (GDestroyNotify) g_free,
+	                                                  NULL);
+
+	/* Signal handler for new album art from the extractor */
+	private->connection = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &local_error);
+
+	if (!private->connection) {
+		g_critical ("Could not connect to the D-Bus session bus, %s",
+		            local_error ? local_error->message : "no error given.");
+		g_propagate_error (error, local_error);
+
+		return FALSE;
+	}
+
+	private->storage = storage_new ();
+	if (!private->storage) {
+		g_critical ("Could not start storage module for removable media detection");
+
+		if (error) {
+			*error = g_error_new (MEDIA_ART_ERROR,
+			                      MEDIA_ART_ERROR_NO_STORAGE,
+			                      "Could not initialize storage module");
+		}
+
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static void
+media_art_process_initable_iface_init (GInitableIface *iface)
+{
+	iface->init = media_art_process_initable_init;
+}
+
+static void
+media_art_process_class_init (MediaArtProcessClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->finalize = media_art_process_finalize;
+}
+
+static void
+media_art_process_init (MediaArtProcess *thumbnailer)
+{
+}
+
+/**
+ * media_art_process_new:
+ * @error: Pointer to potential GLib / MediaArt error, or %NULL
+ *
+ * Initialize a GObject for processing and extracting media art.
+ *
+ * This function initializes cache hash tables, backend plugins,
+ * storage modules used for removable devices and a connection to D-Bus.
+ *
+ * Returns: %TRUE on success or %FALSE if @error is set.
+ *
+ * Since: 0.3.0
+ */
+MediaArtProcess *
+media_art_process_new (GError **error)
+{
+	return g_initable_new (MEDIA_ART_TYPE_PROCESS, NULL, error, NULL);
+}
 
 static GDir *
 get_parent_g_dir (const gchar  *uri,
@@ -141,7 +262,6 @@ get_parent_g_dir (const gchar  *uri,
 
 	return dir;
 }
-
 
 static gchar *
 checksum_for_data (GChecksumType  checksum_type,
@@ -1007,13 +1127,15 @@ media_art_set (const unsigned char *buffer,
 }
 
 static FileInfo *
-file_info_new (const gchar *local_uri,
-               const gchar *art_path)
+file_info_new (MediaArtProcess *process,
+               const gchar     *local_uri,
+               const gchar     *art_path)
 {
 	FileInfo *fi;
 
 	fi = g_slice_new (FileInfo);
 
+	fi->process = g_object_ref (process);
 	fi->local_uri = g_strdup (local_uri);
 	fi->art_path = g_strdup (art_path);
 
@@ -1023,23 +1145,33 @@ file_info_new (const gchar *local_uri,
 static void
 file_info_free (FileInfo *fi)
 {
+	if (!fi) {
+		return;
+	}
+
 	g_free (fi->local_uri);
 	g_free (fi->art_path);
+	g_object_unref (fi->process);
 
 	g_slice_free (FileInfo, fi);
 }
 
 static void
-media_art_request_download (MediaArtType  type,
-                            const gchar  *album,
-                            const gchar  *artist,
-                            const gchar  *local_uri,
-                            const gchar  *art_path)
+media_art_request_download (MediaArtProcess *process,
+                            MediaArtType     type,
+                            const gchar     *album,
+                            const gchar     *artist,
+                            const gchar     *local_uri,
+                            const gchar     *art_path)
 {
-	if (connection) {
+	MediaArtProcessPrivate *private;
+
+	private = media_art_process_get_instance_private (process);
+
+	if (private->connection) {
 		FileInfo *info;
 
-		if (disable_requests) {
+		if (private->disable_requests) {
 			return;
 		}
 
@@ -1047,9 +1179,9 @@ media_art_request_download (MediaArtType  type,
 			return;
 		}
 
-		info = file_info_new (local_uri, art_path);
+		info = file_info_new (process, local_uri, art_path);
 
-		g_dbus_connection_call (connection,
+		g_dbus_connection_call (private->connection,
 		                        ALBUMARTER_SERVICE,
 		                        ALBUMARTER_PATH,
 		                        ALBUMARTER_INTERFACE,
@@ -1069,14 +1201,18 @@ media_art_request_download (MediaArtType  type,
 }
 
 static void
-media_art_copy_to_local (const gchar *filename,
-                         const gchar *local_uri)
+media_art_copy_to_local (MediaArtProcess *process,
+                         const gchar     *filename,
+                         const gchar     *local_uri)
 {
+	MediaArtProcessPrivate *private;
 	GSList *roots, *l;
 	gboolean on_removable_device = FALSE;
 	guint flen;
 
-	roots = storage_get_device_roots (storage, STORAGE_REMOVABLE, FALSE);
+	private = media_art_process_get_instance_private (process);
+
+	roots = storage_get_device_roots (private->storage, STORAGE_REMOVABLE, FALSE);
 	flen = strlen (filename);
 
 	for (l = roots; l; l = l->next) {
@@ -1133,17 +1269,20 @@ media_art_queue_cb (GObject      *source_object,
                     GAsyncResult *res,
                     gpointer      user_data)
 {
+	MediaArtProcessPrivate *private;
 	GError *error = NULL;
 	FileInfo *fi;
 	GVariant *v;
 
 	fi = user_data;
 
+	private = media_art_process_get_instance_private (fi->process);
+
 	v = g_dbus_connection_call_finish ((GDBusConnection *) source_object, res, &error);
 
 	if (error) {
 		if (error->code == G_DBUS_ERROR_SERVICE_UNKNOWN) {
-			disable_requests = TRUE;
+			private->disable_requests = TRUE;
 		} else {
 			g_warning ("%s", error->message);
 		}
@@ -1154,91 +1293,15 @@ media_art_queue_cb (GObject      *source_object,
 		g_variant_unref (v);
 	}
 
-	if (storage &&
+	if (private->storage &&
 	    fi->art_path &&
 	    g_file_test (fi->art_path, G_FILE_TEST_EXISTS)) {
-		media_art_copy_to_local (fi->art_path,
+		media_art_copy_to_local (fi->process,
+		                         fi->art_path,
 		                         fi->local_uri);
 	}
 
 	file_info_free (fi);
-}
-
-/**
- * media_art_init:
- *
- * Initialize libmediaart.
- *
- * This function initializes cache hash tables, backend plugins,
- * storage modules used for removable devices and connections to D-Bus.
- *
- * Returns: %TRUE if initialisation was successful, %FALSE otherwise.
- *
- * Since: 0.2.0
- */
-gboolean
-media_art_init (void)
-{
-	GError *error = NULL;
-
-	g_return_val_if_fail (initialized == FALSE, FALSE);
-
-	media_art_plugin_init (0);
-
-	/* Cache to know if we have already handled uris */
-	media_art_cache = g_hash_table_new_full (g_str_hash,
-	                                         g_str_equal,
-	                                         (GDestroyNotify) g_free,
-	                                         NULL);
-
-	/* Signal handler for new album art from the extractor */
-	connection = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &error);
-
-	if (!connection) {
-		g_critical ("Could not connect to the D-Bus session bus, %s",
-		            error ? error->message : "no error given.");
-		g_clear_error (&error);
-		return FALSE;
-	}
-
-	storage = storage_new ();
-	if (!storage) {
-		g_critical ("Could not start storage module for removable media detection");
-		return FALSE;
-	}
-
-	initialized = TRUE;
-
-	return TRUE;
-}
-
-/**
- * media_art_shutdown:
- *
- * Clean up and free the resources created and mentioned in media_art_init().
- *
- * Since: 0.2.0
- */
-void
-media_art_shutdown (void)
-{
-	g_return_if_fail (initialized == TRUE);
-
-	if (storage) {
-		g_object_unref (storage);
-	}
-
-	if (connection) {
-		g_object_unref (connection);
-	}
-
-	if (media_art_cache) {
-		g_hash_table_unref (media_art_cache);
-	}
-
-	media_art_plugin_shutdown ();
-
-	initialized = FALSE;
 }
 
 /**
@@ -1330,6 +1393,7 @@ get_heuristic_for_parent_path (GFile        *file,
 
 /**
  * media_art_process_file:
+ * @process: Media art process object
  * @file: File to be processed
  * @buffer: (array length=len)(allow-none): a buffer containing @file data, or %NULL
  * @len: length of @buffer, or 0
@@ -1352,26 +1416,31 @@ get_heuristic_for_parent_path (GFile        *file,
  *
  * Returns: %TRUE if @file could be processed or %FALSE if @error is set.
  *
- * Since: 0.2.0
+ * Since: 0.3.0
  */
 gboolean
-media_art_process_file (GFile         *file,
-                        const guchar  *buffer,
-                        gsize          len,
-                        const gchar   *mime,
-                        MediaArtType   type,
-                        const gchar   *artist,
-                        const gchar   *title,
-                        GError       **error)
+media_art_process_file (MediaArtProcess  *process,
+                        GFile            *file,
+                        const guchar     *buffer,
+                        gsize             len,
+                        const gchar      *mime,
+                        MediaArtType      type,
+                        const gchar      *artist,
+                        const gchar      *title,
+                        GError          **error)
 {
+	MediaArtProcessPrivate *private;
 	GFile *cache_art_file, *local_art_file;
 	GError *local_error = NULL;
 	gchar *cache_art_path, *uri;
 	gboolean processed, created, no_cache_or_old;
 	guint64 mtime, cache_mtime = 0;
 
+	g_return_val_if_fail (MEDIA_ART_IS_PROCESS (process), FALSE);
 	g_return_val_if_fail (G_IS_FILE (file), FALSE);
 	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
+
+	private = media_art_process_get_instance_private (process);
 
 	processed = created = FALSE;
 
@@ -1452,7 +1521,7 @@ media_art_process_file (GFile         *file,
 
 		key = get_heuristic_for_parent_path (file, type, artist, title);
 
-		if (!g_hash_table_lookup (media_art_cache, key)) {
+		if (!g_hash_table_lookup (private->media_art_cache, key)) {
 			gchar *local_art_uri;
 
 			local_art_uri = g_file_get_uri (local_art_file);
@@ -1463,7 +1532,8 @@ media_art_process_file (GFile         *file,
 				 * media-art to the media-art
 				 * downloaders
 				 */
-				media_art_request_download (type,
+				media_art_request_download (process,
+				                            type,
 				                            artist,
 				                            title,
 				                            local_art_uri,
@@ -1472,7 +1542,7 @@ media_art_process_file (GFile         *file,
 
 			set_mtime (cache_art_path, mtime);
 
-			g_hash_table_insert (media_art_cache,
+			g_hash_table_insert (private->media_art_cache,
 			                     key,
 			                     GINT_TO_POINTER(TRUE));
 			g_free (local_art_uri);
@@ -1493,7 +1563,7 @@ media_art_process_file (GFile         *file,
 			gchar *local_art_uri;
 
 			local_art_uri = g_file_get_uri (local_art_file);
-			media_art_copy_to_local (cache_art_path, local_art_uri);
+			media_art_copy_to_local (process, cache_art_path, local_art_uri);
 			g_free (local_art_uri);
 		}
 	}
@@ -1514,7 +1584,8 @@ media_art_process_file (GFile         *file,
 
 
 /**
- * media_art_process:
+ * media_art_process_uri:
+ * @process: Media art process object
  * @uri: URI of the media file that contained the data
  * @buffer: (array length=len): A buffer of binary data
  * @len: The length of @buffer, in bytes
@@ -1522,32 +1593,36 @@ media_art_process_file (GFile         *file,
  * @type: The type of media that contained the image data
  * @artist: (allow-none): Artist name of the media
  * @title: (allow-none): Title of the media
+ * @error: Pointer to potential GLib / MediaArt error, or %NULL
  *
  * This function is the same as media_art_process_file(), but takes the URI as
  * a string rather than a #GFile object.
  *
  * Returns: %TRUE if @uri could be processed or %FALSE if @error is set.
  *
- * Since: 0.2.0
+ * Since: 0.3.0
  */
 gboolean
-media_art_process (const gchar          *uri,
-                   const unsigned char  *buffer,
-                   size_t                len,
-                   const gchar          *mime,
-                   MediaArtType          type,
-                   const gchar          *artist,
-                   const gchar          *title,
-                   GError              **error)
+media_art_process_uri (MediaArtProcess      *process,
+                       const gchar          *uri,
+                       const unsigned char  *buffer,
+                       size_t                len,
+                       const gchar          *mime,
+                       MediaArtType          type,
+                       const gchar          *artist,
+                       const gchar          *title,
+                       GError              **error)
 {
 	GFile *file;
 	gboolean result;
 
+	g_return_val_if_fail (MEDIA_ART_IS_PROCESS (process), FALSE);
 	g_return_val_if_fail (uri != NULL, FALSE);
 
 	file = g_file_new_for_uri (uri);
 
-	result = media_art_process_file (file,
+	result = media_art_process_file (process,
+	                                 file,
 	                                 buffer,
 	                                 len,
 	                                 mime,

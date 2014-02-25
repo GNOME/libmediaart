@@ -76,9 +76,17 @@ struct {
 };
 
 static void
-test_mediaart_init (void)
+test_mediaart_new (void)
 {
-	g_assert_true (media_art_init ());
+	MediaArtProcess *process;
+	GError *error = NULL;
+
+	/* Test: creation of object */
+	process = media_art_process_new (&error);
+	g_assert_no_error (error);
+	g_assert (process != NULL);
+
+	g_object_unref (process);
 }
 
 static void
@@ -185,6 +193,7 @@ test_mediaart_location_path (void)
 static void
 test_mediaart_embedded_mp3 (void)
 {
+	MediaArtProcess *process;
 	GError *error = NULL;
 	GFile *file = NULL;
 	gchar *dir, *path;
@@ -197,7 +206,11 @@ test_mediaart_embedded_mp3 (void)
 	file = g_file_new_for_path (path);
 	g_free (path);
 
-	retval = media_art_process_file (file,
+	process = media_art_process_new (&error);
+	g_assert_no_error (error);
+
+	retval = media_art_process_file (process,
+	                                 file,
 	                                 NULL,
 	                                 0,
 	                                 "audio/mp3", /* mime */
@@ -211,11 +224,14 @@ test_mediaart_embedded_mp3 (void)
 
 	g_object_unref (file);
 	g_free (dir);
+
+	g_object_unref (process);
 }
 
 static void
 test_mediaart_png (void)
 {
+	MediaArtProcess *process;
 	GError *error = NULL;
 	GFile *file = NULL;
 	gchar *dir, *path;
@@ -229,6 +245,9 @@ test_mediaart_png (void)
 	file = g_file_new_for_path (path);
 	g_free (dir);
 
+	process = media_art_process_new (&error);
+	g_assert_no_error (error);
+
 	/* Check data is not cached currently */
 	media_art_get_path ("Lanedo", /* artist / title */
 	                    NULL, /* album */
@@ -241,7 +260,8 @@ test_mediaart_png (void)
 	g_free (out_uri);
 
 	/* Process data */
-	retval = media_art_process_file (file,
+	retval = media_art_process_file (process,
+	                                 file,
 	                                 NULL,
 	                                 0,
 	                                 "image/png", /* mime */
@@ -284,58 +304,74 @@ test_mediaart_png (void)
 
         g_object_unref (file);
         g_free (path);
+
+	g_object_unref (process);
 }
 
 static void
 test_mediaart_process_failures (void)
 {
+	MediaArtProcess *process;
 	GError *error = NULL;
 
 	g_test_trap_subprocess ("/mediaart/process_failures/subprocess", 0, 0 /*G_TEST_SUBPROCESS_INHERIT_STDOUT | G_TEST_SUBPROCESS_INHERIT_STDERR*/);
 	g_test_trap_assert_failed ();
 	g_test_trap_assert_stderr ("*assertion 'uri != NULL' failed*");
 
+	process = media_art_process_new (&error);
+	g_assert_no_error (error);
+
 	/* Test: invalid file */
-	g_assert (!media_art_process ("file:///invalid/path.png",
-	                              NULL,
-	                              0,
-	                              "image/png", /* mime */
-	                              MEDIA_ART_ALBUM,
-	                              "Foo",       /* album */
-	                              "Bar",       /* title */
-	                              &error));
+	g_assert (!media_art_process_uri (process,
+	                                  "file:///invalid/path.png",
+	                                  NULL,
+	                                  0,
+	                                  "image/png", /* mime */
+	                                  MEDIA_ART_ALBUM,
+	                                  "Foo",       /* album */
+	                                  "Bar",       /* title */
+	                                  &error));
 	
 	g_assert_error (error, g_io_error_quark(), G_IO_ERROR_NOT_FOUND);
 	g_clear_error (&error);
 
-
 	/* Test: Invalid mime type */
-	/* g_assert (!media_art_process ("file:///invalid/path.png", */
-	/*                               NULL, */
-	/*                               0, */
-	/*                               "image/png", /\* mime *\/ */
-	/*                               MEDIA_ART_ALBUM, */
-	/*                               "Foo",       /\* album *\/ */
-	/*                               "Bar",       /\* title *\/ */
-	/*                               &error)); */
+	/* g_assert (!media_art_process_uri (process, */
+	/*                                   "file:///invalid/path.png", */
+	/*                                   NULL, */
+	/*                                   0, */
+	/*                                  "image/png", /\* mime *\/ */
+	/*                                  MEDIA_ART_ALBUM, */
+	/*                                  "Foo",       /\* album *\/ */
+	/*                                  "Bar",       /\* title *\/ */
+	/*                                  &error)); */
 
 	/* g_message ("code:%d, domain:%d, error:'%s'\n", error->code, error->domain, error->message); */
+
+	g_object_unref (process);
 }
 
 static void
 test_mediaart_process_failures_subprocess (void)
 {
+	MediaArtProcess *process;
 	GError *error = NULL;
 
-	g_assert (!media_art_process (NULL,
-	                              NULL,
-	                              0,
-	                              "image/png", /* mime */
-	                              MEDIA_ART_ALBUM,
-	                              "Foo",       /* album */
-	                              "Bar",       /* title */
-	                              &error));
+	process = media_art_process_new (&error);
 	g_assert_no_error (error);
+
+	g_assert (!media_art_process_uri (process,
+	                                  NULL,
+	                                  NULL,
+	                                  0,
+	                                  "image/png", /* mime */
+	                                  MEDIA_ART_ALBUM,
+	                                  "Foo",       /* album */
+	                                  "Bar",       /* title */
+	                                  &error));
+	g_assert_no_error (error);
+
+	g_object_unref (process);
 }
 
 int
@@ -345,8 +381,8 @@ main (int argc, char **argv)
 
         g_test_init (&argc, &argv, NULL);
 
-        g_test_add_func ("/mediaart/init",
-                         test_mediaart_init);
+        g_test_add_func ("/mediaart/new",
+                         test_mediaart_new);
         g_test_add_func ("/mediaart/stripping",
                          test_mediaart_stripping);
         g_test_add_func ("/mediaart/stripping_failures",
@@ -369,8 +405,6 @@ main (int argc, char **argv)
                          test_mediaart_process_failures_subprocess);
 
         success = g_test_run ();
-
-        media_art_shutdown ();
 
         return success;
 }
