@@ -209,6 +209,10 @@ test_mediaart_embedded_mp3 (void)
 	process = media_art_process_new (&error);
 	g_assert_no_error (error);
 
+	/* NOTE: This should fail because we aren't passing a buffer
+	 * in. With MP3 files, or none IMAGE based files, we don't
+	 * have extractors for each type and it's up to the caller to
+	 * pass in the data buffer to save in this case. */
 	retval = media_art_process_file (process,
 	                                 file,
 	                                 NULL,
@@ -216,11 +220,11 @@ test_mediaart_embedded_mp3 (void)
 	                                 "audio/mp3", /* mime */
 	                                 MEDIA_ART_ALBUM,
 	                                 "King Kilo", /* artist */
-	                                 "Lanedo",    /* title */
+	                                 "Radium",    /* title */
 	                                 &error);
 
 	g_assert_no_error (error);
-	g_assert_true (retval);
+	g_assert_false (retval);
 
 	g_object_unref (file);
 	g_free (dir);
@@ -250,8 +254,8 @@ test_mediaart_png (void)
 
 	/* Check data is not cached currently */
 	media_art_get_path ("Lanedo", /* artist / title */
-	                    NULL, /* album */
-	                    NULL, /* prefix */
+	                    NULL,     /* album */
+	                    NULL,     /* prefix */
                             path,
                             &out_path,
                             &out_uri);
@@ -266,16 +270,16 @@ test_mediaart_png (void)
 	                                 0,
 	                                 "image/png", /* mime */
 	                                 MEDIA_ART_ALBUM,
-	                                 NULL, /* album */
+	                                 NULL,        /* album */
 	                                 "Lanedo",    /* title */
-	                                 NULL);
-
+	                                 &error);
+	g_assert_no_error (error);
 	g_assert_true (retval);
 
 	/* Check cache exists */
 	media_art_get_path ("Lanedo", /* artist / title */
-	                    NULL, /* album */
-	                    NULL, /* prefix */
+	                    NULL,     /* album */
+	                    NULL,     /* prefix */
                             path,
                             &out_path,
                             &out_uri);

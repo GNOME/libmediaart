@@ -1415,7 +1415,10 @@ get_heuristic_for_parent_path (GFile        *file,
  *
  * If @buffer is %NULL, libmediaart will search the parent directory of @file
  * for image files that are likely to be media art for @file, and if one is
- * found it will be saved in the media art cache.
+ * found it will be saved in the media art cache. If @buffer is %NULL
+ * for a @file which is *not* an image file (typically JPEG or PNG,
+ * supported by the backends), this function will return %FALSE with
+ * no error set, because it's not expected to work.
  *
  * If @file is on a removable filesystem, the media art file will be saved in a
  * cache on the removable file system rather than on the host machine.
