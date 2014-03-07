@@ -43,7 +43,7 @@
 G_BEGIN_DECLS
 
 #ifdef HAVE_QT5
-static QGuiApplication *app = NULL;
+static QCoreApplication *app = NULL;
 #else  /* HAVE_QT4 (we fallback to Qt4) */
 static QApplication *app = NULL;
 #endif /* HAVE_QT5 */
@@ -66,7 +66,7 @@ media_art_plugin_init (gint max_width)
 	setenv("QT_QPA_PLATFORM", "minimal", 1);
 #endif /* HAVE_NEMO */
 
-	app = new QGuiApplication (argc, argv);
+	app = new QCoreApplication (argc, argv);
 #else  /* HAVE_QT4 (we fallback to Qt4) */
  	app = new QApplication (argc, argv, QApplication::Tty);
 #endif /* HAVE_QT5 */
