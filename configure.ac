@@ -184,8 +184,13 @@ AM_CONDITIONAL([ENABLE_GTK_DOC], false)
 
 GOBJECT_INTROSPECTION_CHECK([1.30.0])
 
+m4_ifdef([VAPIGEN_CHECK], [
 # Vala bindings
 VAPIGEN_CHECK([0.16])
+],
+[
+AM_CONDITIONAL([ENABLE_VAPIGEN], false)
+])
 
 ##################################################################
 # Check for GdkPixbuf for MP3 album art
