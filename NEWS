@@ -1,3 +1,20 @@
+NEW in 0.3 - 2014-03-07
+=======================
+
+The main changes since 0.2.0 are:
+
+  * build: Don't fail if vapigen isn't available
+  * build: Force automake C linkage when building C only
+  * build: Remove leftover explicit -lm -lz linkage
+  * build: Don't link to both Qt and gdk-pixbuf if both are autodetect
+  * build: Honor NOCONFIGURE=1 in configure
+  * cache: Improve _remove() function and fix crash with NULL passed
+  * cache: Improve _strip_invalid_entites() API
+  * cache: Fix Non-void function should return a value
+  * extract: Fix Qt5 compilation failure, use QCoreApplication instead of 
+  * extract: Don't break on dummy implementation due to incorrect args in 
+
+
 NEW in 0.2 - 2014-02-06
 =======================
 
