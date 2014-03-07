@@ -23,13 +23,15 @@
 #include "extractgeneric.h"
 
 void
-media_art_plugin_init (void)
+media_art_plugin_init (gint max_width)
 {
+	/* Initialize something */
 }
 
 void
 media_art_plugin_shutdown (void)
 {
+	/* Shutdown something */
 }
 
 gboolean
