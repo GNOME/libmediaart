@@ -236,7 +236,7 @@ if test "x$enable_qt" != "xno" && test "x$enable_gdkpixbuf" != "xyes"; then
 
       AC_DEFINE(HAVE_QT5, [], [Define if we have Qt5])
       AC_DEFINE(HAVE_QT, [], [Define if we have Qt])
-      LIBMEDIAART_BACKEND=QtGui
+      LIBMEDIAART_BACKEND=Qt5Gui
 
       selected_for_media_art="yes (qt5)"
    else
@@ -246,6 +246,7 @@ if test "x$enable_qt" != "xno" && test "x$enable_gdkpixbuf" != "xyes"; then
 
          AC_DEFINE(HAVE_QT4, [], [Define if we have Qt4])
          AC_DEFINE(HAVE_QT, [], [Define if we have Qt])
+         LIBMEDIAART_BACKEND=Qt4Gui
 
          selected_for_media_art="yes (qt4)"
       fi
