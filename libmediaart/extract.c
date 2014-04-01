@@ -816,8 +816,8 @@ media_art_set (const unsigned char *buffer,
 	gboolean retval = FALSE;
 
 	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
-	g_return_val_if_fail (artist == NULL, FALSE);
-	g_return_val_if_fail (title == NULL, FALSE);
+	g_return_val_if_fail (artist != NULL, FALSE);
+	g_return_val_if_fail (title != NULL, FALSE);
 
 	/* What we do here:
 	 *
