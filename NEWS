@@ -1,3 +1,11 @@
+NEW in 0.4 - 2014-04-01
+=======================
+
+  * Fixes: GB#727333, Feature request: load album art embedded in music files
+  * build: Don't forget to define LIBMEDIAART_BACKEND for all Qt cases
+  * extract: Incorrect inverse variable check for media_art_set()
+
+
 NEW in 0.3 - 2014-03-07
 =======================
 
