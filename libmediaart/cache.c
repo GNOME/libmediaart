@@ -237,9 +237,9 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
 
 /**
  * media_art_get_file:
- * @artist: the artist
- * @title: the title
- * @prefix: the prefix for cache files, for example "album"
+ * @artist: (allow-none): the artist
+ * @title: (allow-none): the title
+ * @prefix: (allow-none): the prefix for cache files, for example "album"
  * @file: (allow-none): a #GFile representing the actual media art or %NULL
  * @cache_file: (out) (transfer full) (allow-none): a pointer to a
  * #GFile which represents the cached file for media art, or %NULL
@@ -387,9 +387,9 @@ media_art_get_file (const gchar  *artist,
 
 /**
  * media_art_get_path:
- * @artist: the artist
- * @title: the title
- * @prefix: the prefix, for example "album"
+ * @artist: (allow-none): the artist
+ * @title: (allow-none): the title
+ * @prefix: (allow-none): the prefix, for example "album"
  * @uri: (allow-none): the uri of the file or %NULL
  * @cache_path: (out) (transfer full) (allow-none): a string
  * representing the path to the cache for this media art
