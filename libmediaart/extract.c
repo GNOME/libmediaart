@@ -486,12 +486,12 @@ media_art_find_by_artist_and_title (const gchar  *uri,
 
 			priority = classify_image_file (search, name_strdown);
 			image_list[priority] = g_list_prepend (image_list[priority],
-			                                       name_strdown);
+			                                       name_utf8);
 		} else {
-			g_free (name_strdown);
+			g_free (name_utf8);
 		}
 
-		g_free (name_utf8);
+		g_free (name_strdown);
 	}
 
 	/* Use the results to pick a media art image */
