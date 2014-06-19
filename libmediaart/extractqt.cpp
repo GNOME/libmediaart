@@ -53,8 +53,8 @@ static gint max_width_in_bytes = 0;
 void
 media_art_plugin_init (gint max_width)
 {
-	int argc = 1;
-	char *argv[2] = { (char*) "libmediaart", NULL };
+	static int argc = 1;
+	static char *argv[2] = { (char*) "libmediaart", NULL };
 
 	g_return_if_fail (max_width >= 0);
 
