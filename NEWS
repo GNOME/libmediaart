@@ -1,3 +1,28 @@
+NEW in 0.5 - 2014-07-28
+=======================
+
+  * Fixes: GB#731678, Heuristics does not handle uppercase properly
+  * build: Require glib 2.38 for g_assert_true() in unit tests
+  * build: Updated configure.ac from autoscan suggestions
+  * build: Improve warnings used when compiling and test compiler warnings we can use
+  * extract: Switch to initable MediaArtProcess object  from _init/_shutdown()
+  * extract: Split _process() API into  _process_buffer() and _process_file()
+  * extract: Make GFile first parameter for _process_file()
+  * extract: Add _SYMLINK_FAILED error and report symlink() failure in get_heuristic()
+  * extract: Add GError for _NO_TITLE, which is required in some cases
+  * extract: Add GError * reporting right down to the plugins (pixbuf/qt)
+  * extract: Use a more logical ordered heuristic for caching strings
+  * extract: Refactor media_art_process_file() to simplify the function
+  * storage: Make g_message() calls g_debug() calls, output is unnecessary
+  * docs: Fixed Makefile so we don't fail on distcheck with --enable-gtk-doc
+  * tests: Don't expect media art extraction for NULL data buffer for !images
+  * tests: Test for no error with media_art_process_file() with real use case
+
+NOTE:
+
+  This RELEASE BREAKS API/ABI from 0.4.0.
+
+
 NEW in 0.4 - 2014-04-01
 =======================
 
