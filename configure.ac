@@ -96,6 +96,8 @@ AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 AC_SUBST(LT_CURRENT_MINUS_AGE)
 
+IDT_COMPILE_WARNINGS
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_AWK
@@ -150,6 +152,9 @@ PKG_CHECK_MODULES(LIBMEDIAART, [$LIBMEDIAART_REQUIRED])
 
 GLIB_GENMARSHAL=`$PKG_CONFIG glib-2.0 --variable=glib_genmarshal`
 AC_SUBST(GLIB_GENMARSHAL)
+
+GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
+AC_SUBST(GLIB_PREFIX)
 
 ####################################################################
 # General CFLAGS/LIBS

@@ -28,7 +28,7 @@
 #include "marshal.h"
 
 /**
- * SECTION:-storage
+ * SECTION:storage
  * @short_description: Removable storage and mount point convenience API
  * @include: libmediaart/mediaart.h
  *
@@ -140,8 +140,6 @@ storage_init (Storage *storage)
 {
 	StoragePrivate *priv;
 
-	g_message ("Initializing Storage...");
-
 	priv = STORAGE_GET_PRIVATE (storage);
 
 	priv->mounts = g_node_new (NULL);
@@ -162,8 +160,6 @@ storage_init (Storage *storage)
 	                         G_CALLBACK (mount_pre_removed_cb), storage, 0);
 	g_signal_connect_object (priv->volume_monitor, "mount-added",
 	                         G_CALLBACK (mount_added_cb), storage, 0);
-
-	g_message ("Mount monitors set up for to watch for added, removed and pre-unmounts...");
 
 	/* Get all mounts and set them up */
 	if (!mounts_setup (storage)) {
@@ -702,7 +698,7 @@ mounts_setup (Storage *storage)
 	mounts = g_volume_monitor_get_mounts (priv->volume_monitor);
 
 	if (!mounts) {
-		g_message ("No mounts found to iterate");
+		g_debug ("No mounts found to iterate");
 		return TRUE;
 	}
 
@@ -752,19 +748,19 @@ mount_remove (Storage *storage,
 	if (node) {
 		info = node->data;
 
-		g_message ("Mount:'%s' with UUID:'%s' now unmounted from:'%s'",
-		           name,
-		           info->uuid,
-		           mount_point);
+		g_debug ("Mount:'%s' with UUID:'%s' now unmounted from:'%s'",
+		         name,
+		         info->uuid,
+		         mount_point);
 
 		g_signal_emit (storage, signals[MOUNT_POINT_REMOVED], 0, info->uuid, mount_point, NULL);
 
 		g_hash_table_remove (priv->mounts_by_uuid, info->uuid);
 		mount_node_free (node);
 	} else {
-		g_message ("Mount:'%s' now unmounted from:'%s' (was not tracked)",
-		           name,
-		           mount_point);
+		g_debug ("Mount:'%s' now unmounted from:'%s' (was not tracked)",
+		         name,
+		         mount_point);
 	}
 
 	g_free (name);

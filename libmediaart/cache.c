@@ -29,22 +29,25 @@
 
 /**
  * SECTION:cache
- * @title: Caching and Management
- * @short_description: Caching and management of stored media art.
+ * @title: Cache
+ * @short_description: Caching and lookup of stored media art.
  * @include: libmediaart/mediaart.h
  *
- * These functions give you access to the media art that has been extracted
- * and saved in the user's XDG_CACHE_HOME directory.
+ * These functions give you access to the media art that has been
+ * extracted and saved in the user's XDG_CACHE_HOME directory (usually
+ * ~/.cache/media-art/).
  *
  * To find the media art for a given media file, use the function
- * media_art_get_file() (you can also use media_art_get_path(), which does the
- * same thing but for path strings instead of #GFile objects).
+ * media_art_get_file() (you can also use media_art_get_path(), which
+ * does the same thing but for path strings instead of #GFile
+ * objects).
  *
- * If media art for the file is not found in the cache, these functions will
- * return %NULL. You may find some embedded media art upon loading the file,
- * and you can use media_art_process() to convert it to the correct format and
- * save it in the cache for next time. The media_art_process() function also
- * supports searching for external media art images using a basic heuristic.
+ * If media art for the file is not found in the cache, these
+ * functions will return %NULL. You may find some embedded media art
+ * upon loading the file, and you can use media_art_process_buffer()
+ * to convert it to the correct format and save it in the cache for
+ * next time. The media_art_process_file() function also supports
+ * searching for external media art images using a basic heuristic.
  **/
 
 static gboolean
@@ -271,9 +274,7 @@ media_art_get_file (const gchar  *artist,
 		*local_file = NULL;
 	}
 
-	if (!artist && !title) {
-		return;
-	}
+	g_return_if_fail (artist != NULL || title != NULL);
 
 	if (artist) {
 		artist_stripped = media_art_strip_invalid_entities (artist);
@@ -359,8 +360,8 @@ media_art_get_file (const gchar  *artist,
  * @local_uri: (out) (transfer full) (allow-none): the location to store the
  * local uri or %NULL
  *
- * Get the path to media art for a given resource. Newly allocated data in
- * @path and @local_uri must be freed with g_free().
+ * Get the path to media art for a given resource. Newly allocated
+ * data returned in @path and @local_uri must be freed with g_free().
  *
  * Since: 0.2.0
  */
@@ -417,7 +418,7 @@ media_art_remove_foreach (gpointer data,
  * @artist: artist the media art belongs to
  * @album: (allow-none): album the media art belongs or %NULL
  *
- * Removes media art for given album/artist/etc provided.
+ * Removes media art for given album/artist provided.
  *
  * Returns: #TRUE on success, otherwise #FALSE.
  *
@@ -470,9 +471,11 @@ media_art_remove (const gchar *artist,
 	}
 
 	/* Add the album path also (to which the symlinks are made) */
-	media_art_get_path (NULL, album, "album", NULL, &target, NULL);
-	if (target) {
-		g_hash_table_replace (table, target, target);
+	if (album) {
+		media_art_get_path (NULL, album, "album", NULL, &target, NULL);
+		if (target) {
+			g_hash_table_replace (table, target, target);
+		}
 	}
 
 	/* Perhaps we should have an internal list of media art files that we made,
