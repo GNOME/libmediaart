@@ -1507,6 +1507,8 @@ get_heuristic_for_parent_path (GFile        *file,
  * @buffer, the image data will be converted to the correct format and
  * saved in the media art cache.
  *
+ * Either @artist OR @title can be %NULL, but they can not both be %NULL.
+ *
  * If @file is on a removable filesystem, the media art file will be saved in a
  * cache on the removable file system rather than on the host machine.
  *
@@ -1536,7 +1538,8 @@ media_art_process_buffer (MediaArtProcess       *process,
 	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
 	g_return_val_if_fail (G_IS_FILE (related_file), FALSE);
 	g_return_val_if_fail (buffer != NULL, FALSE);
-	g_return_val_if_fail (len < 0, FALSE);
+	g_return_val_if_fail (len > 0, FALSE);
+	g_return_val_if_fail (artist != NULL || title != NULL, FALSE);
 
 	processed = created = FALSE;
 
