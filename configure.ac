@@ -98,18 +98,6 @@ AC_SUBST(LT_CURRENT_MINUS_AGE)
 
 IDT_COMPILE_WARNINGS
 
-# Checks for programs.
-AC_PROG_CXX
-AC_PROG_AWK
-AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PROG_MAKE_SET
-AC_PROG_RANLIB
-AC_PROG_MKDIR_P
-AC_PROG_YACC
-
 # Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT([disable-static])
@@ -123,18 +111,20 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
+AC_PROG_MKDIR_P
+AC_PROG_YACC
 
 # Checks for libraries.
 
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h utime.h])
+AC_CHECK_HEADERS([stdlib.h string.h utime.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
+AC_C_INLINE
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
-AC_CHECK_FUNCS([strstr utime])
-
+AC_CHECK_FUNCS([setenv strstr utime])
 
 CFLAGS="$CFLAGS"
 
