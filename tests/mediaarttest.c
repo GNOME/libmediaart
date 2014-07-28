@@ -201,11 +201,10 @@ test_mediaart_embedded_mp3 (void)
 	MediaArtProcess *process;
 	GError *error = NULL;
 	GFile *file = NULL;
-	gchar *dir, *path;
+	gchar *path;
 	gboolean retval;
 
-	dir = g_get_current_dir ();
-	path = g_build_filename (G_DIR_SEPARATOR_S, dir, "543249_King-Kilo---Radium.mp3", NULL);
+	path = g_build_filename (G_DIR_SEPARATOR_S, TOP_SRCDIR, "tests", "543249_King-Kilo---Radium.mp3", NULL);
 	file = g_file_new_for_path (path);
 	g_free (path);
 
@@ -224,7 +223,6 @@ test_mediaart_embedded_mp3 (void)
 	g_assert_true (retval);
 
 	g_object_unref (file);
-	g_free (dir);
 
 	g_object_unref (process);
 }
@@ -235,16 +233,14 @@ test_mediaart_process_buffer (void)
 	MediaArtProcess *process;
 	GError *error = NULL;
 	GFile *file = NULL;
-	gchar *dir, *path;
+	gchar *path;
 	gchar *out_path = NULL;
 	gchar *out_uri = NULL;
 	gchar *expected;
 	gboolean retval;
 
-	dir = g_get_current_dir ();
-	path = g_build_filename (G_DIR_SEPARATOR_S, dir, "cover.png", NULL);
+	path = g_build_filename (G_DIR_SEPARATOR_S, TOP_SRCDIR, "tests", "cover.png", NULL);
 	file = g_file_new_for_path (path);
-	g_free (dir);
 
 	process = media_art_process_new (&error);
 	g_assert_no_error (error);

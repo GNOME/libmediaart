@@ -17,3 +17,7 @@ LDADD = \
 	$(LIBMEDIAART_LIBS)
 
 mediaarttest = mediaarttest.c
+
+EXTRA_DIST = \
+	543249_King-Kilo---Radium.mp3 \
+	cover.png
