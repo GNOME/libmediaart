@@ -28,7 +28,7 @@
 #include "marshal.h"
 
 /**
- * SECTION:-storage
+ * SECTION:storage
  * @short_description: Removable storage and mount point convenience API
  * @include: libmediaart/mediaart.h
  *

@@ -20,7 +20,6 @@
  * Philip Van Hoof <philip@codeminded.be>
  */
 
-
 #ifndef __LIBMEDIAART_EXTRACTGENERIC_H__
 #define __LIBMEDIAART_EXTRACTGENERIC_H__
 

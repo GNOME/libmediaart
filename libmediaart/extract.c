@@ -46,7 +46,7 @@
  * from a media file and saving it into the media art cache, so that future
  * applications can display the media art without having to extract the image
  * again. This is done using the media_art_process_file() or
- * media_art_process() functions.
+ * media_art_process_buffer() functions.
  *
  * Extracting new media art from a file needs to be done by your application.
  * Usually, when an application loads a media file any embedded images will be
@@ -56,19 +56,16 @@
  *
  * The media art cache requires that all images are saved as 'application/jpeg'
  * files. Embedded images can be in several formats, and
- * media_art_process_file() and media_art_process() functions will
+ * media_art_process_file() and media_art_process_buffer() functions will
  * convert the supplied image data into the correct format if
  * necessary. There are multiple backends that can be used for this,
  * and you can choose which is used at build time using the library's
  * 'configure' script.
  *
  * If there is no embedded media art in a file,
- * media_art_process_file() and media_art_process() functions will
+ * media_art_process_file() and media_art_process_buffer() functions will
  * look in the directory that contains the media file for likely media
  * art using a simple heuristic.
- *
- * You must call media_art_init() before using the functions in libmediaart,
- * and call media_art_shutdown() to free the resources it uses.
  **/
 
 typedef struct {
@@ -179,7 +176,7 @@ media_art_process_initable_init (GInitable     *initable,
 		g_critical ("Could not start storage module for removable media detection");
 
 		if (error) {
-			*error = g_error_new (MEDIA_ART_ERROR,
+			*error = g_error_new (media_art_error_quark (),
 			                      MEDIA_ART_ERROR_NO_STORAGE,
 			                      "Could not initialize storage module");
 		}
@@ -218,7 +215,8 @@ media_art_process_init (MediaArtProcess *thumbnailer)
  * This function initializes cache hash tables, backend plugins,
  * storage modules used for removable devices and a connection to D-Bus.
  *
- * Returns: %TRUE on success or %FALSE if @error is set.
+ * Returns: A new #MediaArtProcess object on success or %NULL if
+ * @error is set. This object must be freed using g_object_unref().
  *
  * Since: 0.3.0
  */
@@ -397,7 +395,7 @@ convert_from_other_format (const gchar  *found,
 
 		if (!retval) {
 			g_set_error (error,
-			             MEDIA_ART_ERROR,
+			             media_art_error_quark (),
 			             MEDIA_ART_ERROR_RENAME_FAILED,
 			             "Could not rename '%s' to '%s': %s",
 			             target_temp,
@@ -429,7 +427,7 @@ convert_from_other_format (const gchar  *found,
 
 				if (!retval) {
 					g_set_error (error,
-					             MEDIA_ART_ERROR,
+					             media_art_error_quark (),
 					             MEDIA_ART_ERROR_RENAME_FAILED,
 					             "Could not rename '%s' to '%s': %s",
 					             album_path,
@@ -451,7 +449,7 @@ convert_from_other_format (const gchar  *found,
 
 				if (!retval) {
 					g_set_error (error,
-					             MEDIA_ART_ERROR,
+					             media_art_error_quark (),
 					             MEDIA_ART_ERROR_RENAME_FAILED,
 					             "Could not rename '%s' to '%s': %s",
 					             target_temp,
@@ -473,7 +471,7 @@ convert_from_other_format (const gchar  *found,
 
 			if (!retval) {
 				g_set_error (error,
-				             MEDIA_ART_ERROR,
+				             media_art_error_quark (),
 				             MEDIA_ART_ERROR_RENAME_FAILED,
 				             "Could not rename '%s' to '%s': %s",
 				             album_path,
@@ -484,7 +482,7 @@ convert_from_other_format (const gchar  *found,
 
 				if (!retval) {
 					g_set_error (error,
-					             MEDIA_ART_ERROR,
+					             media_art_error_quark (),
 					             MEDIA_ART_ERROR_SYMLINK_FAILED,
 					             "Could not rename '%s' to '%s': %s",
 					             album_path,
@@ -709,7 +707,7 @@ get_heuristic (MediaArtType   type,
 
 	if (title == NULL || title[0] == '\0') {
 		g_set_error (error,
-		             MEDIA_ART_ERROR,
+		             media_art_error_quark (),
 		             MEDIA_ART_ERROR_NO_TITLE,
 		             "Title is required, but was not provided, or was empty");
 		return FALSE;
@@ -842,7 +840,7 @@ get_heuristic (MediaArtType   type,
 
 						if (!retval) {
 							g_set_error (error,
-							             MEDIA_ART_ERROR,
+							             media_art_error_quark (),
 							             MEDIA_ART_ERROR_SYMLINK_FAILED,
 							             "Could not link '%s' to '%s': %s",
 							             album_art_file_path,
@@ -857,7 +855,6 @@ get_heuristic (MediaArtType   type,
 					} else {
 						GFile *art_file;
 						GFile *target_file;
-						GError *local_error = NULL;
 
 						/* If album-space-md5.jpg isn't the same as found,
 						 * make a new album-md5-md5.jpg (found -> target) */
@@ -879,7 +876,6 @@ get_heuristic (MediaArtType   type,
 				} else {
 					GFile *art_file;
 					GFile *album_art_file;
-					GError *local_error = NULL;
 
 					/* If there's not yet a album-space-md5.jpg, make one,
 					 * and symlink album-md5-md5.jpg to it */
@@ -898,7 +894,7 @@ get_heuristic (MediaArtType   type,
 
 						if (!retval) {
 							g_set_error (error,
-							             MEDIA_ART_ERROR,
+							             media_art_error_quark (),
 							             MEDIA_ART_ERROR_SYMLINK_FAILED,
 							             "Could not link '%s' to '%s': %s",
 							             album_art_file_path,
@@ -961,8 +957,6 @@ is_buffer_jpeg (const gchar         *mime,
                 const unsigned char *buffer,
                 size_t               buffer_len)
 {
-	gboolean is_jpeg;
-
 	if (buffer == NULL || buffer_len < 3) {
 		return FALSE;
 	}
@@ -995,9 +989,6 @@ media_art_set (const unsigned char  *buffer,
 	gchar *md5_album = NULL;
 	gchar *md5_tmp = NULL;
 	gchar *temp;
-	const gchar *save_path = NULL;
-	gboolean save_buffer = FALSE;
-	gboolean need_symlink = FALSE;
 	gboolean retval = FALSE;
 
 	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
@@ -1071,7 +1062,7 @@ media_art_set (const unsigned char  *buffer,
 
 			if (!retval) {
 				g_set_error (error,
-				             MEDIA_ART_ERROR,
+				             media_art_error_quark (),
 				             MEDIA_ART_ERROR_SYMLINK_FAILED,
 				             "Could not link '%s' to '%s': %s",
 				             album_path,
@@ -1122,7 +1113,7 @@ media_art_set (const unsigned char  *buffer,
 
 			if (!retval) {
 				g_set_error (error,
-				             MEDIA_ART_ERROR,
+				             media_art_error_quark (),
 				             MEDIA_ART_ERROR_SYMLINK_FAILED,
 				             "Could not link '%s' to '%s': %s",
 				             album_path,
@@ -1184,7 +1175,7 @@ media_art_set (const unsigned char  *buffer,
 
 			if (!retval) {
 				g_set_error (error,
-				             MEDIA_ART_ERROR,
+				             media_art_error_quark (),
 				             MEDIA_ART_ERROR_SYMLINK_FAILED,
 				             "Could not link '%s' to '%s': %s",
 				             album_path,
@@ -1204,7 +1195,7 @@ media_art_set (const unsigned char  *buffer,
 
 			if (!retval) {
 				g_set_error (error,
-				             MEDIA_ART_ERROR,
+				             media_art_error_quark (),
 				             MEDIA_ART_ERROR_RENAME_FAILED,
 				             "Could not rename '%s' to '%s': %s",
 				             temp,
@@ -1466,7 +1457,7 @@ get_mtime (GFile   *file,
 	return mtime;
 }
 
-gchar *
+static gchar *
 get_heuristic_for_parent_path (GFile        *file,
                                MediaArtType  type,
                                const gchar  *artist,
@@ -1499,27 +1490,22 @@ get_heuristic_for_parent_path (GFile        *file,
 }
 
 /**
- * media_art_process_file:
+ * media_art_process_buffer:
  * @process: Media art process object
- * @file: File to be processed
+ * @type: The type of media
+ * @flags: The options given for how to process the media art
+ * @related_file: File related to the media art
  * @buffer: (array length=len)(allow-none): a buffer containing @file data, or %NULL
  * @len: length of @buffer, or 0
  * @mime: MIME type of @buffer, or %NULL
- * @type: The type of media
- * @artist: The media file artist name, or %NULL
- * @title: The media file title, or %NULL
+ * @artist: (allow-none): The artist name @file or %NULL
+ * @title: (allow-none): The title for @file or %NULL
  * @error: Pointer to potential GLib / MediaArt error, or %NULL
  *
- * Processes a media file. If you have extracted any embedded media art and
- * passed this in as @buffer, the image data will be converted to the correct
- * format and saved in the media art cache.
- *
- * If @buffer is %NULL, libmediaart will search the parent directory of @file
- * for image files that are likely to be media art for @file, and if one is
- * found it will be saved in the media art cache. If @buffer is %NULL
- * for a @file which is *not* an image file (typically JPEG or PNG,
- * supported by the backends), this function will return %FALSE with
- * no error set, because it's not expected to work.
+ * Processes a memory buffer represented by @buffer and @len. If you
+ * have extracted any embedded media art and passed this in as
+ * @buffer, the image data will be converted to the correct format and
+ * saved in the media art cache.
  *
  * If @file is on a removable filesystem, the media art file will be saved in a
  * cache on the removable file system rather than on the host machine.
@@ -1529,43 +1515,44 @@ get_heuristic_for_parent_path (GFile        *file,
  * Since: 0.3.0
  */
 gboolean
-media_art_process_file (MediaArtProcess  *process,
-                        GFile            *file,
-                        const guchar     *buffer,
-                        gsize             len,
-                        const gchar      *mime,
-                        MediaArtType      type,
-                        const gchar      *artist,
-                        const gchar      *title,
-                        GError          **error)
+media_art_process_buffer (MediaArtProcess       *process,
+                          MediaArtType           type,
+                          MediaArtProcessFlags   flags,
+                          GFile                 *related_file,
+                          const guchar          *buffer,
+                          gsize                  len,
+                          const gchar           *mime,
+                          const gchar           *artist,
+                          const gchar           *title,
+                          GError               **error)
 {
-	MediaArtProcessPrivate *private;
 	GFile *cache_art_file, *local_art_file;
 	GError *local_error = NULL;
 	gchar *cache_art_path, *uri;
-	gboolean processed, created, no_cache_or_old;
+	gboolean processed, created;
 	guint64 mtime, cache_mtime = 0;
 
 	g_return_val_if_fail (MEDIA_ART_IS_PROCESS (process), FALSE);
-	g_return_val_if_fail (G_IS_FILE (file), FALSE);
 	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
-
-	private = media_art_process_get_instance_private (process);
+	g_return_val_if_fail (G_IS_FILE (related_file), FALSE);
+	g_return_val_if_fail (buffer != NULL, FALSE);
+	g_return_val_if_fail (len < 0, FALSE);
 
 	processed = created = FALSE;
 
-	uri = g_file_get_uri (file);
-	g_debug ("Processing media art: artist:'%s', title:'%s', type:'%s', uri:'%s'. Buffer is %ld bytes, mime:'%s'",
+	uri = g_file_get_uri (related_file);
+	g_debug ("Processing media art: artist:'%s', title:'%s', type:'%s', uri:'%s', flags:0x%.8x. Buffer is %ld bytes, mime:'%s'",
 	         artist ? artist : "",
 	         title ? title : "",
 	         media_art_type_name[type],
 	         uri,
+	         flags,
 	         (long int) len,
 	         mime);
 
-	mtime = get_mtime (file, &local_error);
+	mtime = get_mtime (related_file, &local_error);
 	if (local_error != NULL) {
-		g_debug ("Could not get mtime for file '%s': %s",
+		g_debug ("Could not get mtime for related file '%s': %s",
 		         uri,
 		         local_error->message);
 		g_propagate_error (error, local_error);
@@ -1577,7 +1564,7 @@ media_art_process_file (MediaArtProcess  *process,
 	media_art_get_file (artist,
 	                    title,
 	                    media_art_type_name[type],
-	                    file,
+	                    related_file,
 	                    &cache_art_file,
 	                    &local_art_file);
 
@@ -1592,13 +1579,11 @@ media_art_process_file (MediaArtProcess  *process,
 		gchar *path;
 
 		path = g_file_get_uri (cache_art_file);
-		g_debug ("Cache for media art didn't exist (%s)",
+		g_debug ("Cache for media art did not exist (%s)",
 		         path);
 		g_free (path);
 		g_clear_error (&local_error);
-	}
-
-	if (local_error) {
+	} else if (local_error) {
 		g_free (uri);
 
 		uri = g_file_get_uri (cache_art_file);
@@ -1616,53 +1601,18 @@ media_art_process_file (MediaArtProcess  *process,
 		return FALSE;
 	}
 
-	cache_art_path = g_file_get_path (cache_art_file);
-	no_cache_or_old = cache_mtime == 0 || mtime > cache_mtime;
 
-	if ((buffer && len > 0) && no_cache_or_old) {
+	cache_art_path = g_file_get_path (cache_art_file);
+
+	if (flags & MEDIA_ART_PROCESS_FLAGS_FORCE ||
+	    cache_mtime == 0 || mtime > cache_mtime) {
 		processed = media_art_set (buffer, len, mime, type, artist, title, error);
 		set_mtime (cache_art_path, mtime);
-		created = TRUE;
-	}
-
-	if (!created && no_cache_or_old) {
-		/* If not, we perform a heuristic on the dir */
-		gchar *key;
-
-		key = get_heuristic_for_parent_path (file, type, artist, title);
-
-		if (!g_hash_table_lookup (private->media_art_cache, key)) {
-			gchar *local_art_uri;
-
-			local_art_uri = g_file_get_uri (local_art_file);
-
-			if (!get_heuristic (type, uri, local_art_uri, artist, title, error)) {
-				/* If the heuristic failed, we
-				 * request the download the
-				 * media-art to the media-art
-				 * downloaders
-				 */
-				media_art_request_download (process,
-				                            type,
-				                            artist,
-				                            title,
-				                            local_art_uri,
-				                            cache_art_path);
-			}
-
-			set_mtime (cache_art_path, mtime);
-
-			g_hash_table_insert (private->media_art_cache,
-			                     key,
-			                     GINT_TO_POINTER(TRUE));
-			g_free (local_art_uri);
-		} else {
-			g_free (key);
-		}
-	} else if (!created) {
+	} else {
 		g_debug ("Album art already exists for uri:'%s' as '%s'",
 		         uri,
 		         cache_art_path);
+		processed = TRUE;
 	}
 
 	if (local_art_file && !g_file_query_exists (local_art_file, NULL)) {
@@ -1692,51 +1642,199 @@ media_art_process_file (MediaArtProcess  *process,
 	return processed;
 }
 
+/**
+ * media_art_process_file:
+ * @process: Media art process object
+ * @type: The type of media
+ * @flags: The options given for how to process the media art
+ * @file: File to be processed
+ * @artist: (allow-none): The artist name @file or %NULL
+ * @title: (allow-none): The title for @file or %NULL
+ * @error: Pointer to potential GLib / MediaArt error, or %NULL
+ *
+ * Process @file and check if media art exists and if it is up to date
+ * with @artist and @title provided. Either @artist OR @title can be
+ * %NULL, but they can not both be %NULL.
+ *
+ * NOTE: This function MAY retrieve media art for
+ * @artist and @title combinations. It is not guaranteed and depends
+ * on download services available over DBus at the time.
+ *
+ * In cases where download is unavailable, media_art_process_file()
+ * will only try to procure a cache for possible media art found in
+ * directories surrounding the location of @file. If a buffer or
+ * memory chunk needs to be saved to disk which has been retrieved
+ * from an MP3 (for example), you should use
+ * media_art_process_buffer().
+ *
+ * The modification time (mtime) of @file is checked against the
+ * cached stored for @artist and @title. If the cache is old or
+ * doesn't exist, it will be updated. What this actually does is
+ * update the mtime of the cache (a symlink) on the disk.
+ *
+ * If there is no actual media art stored locally (for example, it's
+ * stored in a directory on a removable device), it is copied locally
+ * (usually to an XDG cache directory).
+ *
+ * If @file is on a removable filesystem, the media art file will be
+ * saved in a cache on the removable file system rather than on the
+ * host machine.
+ *
+ * Returns: %TRUE if @file could be processed or %FALSE if @error is set.
+ *
+ * Since: 0.3.0
+ */
+gboolean
+media_art_process_file (MediaArtProcess       *process,
+                        MediaArtType           type,
+                        MediaArtProcessFlags   flags,
+                        GFile                 *file,
+                        const gchar           *artist,
+                        const gchar           *title,
+                        GError               **error)
+{
+	MediaArtProcessPrivate *private;
+	GFile *cache_art_file, *local_art_file;
+	GError *local_error = NULL;
+	gchar *cache_art_path, *uri;
+	gboolean no_cache_or_old;
+	guint64 mtime, cache_mtime;
+
+	g_return_val_if_fail (MEDIA_ART_IS_PROCESS (process), FALSE);
+	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
+	g_return_val_if_fail (G_IS_FILE (file), FALSE);
+	g_return_val_if_fail (artist != NULL || title != NULL, FALSE);
+
+	private = media_art_process_get_instance_private (process);
+
+	uri = g_file_get_uri (file);
+	g_debug ("Processing media art: artist:'%s', title:'%s', type:'%s', uri:'%s', flags:0x%.8x",
+	         artist ? artist : "",
+	         title ? title : "",
+	         media_art_type_name[type],
+	         uri,
+	         flags);
+
+	mtime = get_mtime (file, &local_error);
+	if (local_error != NULL) {
+		g_debug ("Could not get mtime for file '%s': %s",
+		         uri,
+		         local_error->message);
+		g_propagate_error (error, local_error);
+		g_free (uri);
+
+		return FALSE;
+	}
+
+	media_art_get_file (artist,
+	                    title,
+	                    media_art_type_name[type],
+	                    file,
+	                    &cache_art_file,
+	                    &local_art_file);
+
+	cache_art_path = g_file_get_path (cache_art_file);
+
+	cache_mtime = get_mtime (cache_art_file, &local_error);
+	no_cache_or_old = cache_mtime == -1 || cache_mtime < mtime;
+
+	if (no_cache_or_old) {
+		/* If not, we perform a heuristic on the dir */
+		gchar *key;
+
+		key = get_heuristic_for_parent_path (file, type, artist, title);
+
+		if (!g_hash_table_lookup (private->media_art_cache, key)) {
+			gchar *local_art_uri;
+
+			local_art_uri = g_file_get_uri (local_art_file);
+
+			if (!get_heuristic (type, uri, local_art_uri, artist, title, error)) {
+				/* If the heuristic failed, we
+				 * request the download the
+				 * media-art to the media-art
+				 * downloaders
+				 */
+				media_art_request_download (process,
+				                            type,
+				                            artist,
+				                            title,
+				                            local_art_uri,
+				                            cache_art_path);
+
+				/* FIXME: Should return TRUE or FALSE? */
+			}
+
+			set_mtime (cache_art_path, mtime);
+
+			g_hash_table_insert (private->media_art_cache,
+			                     key,
+			                     GINT_TO_POINTER(TRUE));
+			g_free (local_art_uri);
+		} else {
+			g_free (key);
+		}
+	} else {
+		g_debug ("Album art already exists for uri:'%s' as '%s'",
+		         uri,
+		         cache_art_path);
+	}
+
+	if (cache_art_file) {
+		g_object_unref (cache_art_file);
+	}
+
+	if (local_art_file) {
+		g_object_unref (local_art_file);
+	}
+
+	g_free (cache_art_path);
+	g_free (uri);
+
+	return TRUE;
+}
 
 /**
  * media_art_process_uri:
  * @process: Media art process object
- * @uri: URI of the media file that contained the data
- * @buffer: (array length=len): A buffer of binary data
- * @len: The length of @buffer, in bytes
- * @mime: The MIME type of the data stored in @buffer
  * @type: The type of media that contained the image data
- * @artist: (allow-none): Artist name of the media
- * @title: (allow-none): Title of the media
+ * @flags: How the media art is processed
+ * @uri: URI of the media file that contained the data
+ * @artist: (allow-none): The artist name @uri or %NULL
+ * @title: (allow-none): The title for @uri or %NULL
  * @error: Pointer to potential GLib / MediaArt error, or %NULL
  *
- * This function is the same as media_art_process_file(), but takes the URI as
- * a string rather than a #GFile object.
+ * This function calls media_art_process_file(), but takes the @uri as
+ * a string rather than a #GFile object. Either @artist OR @title can be
+ * %NULL, but they can not both be %NULL.
  *
  * Returns: %TRUE if @uri could be processed or %FALSE if @error is set.
  *
  * Since: 0.3.0
  */
 gboolean
-media_art_process_uri (MediaArtProcess      *process,
-                       const gchar          *uri,
-                       const unsigned char  *buffer,
-                       size_t                len,
-                       const gchar          *mime,
-                       MediaArtType          type,
-                       const gchar          *artist,
-                       const gchar          *title,
-                       GError              **error)
+media_art_process_uri (MediaArtProcess       *process,
+                       MediaArtType           type,
+                       MediaArtProcessFlags   flags,
+                       const gchar           *uri,
+                       const gchar           *artist,
+                       const gchar           *title,
+                       GError               **error)
 {
 	GFile *file;
 	gboolean result;
 
 	g_return_val_if_fail (MEDIA_ART_IS_PROCESS (process), FALSE);
+	g_return_val_if_fail (type > MEDIA_ART_NONE && type < MEDIA_ART_TYPE_COUNT, FALSE);
 	g_return_val_if_fail (uri != NULL, FALSE);
+	g_return_val_if_fail (artist != NULL || title != NULL, FALSE);
 
 	file = g_file_new_for_uri (uri);
 
 	result = media_art_process_file (process,
-	                                 file,
-	                                 buffer,
-	                                 len,
-	                                 mime,
 	                                 type,
+	                                 flags,
+	                                 file,
 	                                 artist,
 	                                 title,
 	                                 error);

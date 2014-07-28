@@ -46,6 +46,19 @@ typedef enum {
 	MEDIA_ART_TYPE_COUNT
 } MediaArtType;
 
+/**
+ * MediaArtProcessFlags:
+ * @MEDIA_ART_PROCESS_FLAGS_NONE: Normal operation.
+ * @MEDIA_ART_PROCESS_FLAGS_FORCE: Force media art to be re-saved to disk even if it already exists and the related file or URI has the same modified time (mtime).
+ *
+ * This type categorized the flags used when processing media art.
+ *
+ * Since: 0.3
+ */
+typedef enum {
+	MEDIA_ART_PROCESS_FLAGS_NONE   = 0,
+	MEDIA_ART_PROCESS_FLAGS_FORCE  = 1 << 0,
+} MediaArtProcessFlags;
 
 /**
  * MediaArtError:
@@ -69,8 +82,14 @@ typedef enum {
 	MEDIA_ART_ERROR_RENAME_FAILED
 } MediaArtError;
 
-#define MEDIA_ART_ERROR media_art_error_quark ()
 
+/**
+ * media_art_error_quark:
+ *
+ * A #GQuark representing the type of #GError for #MediaArtProcess failures.
+ *
+ * Since: 0.2.0.
+ **/
 GQuark media_art_error_quark (void) G_GNUC_CONST;
 
 
@@ -104,30 +123,34 @@ struct _MediaArtProcessClass {
 	GObjectClass parent;
 };
 
-GType    media_art_process_type (void) G_GNUC_CONST;
-MediaArtProcess *
-         media_art_process_new  (GError              **error);
 
-gboolean media_art_process_uri  (MediaArtProcess      *process,
-                                 const gchar          *uri,
-                                 const unsigned char  *buffer,
-                                 size_t                len,
-                                 const gchar          *mime,
-                                 MediaArtType          type,
-                                 const gchar          *artist,
-                                 const gchar          *title,
-                                 GError              **error);
-
-gboolean media_art_process_file (MediaArtProcess      *process,
-                                 GFile                *file,
-                                 const guchar         *buffer,
-				 gsize                 len,
-				 const gchar          *mime,
-				 MediaArtType          type,
-				 const gchar          *artist,
-                                 const gchar          *title,
-                                 GError              **error);
+GType            media_art_process_get_type (void) G_GNUC_CONST;
+MediaArtProcess *media_art_process_new      (GError               **error);
+gboolean         media_art_process_uri      (MediaArtProcess       *process,
+                                             MediaArtType           type,
+                                             MediaArtProcessFlags   flags,
+                                             const gchar           *uri,
+                                             const gchar           *artist,
+                                             const gchar           *title,
+                                             GError               **error);
+gboolean         media_art_process_file     (MediaArtProcess       *process,
+                                             MediaArtType           type,
+                                             MediaArtProcessFlags   flags,
+                                             GFile                 *file,
+                                             const gchar           *artist,
+                                             const gchar           *title,
+                                             GError               **error);
+gboolean         media_art_process_buffer   (MediaArtProcess       *process,
+                                             MediaArtType           type,
+                                             MediaArtProcessFlags   flags,
+                                             GFile                 *related_file,
+                                             const guchar          *buffer,
+                                             gsize                  len,
+                                             const gchar           *mime,
+                                             const gchar           *artist,
+                                             const gchar           *title,
+                                             GError               **error);
 
 G_END_DECLS
 
-#endif /* __LIBMEDIAART_UTILS_H__ */
+#endif /* __LIBMEDIAART_EXTRACT_H__ */

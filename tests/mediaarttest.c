@@ -161,8 +161,13 @@ test_mediaart_location_null (void)
         gchar *path = NULL, *local_uri = NULL;
 
         /* NULL parameters */
-        media_art_get_path (NULL, NULL, "album", "file:///a/b/c.mp3", &path, &local_uri);
-        g_assert (!path && !local_uri);
+        media_art_get_path (NULL, "some-title", "album", "file:///a/b/c.mp3", &path, &local_uri);
+        g_assert (path != NULL);
+        g_assert (local_uri != NULL);
+
+        media_art_get_path ("some-artist", NULL, "album", "file:///a/b/c.mp3", &path, &local_uri);
+        g_assert (path != NULL);
+        g_assert (local_uri != NULL);
 }
 
 static void
@@ -199,8 +204,6 @@ test_mediaart_embedded_mp3 (void)
 	gchar *dir, *path;
 	gboolean retval;
 
-	/* FIXME: Handle 'buffer' AND 'file/path', is broken currently */
-
 	dir = g_get_current_dir ();
 	path = g_build_filename (G_DIR_SEPARATOR_S, dir, "543249_King-Kilo---Radium.mp3", NULL);
 	file = g_file_new_for_path (path);
@@ -209,22 +212,16 @@ test_mediaart_embedded_mp3 (void)
 	process = media_art_process_new (&error);
 	g_assert_no_error (error);
 
-	/* NOTE: This should fail because we aren't passing a buffer
-	 * in. With MP3 files, or none IMAGE based files, we don't
-	 * have extractors for each type and it's up to the caller to
-	 * pass in the data buffer to save in this case. */
 	retval = media_art_process_file (process,
-	                                 file,
-	                                 NULL,
-	                                 0,
-	                                 "audio/mp3", /* mime */
 	                                 MEDIA_ART_ALBUM,
+	                                 MEDIA_ART_PROCESS_FLAGS_FORCE,
+	                                 file,
 	                                 "King Kilo", /* artist */
 	                                 "Radium",    /* title */
 	                                 &error);
 
 	g_assert_no_error (error);
-	g_assert_false (retval);
+	g_assert_true (retval);
 
 	g_object_unref (file);
 	g_free (dir);
@@ -233,7 +230,7 @@ test_mediaart_embedded_mp3 (void)
 }
 
 static void
-test_mediaart_png (void)
+test_mediaart_process_buffer (void)
 {
 	MediaArtProcess *process;
 	GError *error = NULL;
@@ -245,7 +242,7 @@ test_mediaart_png (void)
 	gboolean retval;
 
 	dir = g_get_current_dir ();
-	path = g_build_filename (G_DIR_SEPARATOR_S, dir, "LanedoIconHKS43-64².png", NULL);
+	path = g_build_filename (G_DIR_SEPARATOR_S, dir, "cover.png", NULL);
 	file = g_file_new_for_path (path);
 	g_free (dir);
 
@@ -265,11 +262,9 @@ test_mediaart_png (void)
 
 	/* Process data */
 	retval = media_art_process_file (process,
-	                                 file,
-	                                 NULL,
-	                                 0,
-	                                 "image/png", /* mime */
 	                                 MEDIA_ART_ALBUM,
+	                                 MEDIA_ART_PROCESS_FLAGS_NONE,
+	                                 file,
 	                                 NULL,        /* album */
 	                                 "Lanedo",    /* title */
 	                                 &error);
@@ -294,7 +289,7 @@ test_mediaart_png (void)
         /* FIXME: Why does this next test fail - i.e. file does not
          * exist if we've processed it?
          */
-        /* g_assert (g_file_test (out_path, G_FILE_TEST_EXISTS) == TRUE); */
+        g_assert (g_file_test (out_path, G_FILE_TEST_EXISTS) == TRUE);
 
         g_free (out_path);
         g_free (out_uri);
@@ -327,11 +322,9 @@ test_mediaart_process_failures (void)
 
 	/* Test: invalid file */
 	g_assert (!media_art_process_uri (process,
-	                                  "file:///invalid/path.png",
-	                                  NULL,
-	                                  0,
-	                                  "image/png", /* mime */
 	                                  MEDIA_ART_ALBUM,
+	                                  MEDIA_ART_PROCESS_FLAGS_NONE,
+	                                  "file:///invalid/path.png",
 	                                  "Foo",       /* album */
 	                                  "Bar",       /* title */
 	                                  &error));
@@ -365,11 +358,9 @@ test_mediaart_process_failures_subprocess (void)
 	g_assert_no_error (error);
 
 	g_assert (!media_art_process_uri (process,
-	                                  NULL,
-	                                  NULL,
-	                                  0,
-	                                  "image/png", /* mime */
 	                                  MEDIA_ART_ALBUM,
+	                                  MEDIA_ART_PROCESS_FLAGS_NONE,
+	                                  NULL,
 	                                  "Foo",       /* album */
 	                                  "Bar",       /* title */
 	                                  &error));
@@ -401,8 +392,8 @@ main (int argc, char **argv)
                          test_mediaart_location_path);
         g_test_add_func ("/mediaart/embedded_mp3",
                          test_mediaart_embedded_mp3);
-        g_test_add_func ("/mediaart/png",
-                         test_mediaart_png);
+        g_test_add_func ("/mediaart/process_buffer",
+                         test_mediaart_process_buffer);
         g_test_add_func ("/mediaart/process_failures",
                          test_mediaart_process_failures);
         g_test_add_func ("/mediaart/process_failures/subprocess",
