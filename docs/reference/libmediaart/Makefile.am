@@ -15,14 +15,14 @@ SCAN_OPTIONS=
 # SCANGOBJ_OPTIONS=--type-init-func="gtk_type_init(0)"
 
 # The directory containing the source code. Relative to $(srcdir)
-DOC_SOURCE_DIR=../../../libmediaart
+DOC_SOURCE_DIR=$(top_srcdir)/libmediaart
 
 # Used for dependencies
 HFILE_GLOB=$(top_srcdir)/libmediaart/*.h
 CFILE_GLOB=$(top_srcdir)/libmediaart/*.c
 
 # Header files to ignore when scanning
-IGNORE_HFILES=
+IGNORE_HFILES=$(top_srcdir)/libmediaart/storage.h
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.
@@ -49,7 +49,10 @@ expand_content_files =
 HTML_IMAGES =
 
 # Extra options to supply to gtkdoc-fixref
-FIXXREF_OPTIONS=
+FIXXREF_OPTIONS=\
+	--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/gobject \
+	--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/glib \
+	--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/gio
 
 include $(top_srcdir)/gtk-doc.make
 
