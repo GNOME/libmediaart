@@ -218,7 +218,7 @@ media_art_process_init (MediaArtProcess *thumbnailer)
  * Returns: A new #MediaArtProcess object on success or %NULL if
  * @error is set. This object must be freed using g_object_unref().
  *
- * Since: 0.3.0
+ * Since: 0.5.0
  */
 MediaArtProcess *
 media_art_process_new (GError **error)
@@ -1407,7 +1407,7 @@ media_art_queue_cb (GObject      *source_object,
  * Returns: the #GQuark used to identify media art errors in
  * GError structures.
  *
- * Since: 0.2
+ * Since: 0.2.0
  **/
 GQuark
 media_art_error_quark (void)
@@ -1512,7 +1512,7 @@ get_heuristic_for_parent_path (GFile        *file,
  *
  * Returns: %TRUE if @file could be processed or %FALSE if @error is set.
  *
- * Since: 0.3.0
+ * Since: 0.5.0
  */
 gboolean
 media_art_process_buffer (MediaArtProcess       *process,
@@ -1810,7 +1810,7 @@ media_art_process_file (MediaArtProcess       *process,
  *
  * Returns: %TRUE if @uri could be processed or %FALSE if @error is set.
  *
- * Since: 0.3.0
+ * Since: 0.5.0
  */
 gboolean
 media_art_process_uri (MediaArtProcess       *process,

@@ -53,7 +53,7 @@ typedef enum {
  *
  * This type categorized the flags used when processing media art.
  *
- * Since: 0.3
+ * Since: 0.3.0
  */
 typedef enum {
 	MEDIA_ART_PROCESS_FLAGS_NONE   = 0,
@@ -73,7 +73,7 @@ typedef enum {
  * Enumeration values used in errors returned by the
  * #MediaArtError API.
  *
- * Since: 0.2
+ * Since: 0.2.0
  **/
 typedef enum {
 	MEDIA_ART_ERROR_NO_STORAGE,
@@ -88,7 +88,7 @@ typedef enum {
  *
  * A #GQuark representing the type of #GError for #MediaArtProcess failures.
  *
- * Since: 0.2.0.
+ * Since: 0.2.0
  **/
 GQuark media_art_error_quark (void) G_GNUC_CONST;
 
