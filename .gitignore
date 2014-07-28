@@ -2,10 +2,12 @@
 
 *.o
 
-# http://www.gnu.org/software/automake
+ChangeLog
 
+# http://www.gnu.org/software/automake
 Makefile
 Makefile.in
+INSTALL
 
 # http://www.gnu.org/software/autoconf
 
