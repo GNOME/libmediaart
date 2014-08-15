@@ -26,57 +26,74 @@
 
 #include <libmediaart/mediaart.h>
 
-struct {
-        const gchar *input;
-        const gchar *expected_output;
-} strip_test_cases [] = {
-        { "nothing to strip here", "nothing to strip here" },
-        { "Upper Case gOEs dOwN", "upper case goes down"},
-        { "o", "o"},
-        { "A", "a"},
-        { "cool album (CD1)", "cool album"},
-        { "cool album [CD1]", "cool album"},
-        { "cool album {CD1}", "cool album"},
-        { "cool album <CD1>", "cool album"},
-        { " ", ""},
-        { "     a     ", "a"},
-        { "messy #title & stuff?", "messy title stuff"},
-        { "Unbalanced [brackets", "unbalanced brackets" },
-        { "Unbalanced (brackets", "unbalanced brackets" },
-        { "Unbalanced <brackets", "unbalanced brackets" },
-        { "Unbalanced brackets)", "unbalanced brackets" },
-        { "Unbalanced brackets]", "unbalanced brackets" },
-        { "Unbalanced brackets>", "unbalanced brackets" },
-        { "Live at *WEMBLEY* dude!", "live at wembley dude" },
-        { "met[xX[x]alli]ca", "metallica" },
-        { NULL, NULL}
+typedef struct {
+	const gchar *test_name;
+	const gchar *input1;
+	const gchar *input2;
+	const gchar *expected;
+} TestInfo;
+
+static TestInfo strip_test_cases [] = {
+	{ "nothing-to-strip", "nothing to strip here", NULL, "nothing to strip here" },
+        { "case-strip", "Upper Case gOEs dOwN", NULL, "upper case goes down" },
+	{ "single-char", "o", NULL, "o" },
+        { "single-char-case", "A", NULL, "a" },
+        { "remove-parenthesis-round", "cool album (CD1)", NULL, "cool album" },
+	{ "remove-parenthesis-square", "cool album [CD1]", NULL, "cool album" },
+        { "remove-parenthesis-squirly", "cool album {CD1}", NULL, "cool album" },
+        { "remove-parenthesis-gt-lt", "cool album <CD1>", NULL, "cool album" },
+        { "whitespace", " ", NULL, "" },
+        { "whitespace-with-content", "     a     ", NULL, "a" },
+        { "messy-title", "messy #title & stuff?", NULL, "messy title stuff" },
+	{ "unbalanced-brackets-square-start", "Unbalanced [brackets", NULL, "unbalanced brackets" },
+        { "unbalanced-brackets-round-start", "Unbalanced (brackets", NULL, "unbalanced brackets" },
+        { "unbalanced-brackets-gt-lt-start", "Unbalanced <brackets", NULL, "unbalanced brackets" },
+        { "unbalanced-brackets-round-end", "Unbalanced brackets)", NULL, "unbalanced brackets" },
+        { "unbalanced-brackets-square-end", "Unbalanced brackets]", NULL, "unbalanced brackets" },
+        { "unbalanced-brackets-gt-lt-end", "Unbalanced brackets>", NULL, "unbalanced brackets" },
+        { "messy-title-punctuation", "Live at *WEMBLEY* dude!", NULL, "live at wembley dude" },
+	{ "crap-brackets-everywhere", "met[xX[x]alli]ca", NULL, "metallica" },
+	{ NULL, NULL, NULL, NULL }
 };
 
-struct {
-        const gchar *artist;
-        const gchar *album;
-        const gchar *filename;
-} mediaart_test_cases [] = {
-        {"Beatles", "Sgt. Pepper",
-         "album-2a9ea35253dbec60e76166ec8420fbda-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
-
-        { "", "sgt. pepper",
-          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
-
-        { " ", "sgt. pepper",
-          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg"},
-
-        { NULL, "sgt. pepper",
-          "album-cfba4326a32b44b8760b3a2fc827a634-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"}, 
-
-        { "Beatles", NULL,
-          "album-2a9ea35253dbec60e76166ec8420fbda-7215ee9c7d9dc229d2921a40e899ec5f.jpeg"},
-
-        { NULL, NULL, NULL }
+static TestInfo location_test_cases [] = {
+	{ "normal-case",
+	  "Beatles", "Sgt. Pepper",
+         "album-2a9ea35253dbec60e76166ec8420fbda-cfba4326a32b44b8760b3a2fc827a634.jpeg" },
+	{ "empty-artist",
+	  "", "sgt. pepper",
+          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg" },
+	{ "whitespace-artist",
+	  " ", "sgt. pepper",
+          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg" },
+	{ "null-artist",
+	  NULL, "sgt. pepper",
+          "album-cfba4326a32b44b8760b3a2fc827a634-7215ee9c7d9dc229d2921a40e899ec5f.jpeg" },
+	{ "null-title",
+	  "Beatles", NULL,
+          "album-2a9ea35253dbec60e76166ec8420fbda-7215ee9c7d9dc229d2921a40e899ec5f.jpeg" },
+        { NULL, NULL, NULL, NULL }
 };
 
 static void
-test_mediaart_new (void)
+setup (TestInfo      *info,
+       gconstpointer  context)
+{
+	TestInfo *this_test = (gpointer) context;
+	if (this_test) {
+		*info = *this_test;
+	}
+}
+
+static void
+teardown (TestInfo      *info,
+          gconstpointer  context)
+{
+}
+
+static void
+test_mediaart_new (TestInfo      *test_info,
+                   gconstpointer  context)
 {
 	MediaArtProcess *process;
 	GError *error = NULL;
@@ -90,18 +107,14 @@ test_mediaart_new (void)
 }
 
 static void
-test_mediaart_stripping (void)
+test_mediaart_stripping (TestInfo      *test_info,
+                         gconstpointer  context)
 {
-        gint i;
         gchar *result;
 
-        for (i = 0; strip_test_cases[i].input != NULL; i++) {
-                result = media_art_strip_invalid_entities (strip_test_cases[i].input);
-                g_assert_cmpstr (result, ==, strip_test_cases[i].expected_output);
-                g_free (result);
-        }
-
-        g_print ("(%d test cases) ", i);
+        result = media_art_strip_invalid_entities (test_info->input1);
+        g_assert_cmpstr (result, ==, test_info->expected);
+        g_free (result);
 }
 
 static void
@@ -127,32 +140,30 @@ test_mediaart_stripping_failures (void)
 	g_test_trap_assert_stderr ("*assertion 'original != NULL' failed*");
 }
 
+
 static void
-test_mediaart_location (void)
+test_mediaart_location (TestInfo      *test_info,
+                        gconstpointer  context)
 {
         gchar *path = NULL, *local_uri = NULL;
         gchar *expected;
-        gint i;
-     
-        for (i = 0; mediaart_test_cases[i].filename != NULL; i++) {
-                media_art_get_path (mediaart_test_cases[i].artist,
-                                    mediaart_test_cases[i].album,
-                                    "album",
-                                    "file:///home/test/a.mp3",
-                                    &path,
-                                    &local_uri);
-                expected = g_build_path (G_DIR_SEPARATOR_S,
-                                         g_get_user_cache_dir (),
-                                         "media-art",
-                                         mediaart_test_cases[i].filename, 
-                                         NULL);
-                g_assert_cmpstr (path, ==, expected);
+
+        media_art_get_path (test_info->input1,
+                            test_info->input2,
+                            "album",
+                            "file:///home/test/a.mp3",
+                            &path,
+                            &local_uri);
+        expected = g_build_path (G_DIR_SEPARATOR_S,
+                                 g_get_user_cache_dir (),
+                                 "media-art",
+                                 test_info->expected,
+                                 NULL);
+        g_assert_cmpstr (path, ==, expected);
                 
-                g_free (expected);
-                g_free (path);
-                g_free (local_uri);
-        }
-        g_print ("(%d test cases) ", i);
+        g_free (expected);
+        g_free (path);
+        g_free (local_uri);
 }
 
 static void
@@ -177,8 +188,8 @@ test_mediaart_location_path (void)
         gchar *expected;
 
         /* Use path instead of URI */
-        media_art_get_path (mediaart_test_cases[0].artist,
-                            mediaart_test_cases[0].album,
+        media_art_get_path (location_test_cases[0].input1,
+                            location_test_cases[0].input2,
                             "album",
                             "/home/test/a.mp3",
                             &path,
@@ -186,7 +197,7 @@ test_mediaart_location_path (void)
         expected = g_build_path (G_DIR_SEPARATOR_S, 
                                  g_get_user_cache_dir (),
                                  "media-art",
-                                 mediaart_test_cases[0].filename, 
+                                 location_test_cases[0].expected,
                                  NULL);
         g_assert_cmpstr (path, ==, expected);
                 
@@ -368,32 +379,38 @@ test_mediaart_process_failures_subprocess (void)
 int
 main (int argc, char **argv)
 {
-	int success = EXIT_SUCCESS;
+	gint success = EXIT_SUCCESS;
+	gint i;
 
         g_test_init (&argc, &argv, NULL);
 
-        g_test_add_func ("/mediaart/new",
-                         test_mediaart_new);
-        g_test_add_func ("/mediaart/stripping",
-                         test_mediaart_stripping);
-        g_test_add_func ("/mediaart/stripping_failures",
-                         test_mediaart_stripping_failures);
-        g_test_add_func ("/mediaart/stripping_failures/subprocess",
-                         test_mediaart_stripping_failures_subprocess);
-        g_test_add_func ("/mediaart/location",
-                         test_mediaart_location);
-        g_test_add_func ("/mediaart/location_null",
-                         test_mediaart_location_null);
-        g_test_add_func ("/mediaart/location_path",
-                         test_mediaart_location_path);
-        g_test_add_func ("/mediaart/embedded_mp3",
-                         test_mediaart_embedded_mp3);
-        g_test_add_func ("/mediaart/process_buffer",
-                         test_mediaart_process_buffer);
-        g_test_add_func ("/mediaart/process_failures",
-                         test_mediaart_process_failures);
-        g_test_add_func ("/mediaart/process_failures/subprocess",
-                         test_mediaart_process_failures_subprocess);
+        g_test_add ("/mediaart/new", TestInfo, NULL, setup, test_mediaart_new, teardown);
+
+	for (i = 0; strip_test_cases[i].test_name; i++) {
+		gchar *testpath;
+
+		testpath = g_strconcat ("/mediaart/stripping/", strip_test_cases[i].test_name, NULL);
+		g_test_add (testpath, TestInfo, &strip_test_cases[i], setup, test_mediaart_stripping, teardown);
+		g_free (testpath);
+	}
+
+        g_test_add_func ("/mediaart/stripping_failures", test_mediaart_stripping_failures);
+        g_test_add_func ("/mediaart/stripping_failures/subprocess", test_mediaart_stripping_failures_subprocess);
+
+	for (i = 0; location_test_cases[i].test_name; i++) {
+		gchar *testpath;
+
+		testpath = g_strconcat ("/mediaart/location/", location_test_cases[i].test_name, NULL);
+		g_test_add (testpath, TestInfo, &location_test_cases[i], setup, test_mediaart_location, teardown);
+		g_free (testpath);
+	}
+
+        g_test_add_func ("/mediaart/location_null", test_mediaart_location_null);
+        g_test_add_func ("/mediaart/location_path", test_mediaart_location_path);
+        g_test_add_func ("/mediaart/embedded_mp3", test_mediaart_embedded_mp3);
+        g_test_add_func ("/mediaart/process_buffer", test_mediaart_process_buffer);
+        g_test_add_func ("/mediaart/process_failures", test_mediaart_process_failures);
+        g_test_add_func ("/mediaart/process_failures/subprocess", test_mediaart_process_failures_subprocess);
 
         success = g_test_run ();
 

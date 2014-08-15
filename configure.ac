@@ -128,6 +128,8 @@ AC_CHECK_FUNCS([setenv strstr utime])
 
 CFLAGS="$CFLAGS"
 
+GLIB_TESTS
+
 # Library required versions
 GLIB_REQUIRED=2.38.0
 GDKPIXBUF_REQUIRED=2.12.0

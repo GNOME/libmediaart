@@ -14,7 +14,9 @@ libmediaart-$(LIBMEDIAART_API_VERSION).pc: libmediaart.pc
 
 EXTRA_DIST = \
 	libmediaart.doap \
-	libmediaart.pc.in
+	libmediaart.pc.in \
+        tap-driver.sh \
+        tap-test
 
 CLEANFILES = \
 	libmediaart-@LIBMEDIAART_API_VERSION@.pc

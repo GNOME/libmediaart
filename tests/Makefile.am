@@ -1,8 +1,8 @@
 include $(top_srcdir)/Makefile.decl
 
-noinst_PROGRAMS = $(TEST_PROGS)
+noinst_PROGRAMS += $(test_programs)
 
-TEST_PROGS += mediaarttest
+test_programs = mediaarttest
 
 AM_CPPFLAGS = \
 	-DTOP_SRCDIR=\"$(abs_top_srcdir)\" \
@@ -16,8 +16,8 @@ LDADD = \
 	$(BUILD_LIBS) \
 	$(LIBMEDIAART_LIBS)
 
-mediaarttest = mediaarttest.c
+mediaarttest_SOURCES = mediaarttest.c
 
-EXTRA_DIST = \
+EXTRA_DIST += \
 	543249_King-Kilo---Radium.mp3 \
 	cover.png
