@@ -34,8 +34,20 @@
  * @include: libmediaart/mediaart.h
  *
  * These functions give you access to the media art that has been
- * extracted and saved in the user's XDG_CACHE_HOME directory (usually
- * ~/.cache/media-art/).
+ * extracted and saved. There are normally two places the media art
+ * will be located in. These locations store symlinks not real copies
+ * of the content:
+ * <itemizedlist>
+ *   <listitem>
+ *     <para>The user's XDG_CACHE_HOME directory (usually
+ * <filename>~/.cache/media-art/</filename>)</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>The local file system's top level
+ * <filename>.mediaartlocal</filename> directory (for example
+ * <filename>/media/martyn/pendrive/.mediaartlocal/</filename>)</para>
+ *   </listitem>
+ * </itemizedlist>
  *
  * To find the media art for a given media file, use the function
  * media_art_get_file() (you can also use media_art_get_path(), which
@@ -228,12 +240,12 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * @artist: the artist
  * @title: the title
  * @prefix: the prefix for cache files, for example "album"
- * @file: (allow-none): the file or %NULL
- * @cache_file: (out) (transfer full) (allow-none): the location to store
- * a #GFile pointing to the user cache path, or %NULL
- * @local_file: (out) (transfer full) (allow-none): the location to store
- * a #GFile pointing to a cache file in the same filesystem than @file,
- * or %NULL.
+ * @file: (allow-none): a #GFile representing the actual media art or %NULL
+ * @cache_file: (out) (transfer full) (allow-none): a pointer to a
+ * #GFile which represents the cached file for media art, or %NULL
+ * a #GFile representing the user&apos;s cache path, or %NULL
+ * @local_file: (out) (transfer full) (allow-none): a pointer to a
+ * #GFile representing the location of the local media art
  *
  * Gets the files pointing to cache files suitable for storing the media
  * art provided by the @artist, @title and @file arguments. @cache_file
@@ -241,12 +253,29 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * @local_file will point to a cache file that resides in the same
  * filesystem than @file.
  *
+ * The @file provided is required if @local_file is to be returned.
+ * The @local_file relates to a location on the media the local file
+ * system or media storage it is found on, so for example, if you have
+ * a mounted volume with MP3s on it in
+ * <filename>file:///media/martyn/pendrive</filename>, the @local_file
+ * will point to a URI that looks like
+ * <filename>file:///media/martyn/pendrive/.mediaartlocal/...</filename>.
+ *
+ * The @cache_file is very different to the @local_file, the
+ * @cache_file relates to a symlink stored in XDG cache directories
+ * for the user. A @cache_file would be expected to look like
+ * <filename>file:///home/martyn/.cache/media-art/...</filename>. This
+ * is normally the location that is most useful (assuming the cache
+ * has been extracted in the first place).
+ *
  * When done, both #GFile<!-- -->s must be freed with g_object_unref() if
  * non-%NULL.
  *
+ * Returns: %TRUE if @cache_file or @local_file were returned, otherwise %FALSE.
+ *
  * Since: 0.2.0
  */
-void
+gboolean
 media_art_get_file (const gchar  *artist,
                     const gchar  *title,
                     const gchar  *prefix,
@@ -274,7 +303,12 @@ media_art_get_file (const gchar  *artist,
 		*local_file = NULL;
 	}
 
-	g_return_if_fail (artist != NULL || title != NULL);
+	/* Rules:
+	 * 1. artist OR title must be non-NULL.
+	 * 2. file AND local_file must be non-NULL OR cache_file must be non-NULL
+	 */
+	g_return_val_if_fail (artist != NULL || title != NULL, FALSE);
+	g_return_val_if_fail (((!G_IS_FILE (file) && !G_IS_FILE (local_file)) || !G_IS_FILE (cache_file)), FALSE);
 
 	if (artist) {
 		artist_stripped = media_art_strip_invalid_entities (artist);
@@ -347,6 +381,8 @@ media_art_get_file (const gchar  *artist,
 
 	g_free (dir);
 	g_free (art_filename);
+
+	return TRUE;
 }
 
 /**
@@ -355,35 +391,50 @@ media_art_get_file (const gchar  *artist,
  * @title: the title
  * @prefix: the prefix, for example "album"
  * @uri: (allow-none): the uri of the file or %NULL
- * @path: (out) (transfer full) (allow-none): the location to store the local
+ * @cache_path: (out) (transfer full) (allow-none): a string
+ * representing the path to the cache for this media art
  * path or %NULL
- * @local_uri: (out) (transfer full) (allow-none): the location to store the
- * local uri or %NULL
+ * @local_uri: (out) (transfer full) (allow-none): a string
+ * representing the URI to the local media art or %NULL
+ *
+ * This function calls media_art_get_file() by creating a #GFile for
+ * @uri and passing the same arguments to media_art_get_file(). For more
+ * details about what this function does, see media_art_get_file().
  *
  * Get the path to media art for a given resource. Newly allocated
- * data returned in @path and @local_uri must be freed with g_free().
+ * data returned in @cache_path and @local_uri must be freed with g_free().
+ *
+ * Returns: %TRUE if @cache_path or @local_uri were returned,
+ * otherwise %FALSE.
  *
  * Since: 0.2.0
  */
-void
+gboolean
 media_art_get_path (const gchar  *artist,
                     const gchar  *title,
                     const gchar  *prefix,
                     const gchar  *uri,
-                    gchar       **path,
+                    gchar       **cache_path,
                     gchar       **local_uri)
 {
 	GFile *file = NULL, *cache_file = NULL, *local_file = NULL;
+
+	/* Rules:
+	 * 1. artist OR title must be non-NULL.
+	 * 2. file AND local_file must be non-NULL OR cache_file must be non-NULL
+	 */
+	g_return_val_if_fail (artist != NULL || title != NULL, FALSE);
+	g_return_val_if_fail ((uri != NULL && local_uri != NULL) || cache_path != NULL, FALSE);
 
 	if (uri) {
 		file = g_file_new_for_uri (uri);
 	}
 
 	media_art_get_file (artist, title, prefix, file,
-			    (path) ? &cache_file : NULL,
-			    (local_uri) ? &local_file : NULL);
-	if (path) {
-		*path = cache_file ? g_file_get_path (cache_file) : NULL;
+			    cache_path ? &cache_file : NULL,
+			    local_uri ? &local_file : NULL);
+	if (cache_path) {
+		*cache_path = cache_file ? g_file_get_path (cache_file) : NULL;
 	}
 
 	if (local_uri) {
@@ -393,6 +444,8 @@ media_art_get_path (const gchar  *artist,
 	if (file) {
 		g_object_unref (file);
 	}
+
+	return TRUE;
 }
 
 static void

@@ -31,14 +31,14 @@ G_BEGIN_DECLS
 
 gchar *  media_art_strip_invalid_entities (const gchar          *original);
 
-void     media_art_get_path               (const gchar          *artist,
+gboolean media_art_get_path               (const gchar          *artist,
                                            const gchar          *title,
                                            const gchar          *prefix,
                                            const gchar          *uri,
-                                           gchar               **path,
+                                           gchar               **cache_path,
                                            gchar               **local_uri);
 
-void     media_art_get_file               (const gchar          *artist,
+gboolean media_art_get_file               (const gchar          *artist,
                                            const gchar          *title,
                                            const gchar          *prefix,
                                            GFile                *file,
