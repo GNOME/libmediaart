@@ -12,13 +12,13 @@ pkgconfigdir = $(libdir)/pkgconfig
 libmediaart-$(LIBMEDIAART_API_VERSION).pc: libmediaart.pc
 	cp $< $@
 
-EXTRA_DIST = \
+EXTRA_DIST += \
 	libmediaart.doap \
 	libmediaart.pc.in \
         tap-driver.sh \
         tap-test
 
-CLEANFILES = \
+CLEANFILES += \
 	libmediaart-@LIBMEDIAART_API_VERSION@.pc
 
 DISTCHECK_CONFIGURE_FLAGS =                            \
