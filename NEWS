@@ -1,3 +1,18 @@
+NEW in 0.6 - 2014-08-19
+=======================
+
+  * Fixes: GB#734837, media_art_get_path() usage is unclear
+  * build: include m4 dir parsing
+  * tests: Use tap automake testing scripts, fixes output summaries
+  * doap: add <programming-language> and 'core' category
+  * extract: Fixed process_buffer() len check (was inverted) and artist/title
+
+NOTE:
+
+  This RELEASE BREAKS API/ABI from 0.5.0, return value for
+  media_art_get_path() is now a gboolean, not void.
+
+
 NEW in 0.5 - 2014-07-28
 =======================
 

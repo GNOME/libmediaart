@@ -12,7 +12,7 @@ AC_PREREQ([2.64])
 # if backwards compatibility has been broken,
 # set LIBMEDIAART_BINARY_AGE and LIBMEDIAART_INTERFACE_AGE to 0.
 m4_define([libmediaart_major_version], [0])
-m4_define([libmediaart_minor_version], [5])
+m4_define([libmediaart_minor_version], [6])
 m4_define([libmediaart_micro_version], [0])
 m4_define([libmediaart_interface_age], [0])
 m4_define([libmediaart_binary_age],
