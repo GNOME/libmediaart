@@ -69,6 +69,10 @@ typedef enum {
  * @MEDIA_ART_ERROR_SYMLINK_FAILED: A call to symlink() failed
  * resulting in the incorrect storage of media art.
  * @MEDIA_ART_ERROR_RENAME_FAILED: File could not be renamed.
+ * @MEDIA_ART_ERROR_NO_CACHE_DIR: This is given when the
+ * XDG_CACHE_HOME directory could not be used to create the
+ * 'media-art' subdirectory used for caching media art. This is
+ * usually an initiation error.
  *
  * Enumeration values used in errors returned by the
  * #MediaArtError API.
@@ -79,14 +83,15 @@ typedef enum {
 	MEDIA_ART_ERROR_NO_STORAGE,
 	MEDIA_ART_ERROR_NO_TITLE,
 	MEDIA_ART_ERROR_SYMLINK_FAILED,
-	MEDIA_ART_ERROR_RENAME_FAILED
+	MEDIA_ART_ERROR_RENAME_FAILED,
+	MEDIA_ART_ERROR_NO_CACHE_DIR
 } MediaArtError;
 
 
 /**
  * media_art_error_quark:
  *
- * A #GQuark representing the type of #GError for #MediaArtProcess failures.
+ * Returns: A #GQuark representing the type of #GError for #MediaArtProcess failures.
  *
  * Since: 0.2.0
  **/
