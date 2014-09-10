@@ -24,6 +24,7 @@
 #include <errno.h>
 
 #include <glib/gstdio.h>
+#include <glib/gi18n.h>
 #include <gio/gio.h>
 
 #include "extractgeneric.h"
@@ -146,6 +147,8 @@ media_art_process_initable_init (GInitable     *initable,
 	MediaArtProcessPrivate *private;
 	MediaArtProcess *process;
 	GError *local_error = NULL;
+	gchar *dir;
+	gboolean retval;
 
 	process = MEDIA_ART_PROCESS (initable);
 	private = media_art_process_get_instance_private (process);
@@ -174,17 +177,32 @@ media_art_process_initable_init (GInitable     *initable,
 	private->storage = storage_new ();
 	if (!private->storage) {
 		g_critical ("Could not start storage module for removable media detection");
-
-		if (error) {
-			*error = g_error_new (media_art_error_quark (),
-			                      MEDIA_ART_ERROR_NO_STORAGE,
-			                      "Could not initialize storage module");
-		}
-
+		g_set_error_literal (error,
+		                     media_art_error_quark (),
+		                     MEDIA_ART_ERROR_NO_STORAGE,
+		                     _("Could not initialize storage module"));
 		return FALSE;
 	}
 
-	return TRUE;
+	/* Returns 0 if already exists, so we don't check if directory
+	 * existed before, it's an additional stat() call we just
+	 * don't need.
+	 */
+	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
+	retval = g_mkdir_with_parents (dir, 0770);
+
+	if (retval == -1) {
+		g_set_error (error,
+		             media_art_error_quark (),
+		             MEDIA_ART_ERROR_NO_CACHE_DIR,
+		             _("Could not create cache directory '%s', %d returned by g_mkdir_with_parents()"),
+		             dir,
+		             retval);
+	}
+
+	g_free (dir);
+
+	return retval == 0 ? TRUE : FALSE;
 }
 
 static void

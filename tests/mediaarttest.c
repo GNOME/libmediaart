@@ -23,6 +23,7 @@
 #include <stdlib.h>
 
 #include <glib-object.h>
+#include <glib/gstdio.h>
 
 #include <libmediaart/mediaart.h>
 
@@ -239,11 +240,33 @@ test_mediaart_embedded_mp3 (void)
 }
 
 static void
+test_mediaart_remove_cb (GObject      *source_object,
+                         GAsyncResult *result,
+                         gpointer      user_data)
+{
+	GError *error = NULL;
+	GFile *file = user_data;
+	gboolean success;
+
+	success = media_art_remove_finish (source_object, result, &error);
+        g_assert_no_error (error);
+        g_assert_true (success);
+
+        success = media_art_remove ("Lanedo", NULL, NULL, &error);
+        g_assert_no_error (error);
+        g_assert_true (success);
+
+        g_object_unref (file);
+}
+
+static void
 test_mediaart_process_buffer (void)
 {
 	MediaArtProcess *process;
+        GCancellable *cancellable;
 	GError *error = NULL;
 	GFile *file = NULL;
+	gchar *dir;
 	gchar *path;
 	gchar *out_path = NULL;
 	gchar *out_uri = NULL;
@@ -253,9 +276,6 @@ test_mediaart_process_buffer (void)
 	path = g_build_filename (G_DIR_SEPARATOR_S, TOP_SRCDIR, "tests", "cover.png", NULL);
 	file = g_file_new_for_path (path);
 
-	process = media_art_process_new (&error);
-	g_assert_no_error (error);
-
 	/* Check data is not cached currently */
 	media_art_get_path ("Lanedo", /* artist / title */
 	                    NULL,     /* album */
@@ -263,9 +283,17 @@ test_mediaart_process_buffer (void)
                             path,
                             &out_path,
                             &out_uri);
-	g_assert (g_file_test (out_path, G_FILE_TEST_EXISTS) == FALSE);
+	g_assert_false (g_file_test (out_path, G_FILE_TEST_EXISTS));
 	g_free (out_path);
 	g_free (out_uri);
+
+	/* Creates media-art cache dir if it doesn't exist ... */
+	process = media_art_process_new (&error);
+	g_assert_no_error (error);
+
+	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
+	g_assert_true (g_file_test (dir, G_FILE_TEST_EXISTS));
+	g_free (dir);
 
 	/* Process data */
 	retval = media_art_process_file (process,
@@ -303,14 +331,17 @@ test_mediaart_process_buffer (void)
         g_free (expected);
 
         /* Remove album art */
-        retval = media_art_remove ("Lanedo", "");
-        g_assert_true (retval);
+        cancellable = g_cancellable_new ();
+        media_art_remove_async ("Lanedo",
+                                "",
+                                G_PRIORITY_DEFAULT,
+                                G_OBJECT (process),
+                                cancellable,
+                                test_mediaart_remove_cb,
+                                file);
 
-        retval = media_art_remove ("Lanedo", NULL);
-
-        g_object_unref (file);
+        g_object_unref (cancellable);
         g_free (path);
-
 	g_object_unref (process);
 }
 
@@ -381,7 +412,8 @@ main (int argc, char **argv)
 {
 	const gchar *cache_home_originally;
 	const gchar *test_dir;
-	gint success = EXIT_SUCCESS;
+        gchar *dir;
+	gint success;
 	gint i;
 
         g_test_init (&argc, &argv, NULL);
@@ -419,6 +451,11 @@ main (int argc, char **argv)
         g_test_add_func ("/mediaart/process_failures/subprocess", test_mediaart_process_failures_subprocess);
 
         success = g_test_run ();
+
+        /* Clean up */
+	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
+	g_rmdir (dir);
+	g_free (dir);
 
         if (cache_home_originally) {
 	        g_setenv ("XDG_CACHE_HOME", cache_home_originally, TRUE);

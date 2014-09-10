@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include <glib.h>
+#include <glib/gi18n.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 
@@ -271,6 +272,9 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * When done, both #GFile<!-- -->s must be freed with g_object_unref() if
  * non-%NULL.
  *
+ * This operation should not use i/o, but it depends on the backend
+ * GFile implementation.
+ *
  * Returns: %TRUE if @cache_file or @local_file were returned, otherwise %FALSE.
  *
  * Since: 0.2.0
@@ -331,10 +335,6 @@ media_art_get_file (const gchar  *artist,
 	dir = g_build_filename (g_get_user_cache_dir (),
 	                        "media-art",
 	                        NULL);
-
-	if (!g_file_test (dir, G_FILE_TEST_EXISTS)) {
-		g_mkdir_with_parents (dir, 0770);
-	}
 
 	if (artist) {
 		a = artist_checksum;
@@ -470,18 +470,22 @@ media_art_remove_foreach (gpointer data,
  * media_art_remove:
  * @artist: artist the media art belongs to
  * @album: (allow-none): album the media art belongs or %NULL
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @error: location to store the error occurring, or %NULL to ignore
  *
  * Removes media art for given album/artist provided.
  *
- * Returns: #TRUE on success, otherwise #FALSE.
+ * Returns: #TRUE on success, otherwise #FALSE where @error will be set.
  *
  * Since: 0.2.0
  */
 gboolean
-media_art_remove (const gchar *artist,
-                  const gchar *album)
+media_art_remove (const gchar   *artist,
+                  const gchar   *album,
+                  GCancellable  *cancellable,
+                  GError       **error)
 {
-	GError *error = NULL;
+	GError *local_error = NULL;
 	GHashTable *table = NULL;
 	const gchar *name;
 	GDir *dir;
@@ -494,13 +498,14 @@ media_art_remove (const gchar *artist,
 
 	dirname = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
 
-	dir = g_dir_open (dirname, 0, &error);
-	if (!dir || error) {
+	dir = g_dir_open (dirname, 0, &local_error);
+	if (!dir || local_error) {
 		/* Nothing to do if there is no directory in the first place. */
 		g_debug ("Removing media-art for artist:'%s', album:'%s': directory could not be opened, %s",
-		         artist, album, error ? error->message : "no error given");
+		         artist, album, local_error ? local_error->message : "no error given");
 
-		g_clear_error (&error);
+		g_clear_error (&local_error);
+
 		if (dir) {
 			g_dir_close (dir);
 		}
@@ -553,10 +558,148 @@ media_art_remove (const gchar *artist,
 	g_list_foreach (to_remove, media_art_remove_foreach, &success);
 	g_list_free (to_remove);
 
+	if (!success) {
+		g_set_error_literal (error,
+		                     G_IO_ERROR,
+		                     G_IO_ERROR_FAILED,
+		                     _("Could not remove one or more files from media art cache"));
+	}
+
 	g_hash_table_unref (table);
 
 	g_dir_close (dir);
 	g_free (dirname);
 
 	return success;
+}
+
+typedef struct {
+	gchar *artist;
+	gchar *album;
+} RemoveData;
+
+static RemoveData *
+remove_data_new (const gchar *artist,
+                 const gchar *album)
+{
+	RemoveData *data;
+
+	data = g_slice_new0 (RemoveData);
+	data->artist = g_strdup (artist);
+	data->album = g_strdup (album);
+
+	return data;
+}
+
+static void
+remove_data_free (RemoveData *data)
+{
+	if (!data) {
+		return;
+	}
+
+	g_free (data->artist);
+	g_free (data->album);
+	g_slice_free (RemoveData, data);
+}
+
+static void
+remove_thread (GTask        *task,
+               gpointer      source_object,
+               gpointer      task_data,
+               GCancellable *cancellable)
+{
+	RemoveData *data = task_data;
+	GError *error = NULL;
+	gboolean success = FALSE;
+
+	if (!g_cancellable_set_error_if_cancelled (cancellable, &error)) {
+		success = media_art_remove (data->artist,
+		                            data->album,
+		                            cancellable,
+		                            &error);
+	}
+
+	if (error) {
+		g_task_return_error (task, error);
+	} else {
+		g_task_return_boolean (task, success);
+	}
+}
+
+/**
+ * media_art_remove_async:
+ * @artist: artist the media art belongs to
+ * @album: (allow-none): album the media art belongs or %NULL
+ * @source_object: (allow-none): the #GObject this task belongs to,
+ * can be %NULL.
+ * @io_priority: the [I/O priority][io-priority] of the request
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to
+ * ignore
+ * @callback: (scope async): a #GAsyncReadyCallback to call when the
+ * request is satisfied
+ * @user_data: (closure): the data to pass to callback function
+ *
+ * Removes media art for given album/artist provided. Precisely the
+ * same operation as media_art_remove() is performing, but
+ * asynchronously.
+ *
+ * When all i/o for the operation is finished the @callback will be
+ * called.
+ *
+ * In case of a partial error the callback will be called with any
+ * succeeding items and no error, and on the next request the error
+ * will be reported. If a request is cancelled the callback will be
+ * called with %G_IO_ERROR_CANCELLED.
+ *
+ * During an async request no other sync and async calls are allowed,
+ * and will result in %G_IO_ERROR_PENDING errors.
+ *
+ * Any outstanding i/o request with higher priority (lower numerical
+ * value) will be executed before an outstanding request with lower
+ * priority. Default priority is %G_PRIORITY_DEFAULT.
+ *
+ * Since: 0.7.0
+ */
+void
+media_art_remove_async (const gchar           *artist,
+                        const gchar           *album,
+                        gint                   io_priority,
+                        GObject               *source_object,
+                        GCancellable          *cancellable,
+                        GAsyncReadyCallback    callback,
+                        gpointer               user_data)
+{
+	GTask *task;
+
+	task = g_task_new (source_object, cancellable, callback, user_data);
+	g_task_set_task_data (task, remove_data_new (artist, album), (GDestroyNotify) remove_data_free);
+	g_task_set_priority (task, io_priority);
+	g_task_run_in_thread (task, remove_thread);
+	g_object_unref (task);
+}
+
+/**
+ * media_art_remove_finish:
+ * @source_object: (allow-none): the #GObject this task belongs to,
+ * can be %NULL.
+ * @result: a #GAsyncResult.
+ * @error: a #GError location to store the error occurring, or %NULL
+ * to ignore.
+ *
+ * Finishes the asynchronous operation started with
+ * media_art_remove_async().
+ *
+ * Returns: %TRUE on success, otherwise %FALSE when @error will be set.
+ *
+ * Since: 0.7.0
+ **/
+gboolean
+media_art_remove_finish (GObject       *source_object,
+                         GAsyncResult  *result,
+                         GError       **error)
+{
+	g_return_val_if_fail (g_task_is_valid (result, source_object), FALSE);
+
+	return g_task_propagate_boolean (G_TASK (result), error);
 }

@@ -37,7 +37,6 @@ gboolean media_art_get_path               (const gchar          *artist,
                                            const gchar          *uri,
                                            gchar               **cache_path,
                                            gchar               **local_uri);
-
 gboolean media_art_get_file               (const gchar          *artist,
                                            const gchar          *title,
                                            const gchar          *prefix,
@@ -46,7 +45,19 @@ gboolean media_art_get_file               (const gchar          *artist,
                                            GFile               **local_file);
 
 gboolean media_art_remove                 (const gchar          *artist,
-                                           const gchar          *album);
+                                           const gchar          *album,
+                                           GCancellable         *cancellable,
+                                           GError              **error);
+void     media_art_remove_async           (const gchar          *artist,
+                                           const gchar          *album,
+                                           gint                  io_priority,
+                                           GObject              *source_object,
+                                           GCancellable         *cancellable,
+                                           GAsyncReadyCallback   callback,
+                                           gpointer              user_data);
+gboolean media_art_remove_finish          (GObject              *source_object,
+                                           GAsyncResult         *result,
+                                           GError              **error);
 
 G_END_DECLS
 

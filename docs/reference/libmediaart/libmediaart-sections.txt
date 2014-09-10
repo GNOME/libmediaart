@@ -3,6 +3,8 @@
 media_art_get_path
 media_art_get_file
 media_art_remove
+media_art_remove_async
+media_art_remove_finish
 media_art_strip_invalid_entities
 </SECTION>
 
