@@ -362,6 +362,7 @@ test_mediaart_process_buffer (void)
 	GCancellable *cancellable;
 	GFile *file;
 	GError *error = NULL;
+	gchar *dir;
 	gchar *path;
 	gchar *out_path = NULL;
 	gchar *out_uri = NULL;
@@ -377,16 +378,21 @@ test_mediaart_process_buffer (void)
 	media_art_get_path ("Lanedo", /* artist / title */
 	                    NULL,     /* album */
 	                    NULL,     /* prefix */
-	                    path,
-	                    &out_path,
-	                    &out_uri);
+                            path,
+                            &out_path,
+                            &out_uri);
 	g_assert_false (g_file_test (out_path, G_FILE_TEST_EXISTS));
 	g_free (out_path);
 	g_free (out_uri);
 
+	/* Creates media-art cache dir if it doesn't exist ... */
 	process = media_art_process_new (&error);
 	g_assert_no_error (error);
 	g_assert_nonnull (process);
+
+	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
+	g_assert_true (g_file_test (dir, G_FILE_TEST_EXISTS));
+	g_free (dir);
 
 	ml = g_main_loop_new (NULL, FALSE);
 
