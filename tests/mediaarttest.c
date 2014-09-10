@@ -379,10 +379,16 @@ test_mediaart_process_failures_subprocess (void)
 int
 main (int argc, char **argv)
 {
+	const gchar *cache_home_originally;
+	const gchar *test_dir;
 	gint success = EXIT_SUCCESS;
 	gint i;
 
         g_test_init (&argc, &argv, NULL);
+
+	test_dir = g_test_get_dir (G_TEST_BUILT);
+	cache_home_originally = g_getenv ("XDG_CACHE_HOME");
+	g_setenv ("XDG_CACHE_HOME", test_dir, TRUE);
 
         g_test_add ("/mediaart/new", TestInfo, NULL, setup, test_mediaart_new, teardown);
 
@@ -413,6 +419,12 @@ main (int argc, char **argv)
         g_test_add_func ("/mediaart/process_failures/subprocess", test_mediaart_process_failures_subprocess);
 
         success = g_test_run ();
+
+        if (cache_home_originally) {
+	        g_setenv ("XDG_CACHE_HOME", cache_home_originally, TRUE);
+        } else {
+	        g_unsetenv ("XDG_CACHE_HOME");
+        }
 
         return success;
 }
