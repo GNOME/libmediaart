@@ -34,15 +34,11 @@ gchar *  media_art_strip_invalid_entities (const gchar          *original);
 gboolean media_art_get_path               (const gchar          *artist,
                                            const gchar          *title,
                                            const gchar          *prefix,
-                                           const gchar          *uri,
-                                           gchar               **cache_path,
-                                           gchar               **local_uri);
+                                           gchar               **cache_path);
 gboolean media_art_get_file               (const gchar          *artist,
                                            const gchar          *title,
                                            const gchar          *prefix,
-                                           GFile                *file,
-                                           GFile               **cache_file,
-                                           GFile               **local_file);
+                                           GFile               **cache_file);
 
 gboolean media_art_remove                 (const gchar          *artist,
                                            const gchar          *album,
