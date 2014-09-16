@@ -86,7 +86,7 @@ typedef enum {
 /**
  * media_art_error_quark:
  *
- * A #GQuark representing the type of #GError for #MediaArtProcess failures.
+ * Returns: A #GQuark representing the type of #GError for #MediaArtProcess failures.
  *
  * Since: 0.2.0
  **/
