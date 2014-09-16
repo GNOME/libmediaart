@@ -131,15 +131,13 @@ static void
 test_mediaart_location (TestInfo      *test_info,
                         gconstpointer  context)
 {
-	gchar *path = NULL, *local_uri = NULL;
+	gchar *path = NULL;
 	gchar *expected;
 
 	media_art_get_path (test_info->input1,
 	                    test_info->input2,
 	                    "album",
-	                    "file:///home/test/a.mp3",
-	                    &path,
-	                    &local_uri);
+	                    &path);
 	expected = g_build_path (G_DIR_SEPARATOR_S,
 	                         g_get_user_cache_dir (),
 	                         "media-art",
@@ -149,37 +147,32 @@ test_mediaart_location (TestInfo      *test_info,
 
 	g_free (expected);
 	g_free (path);
-	g_free (local_uri);
 }
 
 static void
 test_mediaart_location_null (void)
 {
-	gchar *path = NULL, *local_uri = NULL;
+	gchar *path = NULL;
 
-	/* NULL parameters */
-	media_art_get_path (NULL, "some-title", "album", "file:///a/b/c.mp3", &path, &local_uri);
-	g_assert (path != NULL);
-	g_assert (local_uri != NULL);
+        /* NULL parameters */
+        media_art_get_path (NULL, "some-title", "album", &path);
+        g_assert (path != NULL);
 
-	media_art_get_path ("some-artist", NULL, "album", "file:///a/b/c.mp3", &path, &local_uri);
-	g_assert (path != NULL);
-	g_assert (local_uri != NULL);
+        media_art_get_path ("some-artist", NULL, "album", &path);
+        g_assert (path != NULL);
 }
 
 static void
 test_mediaart_location_path (void)
 {
-	gchar *path = NULL, *local_uri = NULL;
+	gchar *path = NULL;
 	gchar *expected;
 
 	/* Use path instead of URI */
 	media_art_get_path (location_test_cases[0].input1,
 	                    location_test_cases[0].input2,
 	                    "album",
-	                    "/home/test/a.mp3",
-	                    &path,
-	                    &local_uri);
+	                    &path);
 	expected = g_build_path (G_DIR_SEPARATOR_S,
 	                         g_get_user_cache_dir (),
 	                         "media-art",
@@ -189,7 +182,6 @@ test_mediaart_location_path (void)
 
 	g_free (expected);
 	g_free (path);
-	g_free (local_uri);
 }
 
 static void
@@ -329,9 +321,7 @@ test_mediaart_process_buffer_cb (GObject      *source_object,
 	media_art_get_path ("Lanedo", /* artist / title */
 	                    NULL,     /* album */
 	                    NULL,     /* prefix */
-	                    path,
-	                    &out_path,
-	                    &out_uri);
+	                    &out_path);
 	g_free (path);
 	g_object_unref (file);
 
@@ -365,7 +355,6 @@ test_mediaart_process_buffer (void)
 	gchar *dir;
 	gchar *path;
 	gchar *out_path = NULL;
-	gchar *out_uri = NULL;
 	unsigned char *buffer = NULL;
 	size_t length = 0;
 	const gchar *mime;
@@ -378,12 +367,9 @@ test_mediaart_process_buffer (void)
 	media_art_get_path ("Lanedo", /* artist / title */
 	                    NULL,     /* album */
 	                    NULL,     /* prefix */
-                            path,
-                            &out_path,
-                            &out_uri);
+	                    &out_path);
 	g_assert_false (g_file_test (out_path, G_FILE_TEST_EXISTS));
 	g_free (out_path);
-	g_free (out_uri);
 
 	/* Creates media-art cache dir if it doesn't exist ... */
 	process = media_art_process_new (&error);

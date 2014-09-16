@@ -241,29 +241,16 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * @artist: (allow-none): the artist
  * @title: (allow-none): the title
  * @prefix: (allow-none): the prefix for cache files, for example "album"
- * @file: (allow-none): a #GFile representing the actual media art or %NULL
  * @cache_file: (out) (transfer full) (allow-none): a pointer to a
  * #GFile which represents the cached file for media art, or %NULL
  * a #GFile representing the user&apos;s cache path, or %NULL
- * @local_file: (out) (transfer full) (allow-none): a pointer to a
  * #GFile representing the location of the local media art
  *
  * Gets the files pointing to cache files suitable for storing the media
  * art provided by the @artist, @title and @file arguments. @cache_file
- * will point to a location in the XDG user cache directory, meanwhile
- * @local_file will point to a cache file that resides in the same
- * filesystem than @file.
+ * will point to a location in the XDG user cache directory..
  *
- * The @file provided is required if @local_file is to be returned.
- * The @local_file relates to a location on the media the local file
- * system or media storage it is found on, so for example, if you have
- * a mounted volume with MP3s on it in
- * <filename>file:///media/martyn/pendrive</filename>, the @local_file
- * will point to a URI that looks like
- * <filename>file:///media/martyn/pendrive/.mediaartlocal/...</filename>.
- *
- * The @cache_file is very different to the @local_file, the
- * @cache_file relates to a symlink stored in XDG cache directories
+ * The @cache_file relates to a symlink stored in XDG cache directories
  * for the user. A @cache_file would be expected to look like
  * <filename>file:///home/martyn/.cache/media-art/...</filename>. This
  * is normally the location that is most useful (assuming the cache
@@ -275,7 +262,7 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * This operation should not use i/o, but it depends on the backend
  * GFile implementation.
  *
- * Returns: %TRUE if @cache_file or @local_file were returned, otherwise %FALSE.
+ * Returns: %TRUE if @cache_file was returned, otherwise %FALSE.
  *
  * Since: 0.2.0
  */
@@ -283,9 +270,7 @@ gboolean
 media_art_get_file (const gchar  *artist,
                     const gchar  *title,
                     const gchar  *prefix,
-		    GFile        *file,
-		    GFile       **cache_file,
-		    GFile       **local_file)
+                    GFile       **cache_file)
 {
 	const gchar *space_checksum = "7215ee9c7d9dc229d2921a40e899ec5f";
 	const gchar *a, *b;
@@ -303,16 +288,12 @@ media_art_get_file (const gchar  *artist,
 		*cache_file = NULL;
 	}
 
-	if (local_file) {
-		*local_file = NULL;
-	}
-
 	/* Rules:
 	 * 1. artist OR title must be non-NULL.
-	 * 2. file AND local_file must be non-NULL OR cache_file must be non-NULL
+	 * 2. cache_file must be non-NULL
 	 */
 	g_return_val_if_fail (artist != NULL || title != NULL, FALSE);
-	g_return_val_if_fail (((!G_IS_FILE (file) && !G_IS_FILE (local_file)) || !G_IS_FILE (cache_file)), FALSE);
+	g_return_val_if_fail (!G_IS_FILE (cache_file), FALSE);
 
 	if (artist) {
 		artist_stripped = media_art_strip_invalid_entities (artist);
@@ -366,19 +347,6 @@ media_art_get_file (const gchar  *artist,
 		g_free (filename);
 	}
 
-	if (local_file) {
-		GFile *parent;
-
-		parent = g_file_get_parent (file);
-		if (parent) {
-			filename = g_build_filename (".mediaartlocal", art_filename, NULL);
-			*local_file = g_file_resolve_relative_path (parent, filename);
-			g_free (filename);
-
-			g_object_unref (parent);
-		}
-	}
-
 	g_free (dir);
 	g_free (art_filename);
 
@@ -390,22 +358,18 @@ media_art_get_file (const gchar  *artist,
  * @artist: (allow-none): the artist
  * @title: (allow-none): the title
  * @prefix: (allow-none): the prefix, for example "album"
- * @uri: (allow-none): the uri of the file or %NULL
  * @cache_path: (out) (transfer full) (allow-none): a string
  * representing the path to the cache for this media art
  * path or %NULL
- * @local_uri: (out) (transfer full) (allow-none): a string
- * representing the URI to the local media art or %NULL
  *
  * This function calls media_art_get_file() by creating a #GFile for
  * @uri and passing the same arguments to media_art_get_file(). For more
  * details about what this function does, see media_art_get_file().
  *
  * Get the path to media art for a given resource. Newly allocated
- * data returned in @cache_path and @local_uri must be freed with g_free().
+ * data returned in @cache_path must be freed with g_free().
  *
- * Returns: %TRUE if @cache_path or @local_uri were returned,
- * otherwise %FALSE.
+ * Returns: %TRUE if @cache_path was returned, otherwise %FALSE.
  *
  * Since: 0.2.0
  */
@@ -413,36 +377,20 @@ gboolean
 media_art_get_path (const gchar  *artist,
                     const gchar  *title,
                     const gchar  *prefix,
-                    const gchar  *uri,
-                    gchar       **cache_path,
-                    gchar       **local_uri)
+                    gchar       **cache_path)
 {
-	GFile *file = NULL, *cache_file = NULL, *local_file = NULL;
+	GFile *cache_file = NULL;
 
 	/* Rules:
 	 * 1. artist OR title must be non-NULL.
-	 * 2. file AND local_file must be non-NULL OR cache_file must be non-NULL
+	 * 2. cache_file must be non-NULL
 	 */
 	g_return_val_if_fail (artist != NULL || title != NULL, FALSE);
-	g_return_val_if_fail ((uri != NULL && local_uri != NULL) || cache_path != NULL, FALSE);
+	g_return_val_if_fail (cache_path != NULL, FALSE);
 
-	if (uri) {
-		file = g_file_new_for_uri (uri);
-	}
-
-	media_art_get_file (artist, title, prefix, file,
-			    cache_path ? &cache_file : NULL,
-			    local_uri ? &local_file : NULL);
+	media_art_get_file (artist, title, prefix, cache_path ? &cache_file : NULL);
 	if (cache_path) {
 		*cache_path = cache_file ? g_file_get_path (cache_file) : NULL;
-	}
-
-	if (local_uri) {
-		*local_uri = local_file ? g_file_get_uri (local_file) : NULL;
-	}
-
-	if (file) {
-		g_object_unref (file);
 	}
 
 	return TRUE;
@@ -507,7 +455,8 @@ media_art_remove (const gchar   *artist,
 		gint removed = 0;
 
 		/* The get_path API does stripping itself */
-		media_art_get_path (artist, album, "album", NULL, &target, NULL);
+		media_art_get_path (artist, album, "album", &target);
+
 		if (target) {
 			if (g_unlink (target) != 0) {
 				g_debug ("Could not delete file '%s'", target);
@@ -522,7 +471,7 @@ media_art_remove (const gchar   *artist,
 
 		/* Add the album path also (to which the symlinks are made) */
 		if (album) {
-			media_art_get_path (NULL, album, "album", NULL, &target, NULL);
+			media_art_get_path (NULL, album, "album", &target);
 			if (target) {
 				if (g_unlink (target) != 0) {
 					g_debug ("Could not delete file '%s'", target);
