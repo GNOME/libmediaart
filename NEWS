@@ -1,3 +1,12 @@
+
+NEW in 0.7 - 2014-09-22
+=======================
+
+  * Fixes: GB#727478, artist, title and prefix arguments in get_file should
+  * Fixes: GB#731681, make check clears user's media-art cache
+  * extract: Fixed gtkdoc warning for return value of media_art_error_quark()
+
+
 NEW in 0.6 - 2014-08-19
 =======================
 
