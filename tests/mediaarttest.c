@@ -23,6 +23,7 @@
 #include <stdlib.h>
 
 #include <glib-object.h>
+#include <glib/gstdio.h>
 
 #include <libmediaart/mediaart.h>
 
@@ -35,23 +36,23 @@ typedef struct {
 
 static TestInfo strip_test_cases [] = {
 	{ "nothing-to-strip", "nothing to strip here", NULL, "nothing to strip here" },
-        { "case-strip", "Upper Case gOEs dOwN", NULL, "upper case goes down" },
+	{ "case-strip", "Upper Case gOEs dOwN", NULL, "upper case goes down" },
 	{ "single-char", "o", NULL, "o" },
-        { "single-char-case", "A", NULL, "a" },
-        { "remove-parenthesis-round", "cool album (CD1)", NULL, "cool album" },
+	{ "single-char-case", "A", NULL, "a" },
+	{ "remove-parenthesis-round", "cool album (CD1)", NULL, "cool album" },
 	{ "remove-parenthesis-square", "cool album [CD1]", NULL, "cool album" },
-        { "remove-parenthesis-squirly", "cool album {CD1}", NULL, "cool album" },
-        { "remove-parenthesis-gt-lt", "cool album <CD1>", NULL, "cool album" },
-        { "whitespace", " ", NULL, "" },
-        { "whitespace-with-content", "     a     ", NULL, "a" },
-        { "messy-title", "messy #title & stuff?", NULL, "messy title stuff" },
+	{ "remove-parenthesis-squirly", "cool album {CD1}", NULL, "cool album" },
+	{ "remove-parenthesis-gt-lt", "cool album <CD1>", NULL, "cool album" },
+	{ "whitespace", " ", NULL, "" },
+	{ "whitespace-with-content", "     a     ", NULL, "a" },
+	{ "messy-title", "messy #title & stuff?", NULL, "messy title stuff" },
 	{ "unbalanced-brackets-square-start", "Unbalanced [brackets", NULL, "unbalanced brackets" },
-        { "unbalanced-brackets-round-start", "Unbalanced (brackets", NULL, "unbalanced brackets" },
-        { "unbalanced-brackets-gt-lt-start", "Unbalanced <brackets", NULL, "unbalanced brackets" },
-        { "unbalanced-brackets-round-end", "Unbalanced brackets)", NULL, "unbalanced brackets" },
-        { "unbalanced-brackets-square-end", "Unbalanced brackets]", NULL, "unbalanced brackets" },
-        { "unbalanced-brackets-gt-lt-end", "Unbalanced brackets>", NULL, "unbalanced brackets" },
-        { "messy-title-punctuation", "Live at *WEMBLEY* dude!", NULL, "live at wembley dude" },
+	{ "unbalanced-brackets-round-start", "Unbalanced (brackets", NULL, "unbalanced brackets" },
+	{ "unbalanced-brackets-gt-lt-start", "Unbalanced <brackets", NULL, "unbalanced brackets" },
+	{ "unbalanced-brackets-round-end", "Unbalanced brackets)", NULL, "unbalanced brackets" },
+	{ "unbalanced-brackets-square-end", "Unbalanced brackets]", NULL, "unbalanced brackets" },
+	{ "unbalanced-brackets-gt-lt-end", "Unbalanced brackets>", NULL, "unbalanced brackets" },
+	{ "messy-title-punctuation", "Live at *WEMBLEY* dude!", NULL, "live at wembley dude" },
 	{ "crap-brackets-everywhere", "met[xX[x]alli]ca", NULL, "metallica" },
 	{ NULL, NULL, NULL, NULL }
 };
@@ -59,20 +60,20 @@ static TestInfo strip_test_cases [] = {
 static TestInfo location_test_cases [] = {
 	{ "normal-case",
 	  "Beatles", "Sgt. Pepper",
-         "album-2a9ea35253dbec60e76166ec8420fbda-cfba4326a32b44b8760b3a2fc827a634.jpeg" },
+	  "album-2a9ea35253dbec60e76166ec8420fbda-cfba4326a32b44b8760b3a2fc827a634.jpeg" },
 	{ "empty-artist",
 	  "", "sgt. pepper",
-          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg" },
+	  "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg" },
 	{ "whitespace-artist",
 	  " ", "sgt. pepper",
-          "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg" },
+	  "album-d41d8cd98f00b204e9800998ecf8427e-cfba4326a32b44b8760b3a2fc827a634.jpeg" },
 	{ "null-artist",
 	  NULL, "sgt. pepper",
-          "album-cfba4326a32b44b8760b3a2fc827a634-7215ee9c7d9dc229d2921a40e899ec5f.jpeg" },
+	  "album-cfba4326a32b44b8760b3a2fc827a634-7215ee9c7d9dc229d2921a40e899ec5f.jpeg" },
 	{ "null-title",
 	  "Beatles", NULL,
-          "album-2a9ea35253dbec60e76166ec8420fbda-7215ee9c7d9dc229d2921a40e899ec5f.jpeg" },
-        { NULL, NULL, NULL, NULL }
+	  "album-2a9ea35253dbec60e76166ec8420fbda-7215ee9c7d9dc229d2921a40e899ec5f.jpeg" },
+	{ NULL, NULL, NULL, NULL }
 };
 
 static void
@@ -92,29 +93,14 @@ teardown (TestInfo      *info,
 }
 
 static void
-test_mediaart_new (TestInfo      *test_info,
-                   gconstpointer  context)
-{
-	MediaArtProcess *process;
-	GError *error = NULL;
-
-	/* Test: creation of object */
-	process = media_art_process_new (&error);
-	g_assert_no_error (error);
-	g_assert (process != NULL);
-
-	g_object_unref (process);
-}
-
-static void
 test_mediaart_stripping (TestInfo      *test_info,
                          gconstpointer  context)
 {
-        gchar *result;
+	gchar *result;
 
-        result = media_art_strip_invalid_entities (test_info->input1);
-        g_assert_cmpstr (result, ==, test_info->expected);
-        g_free (result);
+	result = media_art_strip_invalid_entities (test_info->input1);
+	g_assert_cmpstr (result, ==, test_info->expected);
+	g_free (result);
 }
 
 static void
@@ -131,9 +117,9 @@ test_mediaart_stripping_failures (void)
 	/* a. Return NULL for NULL (subprocess)
 	 * b. Return NULL for ""
 	 */
-        stripped = media_art_strip_invalid_entities ("");
-        g_assert (stripped);
-        g_assert_cmpstr (stripped, ==, "");
+	stripped = media_art_strip_invalid_entities ("");
+	g_assert (stripped);
+	g_assert_cmpstr (stripped, ==, "");
 
 	g_test_trap_subprocess ("/mediaart/stripping_failures/subprocess", 0, 0);
 	g_test_trap_assert_failed ();
@@ -145,75 +131,151 @@ static void
 test_mediaart_location (TestInfo      *test_info,
                         gconstpointer  context)
 {
-        gchar *path = NULL, *local_uri = NULL;
-        gchar *expected;
+	gchar *path = NULL, *local_uri = NULL;
+	gchar *expected;
 
-        media_art_get_path (test_info->input1,
-                            test_info->input2,
-                            "album",
-                            "file:///home/test/a.mp3",
-                            &path,
-                            &local_uri);
-        expected = g_build_path (G_DIR_SEPARATOR_S,
-                                 g_get_user_cache_dir (),
-                                 "media-art",
-                                 test_info->expected,
-                                 NULL);
-        g_assert_cmpstr (path, ==, expected);
-                
-        g_free (expected);
-        g_free (path);
-        g_free (local_uri);
+	media_art_get_path (test_info->input1,
+	                    test_info->input2,
+	                    "album",
+	                    "file:///home/test/a.mp3",
+	                    &path,
+	                    &local_uri);
+	expected = g_build_path (G_DIR_SEPARATOR_S,
+	                         g_get_user_cache_dir (),
+	                         "media-art",
+	                         test_info->expected,
+	                         NULL);
+	g_assert_cmpstr (path, ==, expected);
+
+	g_free (expected);
+	g_free (path);
+	g_free (local_uri);
 }
 
 static void
 test_mediaart_location_null (void)
 {
-        gchar *path = NULL, *local_uri = NULL;
+	gchar *path = NULL, *local_uri = NULL;
 
-        /* NULL parameters */
-        media_art_get_path (NULL, "some-title", "album", "file:///a/b/c.mp3", &path, &local_uri);
-        g_assert (path != NULL);
-        g_assert (local_uri != NULL);
+	/* NULL parameters */
+	media_art_get_path (NULL, "some-title", "album", "file:///a/b/c.mp3", &path, &local_uri);
+	g_assert (path != NULL);
+	g_assert (local_uri != NULL);
 
-        media_art_get_path ("some-artist", NULL, "album", "file:///a/b/c.mp3", &path, &local_uri);
-        g_assert (path != NULL);
-        g_assert (local_uri != NULL);
+	media_art_get_path ("some-artist", NULL, "album", "file:///a/b/c.mp3", &path, &local_uri);
+	g_assert (path != NULL);
+	g_assert (local_uri != NULL);
 }
 
 static void
 test_mediaart_location_path (void)
 {
-        gchar *path = NULL, *local_uri = NULL;
-        gchar *expected;
+	gchar *path = NULL, *local_uri = NULL;
+	gchar *expected;
 
-        /* Use path instead of URI */
-        media_art_get_path (location_test_cases[0].input1,
-                            location_test_cases[0].input2,
-                            "album",
-                            "/home/test/a.mp3",
-                            &path,
-                            &local_uri);
-        expected = g_build_path (G_DIR_SEPARATOR_S, 
-                                 g_get_user_cache_dir (),
-                                 "media-art",
-                                 location_test_cases[0].expected,
-                                 NULL);
-        g_assert_cmpstr (path, ==, expected);
-                
-        g_free (expected);
-        g_free (path);
-        g_free (local_uri);
+	/* Use path instead of URI */
+	media_art_get_path (location_test_cases[0].input1,
+	                    location_test_cases[0].input2,
+	                    "album",
+	                    "/home/test/a.mp3",
+	                    &path,
+	                    &local_uri);
+	expected = g_build_path (G_DIR_SEPARATOR_S,
+	                         g_get_user_cache_dir (),
+	                         "media-art",
+	                         location_test_cases[0].expected,
+	                         NULL);
+	g_assert_cmpstr (path, ==, expected);
+
+	g_free (expected);
+	g_free (path);
+	g_free (local_uri);
 }
 
 static void
-test_mediaart_embedded_mp3 (void)
+test_mediaart_process_new (void)
 {
 	MediaArtProcess *process;
 	GError *error = NULL;
+	gchar *dir;
+
+	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
+	g_assert_false (g_file_test (dir, G_FILE_TEST_EXISTS));
+
+	/* Creates media-art cache dir if it doesn't exist ... */
+	process = media_art_process_new (&error);
+	g_assert_no_error (error);
+
+	g_assert_true (g_file_test (dir, G_FILE_TEST_EXISTS));
+
+	g_free (dir);
+
+	g_object_unref (process);
+}
+
+static void
+test_mediaart_remove_cb (GObject      *source_object,
+                         GAsyncResult *result,
+                         gpointer      user_data)
+{
+	GError *error = NULL;
+	GMainLoop *ml = user_data;
+	gboolean success;
+
+	success = media_art_remove_finish (source_object, result, &error);
+	g_assert_no_error (error);
+	g_assert_true (success);
+
+	g_main_loop_quit (ml);
+}
+
+static void
+test_mediaart_remove (const gchar  *artist,
+                      const gchar  *title,
+                      gpointer      user_data)
+{
+	GCancellable *cancellable;
+
+	cancellable = g_cancellable_new ();
+
+	/* Remove album art */
+	media_art_remove_async (artist,
+	                        title,
+	                        G_PRIORITY_DEFAULT,
+	                        NULL,
+	                        cancellable,
+	                        test_mediaart_remove_cb,
+	                        user_data);
+
+	g_object_unref (cancellable);
+}
+
+static void
+test_mediaart_process_file_cb (GObject      *source_object,
+                               GAsyncResult *result,
+                               gpointer      user_data)
+{
+	MediaArtProcess *process = MEDIA_ART_PROCESS (source_object);
+	GError *error = NULL;
+	GMainLoop *ml = user_data;
+	gboolean success;
+
+	success = media_art_process_file_finish (process, result, &error);
+	g_assert_no_error (error);
+	g_assert_true (success);
+
+	test_mediaart_remove ("King Kilo", "Radium", ml);
+}
+
+static void
+test_mediaart_process_file (void)
+{
+	MediaArtProcess *process;
+	GMainLoop *ml;
+	GCancellable *cancellable;
+	GError *error = NULL;
 	GFile *file = NULL;
 	gchar *path;
-	gboolean retval;
 
 	path = g_build_filename (G_DIR_SEPARATOR_S, TOP_SRCDIR, "tests", "543249_King-Kilo---Radium.mp3", NULL);
 	file = g_file_new_for_path (path);
@@ -222,96 +284,154 @@ test_mediaart_embedded_mp3 (void)
 	process = media_art_process_new (&error);
 	g_assert_no_error (error);
 
-	retval = media_art_process_file (process,
-	                                 MEDIA_ART_ALBUM,
-	                                 MEDIA_ART_PROCESS_FLAGS_FORCE,
-	                                 file,
-	                                 "King Kilo", /* artist */
-	                                 "Radium",    /* title */
-	                                 &error);
+	ml = g_main_loop_new (NULL, FALSE);
+	cancellable = g_cancellable_new ();
 
+	media_art_process_file_async (process,
+	                              MEDIA_ART_ALBUM,
+	                              MEDIA_ART_PROCESS_FLAGS_FORCE,
+	                              file,
+	                              "King Kilo", /* artist */
+	                              "Radium",    /* title */
+	                              G_PRIORITY_DEFAULT,
+	                              cancellable,
+	                              test_mediaart_process_file_cb,
+	                              ml);
+
+	g_main_loop_run (ml);
+	g_main_loop_unref (ml);
+
+	g_object_unref (cancellable);
+	g_object_unref (process);
+}
+
+static void
+test_mediaart_process_buffer_cb (GObject      *source_object,
+                                 GAsyncResult *result,
+                                 gpointer      user_data)
+{
+	GError *error = NULL;
+	GFile *file;
+	gchar *path;
+	gchar *expected;
+	gchar *out_path = NULL;
+	gchar *out_uri = NULL;
+	gboolean success;
+
+	success = media_art_process_buffer_finish (MEDIA_ART_PROCESS (source_object), result, &error);
 	g_assert_no_error (error);
-	g_assert_true (retval);
+	g_assert_true (success);
 
+	/* Check cache exists */
+	path = g_build_filename (G_DIR_SEPARATOR_S, TOP_SRCDIR, "tests", "cover.png", NULL);
+	file = g_file_new_for_path (path);
+
+	media_art_get_path ("Lanedo", /* artist / title */
+	                    NULL,     /* album */
+	                    NULL,     /* prefix */
+	                    path,
+	                    &out_path,
+	                    &out_uri);
+	g_free (path);
 	g_object_unref (file);
 
-	g_object_unref (process);
+	expected = g_build_path (G_DIR_SEPARATOR_S,
+	                         g_get_user_cache_dir (),
+	                         "media-art",
+	                         "album-be60c84852d9762b0a896ba9ba24245e-7215ee9c7d9dc229d2921a40e899ec5f.jpeg",
+	                         NULL);
+	g_assert_cmpstr (out_path, ==, expected);
+	/* FIXME: Why is out_uri NULL? */
+	/* FIXME: Why does this next test fail - i.e. file does not
+	 * exist if we've processed it?
+	 */
+	g_assert (g_file_test (out_path, G_FILE_TEST_EXISTS) == TRUE);
+
+	test_mediaart_remove ("Lanedo", NULL, user_data);
+
+	g_free (out_path);
+	g_free (out_uri);
+	g_free (expected);
 }
 
 static void
 test_mediaart_process_buffer (void)
 {
 	MediaArtProcess *process;
+	GMainLoop *ml;
+	GCancellable *cancellable;
+	GFile *file;
 	GError *error = NULL;
-	GFile *file = NULL;
 	gchar *path;
 	gchar *out_path = NULL;
 	gchar *out_uri = NULL;
-	gchar *expected;
-	gboolean retval;
+	unsigned char *buffer = NULL;
+	size_t length = 0;
+	const gchar *mime;
+
+	cancellable = g_cancellable_new ();
 
 	path = g_build_filename (G_DIR_SEPARATOR_S, TOP_SRCDIR, "tests", "cover.png", NULL);
-	file = g_file_new_for_path (path);
-
-	process = media_art_process_new (&error);
-	g_assert_no_error (error);
 
 	/* Check data is not cached currently */
 	media_art_get_path ("Lanedo", /* artist / title */
 	                    NULL,     /* album */
 	                    NULL,     /* prefix */
-                            path,
-                            &out_path,
-                            &out_uri);
-	g_assert (g_file_test (out_path, G_FILE_TEST_EXISTS) == FALSE);
+	                    path,
+	                    &out_path,
+	                    &out_uri);
+	g_assert_false (g_file_test (out_path, G_FILE_TEST_EXISTS));
 	g_free (out_path);
 	g_free (out_uri);
 
-	/* Process data */
-	retval = media_art_process_file (process,
-	                                 MEDIA_ART_ALBUM,
-	                                 MEDIA_ART_PROCESS_FLAGS_NONE,
-	                                 file,
-	                                 NULL,        /* album */
-	                                 "Lanedo",    /* title */
-	                                 &error);
+	process = media_art_process_new (&error);
 	g_assert_no_error (error);
-	g_assert_true (retval);
+	g_assert_nonnull (process);
 
-	/* Check cache exists */
-	media_art_get_path ("Lanedo", /* artist / title */
-	                    NULL,     /* album */
-	                    NULL,     /* prefix */
-                            path,
-                            &out_path,
-                            &out_uri);
+	ml = g_main_loop_new (NULL, FALSE);
 
-        expected = g_build_path (G_DIR_SEPARATOR_S,
-                                 g_get_user_cache_dir (),
-                                 "media-art",
-                                 "album-be60c84852d9762b0a896ba9ba24245e-7215ee9c7d9dc229d2921a40e899ec5f.jpeg",
-                                 NULL);
-        g_assert_cmpstr (out_path, ==, expected);
-        /* FIXME: Why is out_uri NULL? */
-        /* FIXME: Why does this next test fail - i.e. file does not
-         * exist if we've processed it?
-         */
-        g_assert (g_file_test (out_path, G_FILE_TEST_EXISTS) == TRUE);
+	/* Process data */
+	mime = "image/png";
+	g_file_get_contents (path, (gchar**) &buffer, &length, &error);
+	g_assert_no_error (error);
 
-        g_free (out_path);
-        g_free (out_uri);
-        g_free (expected);
+	file = g_file_new_for_path (path);
+	g_free (path);
 
-        /* Remove album art */
-        retval = media_art_remove ("Lanedo", "");
-        g_assert_true (retval);
+	media_art_process_buffer_async (process,
+	                                MEDIA_ART_ALBUM,
+	                                MEDIA_ART_PROCESS_FLAGS_NONE,
+	                                file,
+	                                buffer,
+	                                length,
+	                                mime,
+	                                NULL,        /* album */
+	                                "Lanedo",    /* title */
+	                                G_PRIORITY_DEFAULT,
+	                                cancellable,
+	                                test_mediaart_process_buffer_cb,
+	                                ml);
 
-        retval = media_art_remove ("Lanedo", NULL);
+	g_main_loop_run (ml);
+	g_main_loop_unref (ml);
 
-        g_object_unref (file);
-        g_free (path);
-
+	g_object_unref (file);
+	g_object_unref (cancellable);
 	g_object_unref (process);
+}
+
+static void
+test_mediaart_process_uri_cb (GObject      *source_object,
+                              GAsyncResult *result,
+                              gpointer      user_data)
+{
+	GError *error = NULL;
+	gboolean success;
+
+	success = media_art_process_uri_finish (MEDIA_ART_PROCESS (source_object), result, &error);
+	g_assert_false (success);
+	g_assert_error (error, g_io_error_quark(), G_IO_ERROR_NOT_FOUND);
+	g_clear_error (&error);
 }
 
 static void
@@ -319,8 +439,11 @@ test_mediaart_process_failures (void)
 {
 	MediaArtProcess *process;
 	GError *error = NULL;
+	GCancellable *cancellable;
 
-	g_test_trap_subprocess ("/mediaart/process_failures/subprocess", 0, 0 /*G_TEST_SUBPROCESS_INHERIT_STDOUT | G_TEST_SUBPROCESS_INHERIT_STDERR*/);
+	cancellable = g_cancellable_new ();
+
+	g_test_trap_subprocess ("/mediaart/process/failures/subprocess", 0, 0 /*G_TEST_SUBPROCESS_INHERIT_STDOUT | G_TEST_SUBPROCESS_INHERIT_STDERR*/);
 	g_test_trap_assert_failed ();
 	g_test_trap_assert_stderr ("*assertion 'uri != NULL' failed*");
 
@@ -328,16 +451,16 @@ test_mediaart_process_failures (void)
 	g_assert_no_error (error);
 
 	/* Test: invalid file */
-	g_assert (!media_art_process_uri (process,
-	                                  MEDIA_ART_ALBUM,
-	                                  MEDIA_ART_PROCESS_FLAGS_NONE,
-	                                  "file:///invalid/path.png",
-	                                  "Foo",       /* album */
-	                                  "Bar",       /* title */
-	                                  &error));
-	
-	g_assert_error (error, g_io_error_quark(), G_IO_ERROR_NOT_FOUND);
-	g_clear_error (&error);
+	media_art_process_uri_async (process,
+	                             MEDIA_ART_ALBUM,
+	                             MEDIA_ART_PROCESS_FLAGS_NONE,
+	                             "file:///invalid/path.png",
+	                             "Foo",       /* album */
+	                             "Bar",       /* title */
+	                             G_PRIORITY_DEFAULT,
+	                             cancellable,
+	                             test_mediaart_process_uri_cb,
+	                             NULL);
 
 	/* Test: Invalid mime type */
 	/* g_assert (!media_art_process_uri (process, */
@@ -348,6 +471,7 @@ test_mediaart_process_failures (void)
 	/*                                  MEDIA_ART_ALBUM, */
 	/*                                  "Foo",       /\* album *\/ */
 	/*                                  "Bar",       /\* title *\/ */
+	/*                                  NULL, */
 	/*                                  &error)); */
 
 	/* g_message ("code:%d, domain:%d, error:'%s'\n", error->code, error->domain, error->message); */
@@ -370,6 +494,7 @@ test_mediaart_process_failures_subprocess (void)
 	                                  NULL,
 	                                  "Foo",       /* album */
 	                                  "Bar",       /* title */
+	                                  NULL,
 	                                  &error));
 	g_assert_no_error (error);
 
@@ -381,16 +506,15 @@ main (int argc, char **argv)
 {
 	const gchar *cache_home_originally;
 	const gchar *test_dir;
-	gint success = EXIT_SUCCESS;
+	gchar *dir;
+	gint success;
 	gint i;
 
-        g_test_init (&argc, &argv, NULL);
+	g_test_init (&argc, &argv, NULL);
 
 	test_dir = g_test_get_dir (G_TEST_BUILT);
 	cache_home_originally = g_getenv ("XDG_CACHE_HOME");
 	g_setenv ("XDG_CACHE_HOME", test_dir, TRUE);
-
-        g_test_add ("/mediaart/new", TestInfo, NULL, setup, test_mediaart_new, teardown);
 
 	for (i = 0; strip_test_cases[i].test_name; i++) {
 		gchar *testpath;
@@ -400,8 +524,8 @@ main (int argc, char **argv)
 		g_free (testpath);
 	}
 
-        g_test_add_func ("/mediaart/stripping_failures", test_mediaart_stripping_failures);
-        g_test_add_func ("/mediaart/stripping_failures/subprocess", test_mediaart_stripping_failures_subprocess);
+	g_test_add_func ("/mediaart/stripping_failures", test_mediaart_stripping_failures);
+	g_test_add_func ("/mediaart/stripping_failures/subprocess", test_mediaart_stripping_failures_subprocess);
 
 	for (i = 0; location_test_cases[i].test_name; i++) {
 		gchar *testpath;
@@ -411,20 +535,26 @@ main (int argc, char **argv)
 		g_free (testpath);
 	}
 
-        g_test_add_func ("/mediaart/location_null", test_mediaart_location_null);
-        g_test_add_func ("/mediaart/location_path", test_mediaart_location_path);
-        g_test_add_func ("/mediaart/embedded_mp3", test_mediaart_embedded_mp3);
-        g_test_add_func ("/mediaart/process_buffer", test_mediaart_process_buffer);
-        g_test_add_func ("/mediaart/process_failures", test_mediaart_process_failures);
-        g_test_add_func ("/mediaart/process_failures/subprocess", test_mediaart_process_failures_subprocess);
+	g_test_add_func ("/mediaart/location_null", test_mediaart_location_null);
+	g_test_add_func ("/mediaart/location_path", test_mediaart_location_path);
+	g_test_add_func ("/mediaart/process/new", test_mediaart_process_new);
+	g_test_add_func ("/mediaart/process/file", test_mediaart_process_file);
+	g_test_add_func ("/mediaart/process/buffer", test_mediaart_process_buffer);
+	g_test_add_func ("/mediaart/process/failures", test_mediaart_process_failures);
+	g_test_add_func ("/mediaart/process/failures/subprocess", test_mediaart_process_failures_subprocess);
 
-        success = g_test_run ();
+	success = g_test_run ();
 
-        if (cache_home_originally) {
-	        g_setenv ("XDG_CACHE_HOME", cache_home_originally, TRUE);
-        } else {
-	        g_unsetenv ("XDG_CACHE_HOME");
-        }
+	/* Clean up */
+	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
+	g_rmdir (dir);
+	g_free (dir);
 
-        return success;
+	if (cache_home_originally) {
+		g_setenv ("XDG_CACHE_HOME", cache_home_originally, TRUE);
+	} else {
+		g_unsetenv ("XDG_CACHE_HOME");
+	}
+
+	return success;
 }

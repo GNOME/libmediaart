@@ -69,6 +69,10 @@ typedef enum {
  * @MEDIA_ART_ERROR_SYMLINK_FAILED: A call to symlink() failed
  * resulting in the incorrect storage of media art.
  * @MEDIA_ART_ERROR_RENAME_FAILED: File could not be renamed.
+ * @MEDIA_ART_ERROR_NO_CACHE_DIR: This is given when the
+ * XDG_CACHE_HOME directory could not be used to create the
+ * 'media-art' subdirectory used for caching media art. This is
+ * usually an initiation error.
  *
  * Enumeration values used in errors returned by the
  * #MediaArtError API.
@@ -79,7 +83,8 @@ typedef enum {
 	MEDIA_ART_ERROR_NO_STORAGE,
 	MEDIA_ART_ERROR_NO_TITLE,
 	MEDIA_ART_ERROR_SYMLINK_FAILED,
-	MEDIA_ART_ERROR_RENAME_FAILED
+	MEDIA_ART_ERROR_RENAME_FAILED,
+	MEDIA_ART_ERROR_NO_CACHE_DIR
 } MediaArtError;
 
 
@@ -124,32 +129,78 @@ struct _MediaArtProcessClass {
 };
 
 
-GType            media_art_process_get_type (void) G_GNUC_CONST;
-MediaArtProcess *media_art_process_new      (GError               **error);
-gboolean         media_art_process_uri      (MediaArtProcess       *process,
-                                             MediaArtType           type,
-                                             MediaArtProcessFlags   flags,
-                                             const gchar           *uri,
-                                             const gchar           *artist,
-                                             const gchar           *title,
-                                             GError               **error);
-gboolean         media_art_process_file     (MediaArtProcess       *process,
-                                             MediaArtType           type,
-                                             MediaArtProcessFlags   flags,
-                                             GFile                 *file,
-                                             const gchar           *artist,
-                                             const gchar           *title,
-                                             GError               **error);
-gboolean         media_art_process_buffer   (MediaArtProcess       *process,
-                                             MediaArtType           type,
-                                             MediaArtProcessFlags   flags,
-                                             GFile                 *related_file,
-                                             const guchar          *buffer,
-                                             gsize                  len,
-                                             const gchar           *mime,
-                                             const gchar           *artist,
-                                             const gchar           *title,
-                                             GError               **error);
+GType            media_art_process_get_type      (void) G_GNUC_CONST;
+
+MediaArtProcess *media_art_process_new           (GError               **error);
+gboolean         media_art_process_uri           (MediaArtProcess       *process,
+                                                  MediaArtType           type,
+                                                  MediaArtProcessFlags   flags,
+                                                  const gchar           *uri,
+                                                  const gchar           *artist,
+                                                  const gchar           *title,
+                                                  GCancellable          *cancellable,
+                                                  GError               **error);
+void             media_art_process_uri_async     (MediaArtProcess       *process,
+                                                  MediaArtType           type,
+                                                  MediaArtProcessFlags   flags,
+                                                  const gchar           *uri,
+                                                  const gchar           *artist,
+                                                  const gchar           *title,
+                                                  gint                   io_priority,
+                                                  GCancellable          *cancellable,
+                                                  GAsyncReadyCallback    callback,
+                                                  gpointer               user_data);
+gboolean         media_art_process_uri_finish    (MediaArtProcess       *process,
+                                                  GAsyncResult          *result,
+                                                  GError               **error);
+gboolean         media_art_process_file          (MediaArtProcess       *process,
+                                                  MediaArtType           type,
+                                                  MediaArtProcessFlags   flags,
+                                                  GFile                 *file,
+                                                  const gchar           *artist,
+                                                  const gchar           *title,
+                                                  GCancellable          *cancellable,
+                                                  GError               **error);
+void             media_art_process_file_async    (MediaArtProcess       *process,
+                                                  MediaArtType           type,
+                                                  MediaArtProcessFlags   flags,
+                                                  GFile                 *file,
+                                                  const gchar           *artist,
+                                                  const gchar           *title,
+                                                  gint                   io_priority,
+                                                  GCancellable          *cancellable,
+                                                  GAsyncReadyCallback    callback,
+                                                  gpointer               user_data);
+gboolean         media_art_process_file_finish   (MediaArtProcess       *process,
+                                                  GAsyncResult          *result,
+                                                  GError               **error);
+gboolean         media_art_process_buffer        (MediaArtProcess       *process,
+                                                  MediaArtType           type,
+                                                  MediaArtProcessFlags   flags,
+                                                  GFile                 *related_file,
+                                                  const guchar          *buffer,
+                                                  gsize                  len,
+                                                  const gchar           *mime,
+                                                  const gchar           *artist,
+                                                  const gchar           *title,
+                                                  GCancellable          *cancellable,
+                                                  GError               **error);
+void             media_art_process_buffer_async  (MediaArtProcess       *process,
+                                                  MediaArtType           type,
+                                                  MediaArtProcessFlags   flags,
+                                                  GFile                 *related_file,
+                                                  const guchar          *buffer,
+                                                  gsize                  len,
+                                                  const gchar           *mime,
+                                                  const gchar           *artist,
+                                                  const gchar           *title,
+                                                  gint                   io_priority,
+                                                  GCancellable          *cancellable,
+                                                  GAsyncReadyCallback    callback,
+                                                  gpointer               user_data);
+gboolean         media_art_process_buffer_finish (MediaArtProcess       *process,
+                                                  GAsyncResult          *result,
+                                                  GError               **error);
 
 G_END_DECLS
 
