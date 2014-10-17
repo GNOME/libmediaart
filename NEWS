@@ -1,3 +1,22 @@
+NEW in 1.9.0 - 2014-10-17
+=========================
+
+  * Fixes: GB#722795, tracker should not scatter .mediaartlocal folders across filesystem
+  * Fixes: GB#724879, Add async calls
+
+NOTE:
+
+  This RELEASE COMPLETELY BREAKS API/ABI on nearly all functions and
+  is incompatible with the 1.0 series of releases (the last being
+  0.7.0).
+
+  This unstable release is in preparation for the libmediaart-2.0
+  series of releases. The version being < 2.0 is purely because 2.0
+  will be considered stable.
+
+  From this point on, the API is not expected to change by any large
+  amount from what is defined in these releases.
+
 
 NEW in 0.7 - 2014-09-22
 =======================
