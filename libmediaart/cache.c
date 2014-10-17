@@ -284,16 +284,14 @@ media_art_get_file (const gchar  *artist,
 
 	/* http://live.gnome.org/MediaArtStorageSpec */
 
-	if (cache_file) {
-		*cache_file = NULL;
-	}
-
 	/* Rules:
 	 * 1. artist OR title must be non-NULL.
 	 * 2. cache_file must be non-NULL
 	 */
 	g_return_val_if_fail (artist != NULL || title != NULL, FALSE);
-	g_return_val_if_fail (!G_IS_FILE (cache_file), FALSE);
+	g_return_val_if_fail (cache_file != NULL, FALSE);
+
+	*cache_file = NULL;
 
 	if (artist) {
 		artist_stripped = media_art_strip_invalid_entities (artist);
@@ -341,11 +339,9 @@ media_art_get_file (const gchar  *artist,
 		g_free (title_norm);
 	}
 
-	if (cache_file) {
-		filename = g_build_filename (dir, art_filename, NULL);
-		*cache_file = g_file_new_for_path (filename);
-		g_free (filename);
-	}
+	filename = g_build_filename (dir, art_filename, NULL);
+	*cache_file = g_file_new_for_path (filename);
+	g_free (filename);
 
 	g_free (dir);
 	g_free (art_filename);
@@ -380,6 +376,7 @@ media_art_get_path (const gchar  *artist,
                     gchar       **cache_path)
 {
 	GFile *cache_file = NULL;
+	gboolean success;
 
 	/* Rules:
 	 * 1. artist OR title must be non-NULL.
@@ -388,12 +385,10 @@ media_art_get_path (const gchar  *artist,
 	g_return_val_if_fail (artist != NULL || title != NULL, FALSE);
 	g_return_val_if_fail (cache_path != NULL, FALSE);
 
-	media_art_get_file (artist, title, prefix, cache_path ? &cache_file : NULL);
-	if (cache_path) {
-		*cache_path = cache_file ? g_file_get_path (cache_file) : NULL;
-	}
+	success = media_art_get_file (artist, title, prefix, &cache_file);
+	*cache_path = cache_file ? g_file_get_path (cache_file) : NULL;
 
-	return TRUE;
+	return success;
 }
 
 /**
