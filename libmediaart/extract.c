@@ -883,7 +883,7 @@ get_heuristic (MediaArtType   type,
 						g_debug ("symlink('%s' --> '%s'), %s",
 						         album_art_file_path,
 						         target,
-						         g_strerror (errno));
+						         !retval ? g_strerror (errno) : "no error given");
 					} else {
 						GFile *art_file;
 						GFile *target_file;
@@ -944,7 +944,7 @@ get_heuristic (MediaArtType   type,
 
 						g_debug ("symlink('%s' --> '%s'), %s",
 						         album_art_file_path, target,
-						         g_strerror (errno));
+						         !retval ? g_strerror (errno) : "no error given");
 					}
 
 					g_object_unref (album_art_file);
