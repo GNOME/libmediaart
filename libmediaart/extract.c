@@ -1609,7 +1609,7 @@ process_thread (GTask        *task,
  * @related_file: File related to the media art
  * @buffer: (array length=len)(allow-none): a buffer containing @file data, or %NULL
  * @len: length of @buffer, or 0
- * @mime: MIME type of @buffer, or %NULL
+ * @mime: (allow-none): MIME type of @buffer, or %NULL
  * @artist: (allow-none): The artist name @file or %NULL
  * @title: (allow-none): The title for @file or %NULL
  * @cancellable: (allow-none): optional #GCancellable object, %NULL to
