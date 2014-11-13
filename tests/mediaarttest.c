@@ -269,7 +269,7 @@ test_mediaart_process_file (void)
 	GFile *file = NULL;
 	gchar *path;
 
-	path = g_build_filename (G_DIR_SEPARATOR_S, TOP_SRCDIR, "tests", "543249_King-Kilo---Radium.mp3", NULL);
+	path = g_test_build_filename (G_TEST_DIST, "543249_King-Kilo---Radium.mp3", NULL);
 	file = g_file_new_for_path (path);
 	g_free (path);
 
@@ -315,7 +315,7 @@ test_mediaart_process_buffer_cb (GObject      *source_object,
 	g_assert_true (success);
 
 	/* Check cache exists */
-	path = g_build_filename (G_DIR_SEPARATOR_S, TOP_SRCDIR, "tests", "cover.png", NULL);
+	path = g_test_build_filename (G_TEST_DIST, "cover.png", NULL);
 	file = g_file_new_for_path (path);
 
 	media_art_get_path ("Lanedo", /* artist / title */
@@ -361,7 +361,7 @@ test_mediaart_process_buffer (void)
 
 	cancellable = g_cancellable_new ();
 
-	path = g_build_filename (G_DIR_SEPARATOR_S, TOP_SRCDIR, "tests", "cover.png", NULL);
+	path = g_test_build_filename (G_TEST_DIST, "cover.png", NULL);
 
 	/* Check data is not cached currently */
 	media_art_get_path ("Lanedo", /* artist / title */
@@ -497,16 +497,16 @@ int
 main (int argc, char **argv)
 {
 	const gchar *cache_home_originally;
-	const gchar *test_dir;
+	const gchar *temp_cache_dir;
 	gchar *dir;
 	gint success;
 	gint i;
 
 	g_test_init (&argc, &argv, NULL);
 
-	test_dir = g_test_get_dir (G_TEST_BUILT);
+	temp_cache_dir = g_dir_make_tmp ("libmediaart-tests-XXXXXX", NULL);
 	cache_home_originally = g_getenv ("XDG_CACHE_HOME");
-	g_setenv ("XDG_CACHE_HOME", test_dir, TRUE);
+	g_setenv ("XDG_CACHE_HOME", temp_cache_dir, TRUE);
 
 	for (i = 0; strip_test_cases[i].test_name; i++) {
 		gchar *testpath;
@@ -547,6 +547,7 @@ main (int argc, char **argv)
 	} else {
 		g_unsetenv ("XDG_CACHE_HOME");
 	}
+	g_rmdir (temp_cache_dir);
 
 	return success;
 }
