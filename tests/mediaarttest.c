@@ -496,17 +496,21 @@ test_mediaart_process_failures_subprocess (void)
 int
 main (int argc, char **argv)
 {
-	const gchar *cache_home_originally;
-	const gchar *temp_cache_dir;
+	const gchar *cache_home_originally = NULL;
+	gchar *temp_cache_dir;
 	gchar *dir;
 	gint success;
 	gint i;
 
 	g_test_init (&argc, &argv, NULL);
 
-	temp_cache_dir = g_dir_make_tmp ("libmediaart-tests-XXXXXX", NULL);
-	cache_home_originally = g_getenv ("XDG_CACHE_HOME");
-	g_setenv ("XDG_CACHE_HOME", temp_cache_dir, TRUE);
+	if (!g_test_subprocess ()) {
+		temp_cache_dir = g_dir_make_tmp ("libmediaart-tests-XXXXXX", NULL);
+		cache_home_originally = g_getenv ("XDG_CACHE_HOME");
+		g_setenv ("XDG_CACHE_HOME", temp_cache_dir, TRUE);
+	} else {
+		temp_cache_dir = g_strdup (g_get_user_cache_dir ());
+	}
 
 	for (i = 0; strip_test_cases[i].test_name; i++) {
 		gchar *testpath;
@@ -548,6 +552,7 @@ main (int argc, char **argv)
 		g_unsetenv ("XDG_CACHE_HOME");
 	}
 	g_rmdir (temp_cache_dir);
+	g_free (temp_cache_dir);
 
 	return success;
 }
