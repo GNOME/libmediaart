@@ -44,7 +44,8 @@ endif
 endif
 
 libmediaart_@LIBMEDIAART_API_VERSION@_la_LDFLAGS = \
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
+	-export-symbols-regex '^media_art_.*'
 
 libmediaart_@LIBMEDIAART_API_VERSION@_la_LIBADD = \
 	$(BUILD_LIBS) \
@@ -52,11 +53,11 @@ libmediaart_@LIBMEDIAART_API_VERSION@_la_LIBADD = \
 
 
 marshal.h: marshal.list
-	$(AM_V_GEN)$(GLIB_GENMARSHAL) $< --prefix=media_art_marshal --header > $@
+	$(AM_V_GEN)$(GLIB_GENMARSHAL) $< --prefix=_media_art_marshal --header > $@
 
 marshal.c: marshal.list
 	$(AM_V_GEN)(echo "#include \"marshal.h\""; \
-	    $(GLIB_GENMARSHAL) $< --prefix=media_art_marshal --body) > $@
+	    $(GLIB_GENMARSHAL) $< --prefix=_media_art_marshal --body) > $@
 
 
 BUILT_SOURCES = \
