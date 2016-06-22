@@ -73,7 +73,6 @@ typedef struct {
 	gboolean disable_requests;
 
 	GHashTable *media_art_cache;
-	GDBusConnection *connection;
 	Storage *storage;
 } MediaArtProcessPrivate;
 
@@ -82,12 +81,6 @@ static const gchar *media_art_type_name[MEDIA_ART_TYPE_COUNT] = {
 	"album",
 	"video"
 };
-
-typedef struct {
-	MediaArtProcess *process;
-	gchar *art_path;
-	gchar *local_uri;
-} FileInfo;
 
 typedef struct {
 	gchar *uri;
@@ -118,9 +111,6 @@ typedef struct {
 	gchar *title;
 } ProcessData;
 
-static void media_art_queue_cb                    (GObject        *source_object,
-                                                   GAsyncResult   *res,
-                                                   gpointer        user_data);
 static void media_art_process_initable_iface_init (GInitableIface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (MediaArtProcess, media_art_process, G_TYPE_OBJECT,
@@ -141,10 +131,6 @@ media_art_process_finalize (GObject *object)
 		g_object_unref (private->storage);
 	}
 
-	if (private->connection) {
-		g_object_unref (private->connection);
-	}
-
 	if (private->media_art_cache) {
 		g_hash_table_unref (private->media_art_cache);
 	}
@@ -161,7 +147,6 @@ media_art_process_initable_init (GInitable     *initable,
 {
 	MediaArtProcessPrivate *private;
 	MediaArtProcess *process;
-	GError *local_error = NULL;
 	gchar *dir;
 	gboolean retval;
 
@@ -177,17 +162,6 @@ media_art_process_initable_init (GInitable     *initable,
 	                                                  g_str_equal,
 	                                                  (GDestroyNotify) g_free,
 	                                                  NULL);
-
-	/* Signal handler for new album art from the extractor */
-	private->connection = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &local_error);
-
-	if (!private->connection) {
-		g_critical ("Could not connect to the D-Bus session bus, %s",
-		            local_error ? local_error->message : "no error given.");
-		g_propagate_error (error, local_error);
-
-		return FALSE;
-	}
 
 	private->storage = storage_new ();
 	if (!private->storage) {
@@ -246,7 +220,7 @@ media_art_process_init (MediaArtProcess *thumbnailer)
  * Initialize a GObject for processing and extracting media art.
  *
  * This function initializes cache hash tables, backend plugins,
- * storage modules used for removable devices and a connection to D-Bus.
+ * and storage modules used for removable devices.
  *
  * Returns: A new #MediaArtProcess object on success or %NULL if
  * @error is set. This object must be freed using g_object_unref().
@@ -1302,110 +1276,6 @@ media_art_set (const unsigned char  *buffer,
 	return retval;
 }
 
-static FileInfo *
-file_info_new (MediaArtProcess *process,
-               const gchar     *art_path)
-{
-	FileInfo *fi;
-
-	fi = g_slice_new (FileInfo);
-
-	fi->process = g_object_ref (process);
-	fi->art_path = g_strdup (art_path);
-
-	return fi;
-}
-
-static void
-file_info_free (FileInfo *fi)
-{
-	if (!fi) {
-		return;
-	}
-
-	g_free (fi->art_path);
-	g_object_unref (fi->process);
-
-	g_slice_free (FileInfo, fi);
-}
-
-static void
-media_art_request_download (MediaArtProcess *process,
-                            MediaArtType     type,
-                            const gchar     *album,
-                            const gchar     *artist,
-                            const gchar     *art_path)
-{
-	MediaArtProcessPrivate *private;
-
-	private = media_art_process_get_instance_private (process);
-
-	if (private->connection) {
-		FileInfo *info;
-
-		if (private->disable_requests) {
-			return;
-		}
-
-		if (type != MEDIA_ART_ALBUM) {
-			return;
-		}
-
-		info = file_info_new (process, art_path);
-
-		g_dbus_connection_call (private->connection,
-		                        ALBUMARTER_SERVICE,
-		                        ALBUMARTER_PATH,
-		                        ALBUMARTER_INTERFACE,
-		                        "Queue",
-		                        g_variant_new ("(sssu)",
-		                                       artist ? artist : "",
-		                                       album ? album : "",
-		                                       "album",
-		                                       0),
-		                        NULL,
-		                        G_DBUS_CALL_FLAGS_NONE,
-		                        -1,
-		                        NULL,
-		                        media_art_queue_cb,
-		                        info);
-	}
-}
-
-static void
-media_art_queue_cb (GObject      *source_object,
-                    GAsyncResult *res,
-                    gpointer      user_data)
-{
-	MediaArtProcessPrivate *private;
-	GError *error = NULL;
-	FileInfo *fi;
-	GVariant *v;
-
-	fi = user_data;
-
-	private = media_art_process_get_instance_private (fi->process);
-
-	v = g_dbus_connection_call_finish ((GDBusConnection *) source_object, res, &error);
-
-	if (error) {
-		if (error->code == G_DBUS_ERROR_SERVICE_UNKNOWN) {
-			private->disable_requests = TRUE;
-		} else {
-			g_warning ("%s", error->message);
-		}
-		g_clear_error (&error);
-	}
-
-	/* Do something with downloaded content, e.g. create symlink to actual cache? */
-
-	if (v) {
-		g_variant_unref (v);
-	}
-
-	file_info_free (fi);
-}
-
 /**
  * media_art_error_quark:
  *
@@ -1949,18 +1819,7 @@ media_art_process_file (MediaArtProcess       *process,
 			 */
 			if (!g_cancellable_set_error_if_cancelled (cancellable, error)) {
 				if (!get_heuristic (type, uri, artist, title, error)) {
-					/* If the heuristic failed, we
-					 * request the download the
-					 * media-art to the media-art
-					 * downloaders
-					 */
-					media_art_request_download (process,
-					                            type,
-					                            artist,
-					                            title,
-					                            cache_art_path);
-
-					/* FIXME: Should return TRUE or FALSE? */
+					return FALSE;
 				}
 
 				set_mtime (cache_art_path, mtime);
