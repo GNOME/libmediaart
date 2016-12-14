@@ -328,7 +328,7 @@ file_get_checksum_if_exists (GChecksumType   checksum_type,
 	GError *local_error = NULL;
 	gssize rsize;
 	guchar buffer[1024];
-	gboolean stop;
+	gboolean stop = FALSE;
 
 	file = g_file_new_for_path (path);
 	stream = g_file_read (file, NULL, &local_error);
