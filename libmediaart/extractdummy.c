@@ -93,7 +93,7 @@ media_art_file_to_jpeg (const gchar  *filename,
 
 /**
  * media_art_buffer_to_jpeg:
- * @buffer: Raw buffer representing content to save
+ * @buffer: (array length=len): Raw buffer representing content to save
  * @len: Length of @buffer to use
  * @buffer_mime: MIME type for @buffer
  * @target: Output file name (not URI) to save converted content to
