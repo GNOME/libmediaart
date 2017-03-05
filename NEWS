@@ -1,3 +1,11 @@
+NEW in 1.9.1 - 2017-03-05
+=========================
+
+  * extract: Introspection fix
+  * extract: Coverity fix
+  * tests: Fix tests to run both installed and built
+  * libmediaart: Fix marshallers, hide private symbols
+
 NEW in 1.9.0 - 2014-10-17
 =========================
 

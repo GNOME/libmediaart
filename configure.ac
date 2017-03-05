@@ -13,7 +13,7 @@ AC_PREREQ([2.64])
 # set LIBMEDIAART_BINARY_AGE and LIBMEDIAART_INTERFACE_AGE to 0.
 m4_define([libmediaart_major_version], [1])
 m4_define([libmediaart_minor_version], [9])
-m4_define([libmediaart_micro_version], [0])
+m4_define([libmediaart_micro_version], [1])
 m4_define([libmediaart_interface_age], [0])
 m4_define([libmediaart_binary_age],
           [m4_eval(100 * libmediaart_minor_version + libmediaart_micro_version)])
