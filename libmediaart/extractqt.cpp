@@ -36,9 +36,7 @@
 
 #include <glib.h>
 
-#ifdef HAVE_NEMO
 #include <stdlib.h>
-#endif
 
 G_BEGIN_DECLS
 
@@ -61,11 +59,6 @@ media_art_plugin_init (gint max_width)
 	max_width_in_bytes = max_width;
 
 #ifdef HAVE_QT5
-
-#ifdef HAVE_NEMO
-	setenv("QT_QPA_PLATFORM", "minimal", 1);
-#endif /* HAVE_NEMO */
-
 	app = new QCoreApplication (argc, argv);
 #else  /* HAVE_QT4 (we fallback to Qt4) */
  	app = new QApplication (argc, argv, QApplication::Tty);
