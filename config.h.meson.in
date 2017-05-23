@@ -1,0 +1,13 @@
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define if we have GdkPixbuf */
+#mesondefine HAVE_GDKPIXBUF
+
+/* Define if we have Qt */
+#mesondefine HAVE_QT
+
+/* Define if we have Qt4 */
+#mesondefine HAVE_QT4
+
+/* Define if we have Qt5 */
+#mesondefine HAVE_QT5
