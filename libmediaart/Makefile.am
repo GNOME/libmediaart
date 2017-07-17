@@ -29,6 +29,8 @@ libmediaartinclude_HEADERS = \
 	extract.h \
 	extractgeneric.h
 
+libmediaart_@LIBMEDIAART_API_VERSION@_la_DEPENDENCIES = $(libmediaart_marshal_sources)
+
 libmediaart_@LIBMEDIAART_API_VERSION@_la_SOURCES = \
 	$(libmediaart_marshal_sources) \
 	$(libmediaart_sources)
