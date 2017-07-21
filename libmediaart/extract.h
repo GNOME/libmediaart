@@ -88,13 +88,6 @@ typedef enum {
 } MediaArtError;
 
 
-/**
- * media_art_error_quark:
- *
- * Returns: A #GQuark representing the type of #GError for #MediaArtProcess failures.
- *
- * Since: 0.2.0
- **/
 GQuark media_art_error_quark (void) G_GNUC_CONST;
 
 
