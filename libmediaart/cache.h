@@ -23,27 +23,34 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#include "mediaart-macros.h"
+
 #if !defined (__LIBMEDIAART_INSIDE__) && !defined (LIBMEDIAART_COMPILATION)
 #error "Only <libmediaart/mediaart.h> must be included directly."
 #endif
 
 G_BEGIN_DECLS
 
+_LIBMEDIAART_EXTERN
 gchar *  media_art_strip_invalid_entities (const gchar          *original);
 
+_LIBMEDIAART_EXTERN
 gboolean media_art_get_path               (const gchar          *artist,
                                            const gchar          *title,
                                            const gchar          *prefix,
                                            gchar               **cache_path);
+_LIBMEDIAART_EXTERN
 gboolean media_art_get_file               (const gchar          *artist,
                                            const gchar          *title,
                                            const gchar          *prefix,
                                            GFile               **cache_file);
 
+_LIBMEDIAART_EXTERN
 gboolean media_art_remove                 (const gchar          *artist,
                                            const gchar          *album,
                                            GCancellable         *cancellable,
                                            GError              **error);
+_LIBMEDIAART_EXTERN
 void     media_art_remove_async           (const gchar          *artist,
                                            const gchar          *album,
                                            gint                  io_priority,
@@ -51,6 +58,8 @@ void     media_art_remove_async           (const gchar          *artist,
                                            GCancellable         *cancellable,
                                            GAsyncReadyCallback   callback,
                                            gpointer              user_data);
+
+_LIBMEDIAART_EXTERN
 gboolean media_art_remove_finish          (GObject              *source_object,
                                            GAsyncResult         *result,
                                            GError              **error);
