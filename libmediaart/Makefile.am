@@ -1,6 +1,8 @@
 AM_CPPFLAGS = \
 	$(BUILD_CFLAGS) \
-	$(LIBMEDIAART_CFLAGS)
+	$(LIBMEDIAART_CFLAGS) \
+	$(LIBMEDIAART_HIDDEN_VISIBILITY_CFLAGS)
+
 
 #
 # Binaries
@@ -49,8 +51,7 @@ endif
 endif
 
 libmediaart_@LIBMEDIAART_API_VERSION@_la_LDFLAGS = \
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
-	-export-symbols-regex '^media_art_.*'
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 libmediaart_@LIBMEDIAART_API_VERSION@_la_LIBADD = \
 	$(BUILD_LIBS) \

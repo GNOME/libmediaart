@@ -25,18 +25,24 @@
 
 #include <glib.h>
 
+#include "mediaart-macros.h"
+
 #if !defined (__LIBMEDIAART_INSIDE__) && !defined (LIBMEDIAART_COMPILATION)
 #error "Only <libmediaart/mediaart.h> must be included directly."
 #endif
 
 G_BEGIN_DECLS
 
+_LIBMEDIAART_EXTERN
 void      media_art_plugin_init     (gint                  max_width);
+_LIBMEDIAART_EXTERN
 void      media_art_plugin_shutdown (void);
 
+_LIBMEDIAART_EXTERN
 gboolean  media_art_file_to_jpeg    (const gchar          *filename,
                                      const gchar          *target,
                                      GError              **error);
+_LIBMEDIAART_EXTERN
 gboolean  media_art_buffer_to_jpeg  (const unsigned char  *buffer,
                                      size_t                len,
                                      const gchar          *buffer_mime,
