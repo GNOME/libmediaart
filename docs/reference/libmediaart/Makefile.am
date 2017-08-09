@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = 1.6
 DOC_MODULE=libmediaart
 
 # The top-level SGML file.
-DOC_MAIN_SGML_FILE=libmediaart-docs.sgml
+DOC_MAIN_SGML_FILE=libmediaart-docs.xml
 
 # Extra options to supply to gtkdoc-scan
 SCAN_OPTIONS=
