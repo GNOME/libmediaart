@@ -9,6 +9,12 @@ cc = meson.get_compiler('c')
 
 # This is the X.Y used in -lliblibmediaart-FOO-X.Y
 libmediaart_api_version = '2.0'
+libmediaart_soversion = 0
+libmediaart_interface_age = 0
+
+version_array = meson.project_version().split('.')
+current = 100 * version_array[1].to_int() + version_array[2].to_int()
+libmediaart_ltversion = '@0@.@1@.@2@'.format(libmediaart_soversion, current, libmediaart_interface_age)
 
 glib_required = '2.38.0'
 

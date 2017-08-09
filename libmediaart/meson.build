@@ -28,6 +28,8 @@ libmediaart_dependencies = [glib, gio_unix, gobject, image_library]
 libmediaart = shared_library(
   'mediaart-' + libmediaart_api_version,
   libmediaart_sources, marshal[0], marshal[1],
+  version: libmediaart_ltversion,
+  soversion: libmediaart_soversion,
   dependencies: libmediaart_dependencies,
   c_args: libmediaart_cflags + visibility_cflags,
   include_directories: root_inc,
