@@ -15,6 +15,8 @@ libmediaart-$(LIBMEDIAART_API_VERSION).pc: libmediaart.pc
 	cp $< $@
 
 EXTRA_DIST += \
+	meson.build \
+        meson_options.txt \
 	libmediaart.doap \
 	libmediaart.pc.in \
         tap-driver.sh \
