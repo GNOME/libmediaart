@@ -72,6 +72,7 @@ BUILT_SOURCES = \
 CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = \
+	mediaart-macros.h \
 	meson.build \
 	marshal.list
 

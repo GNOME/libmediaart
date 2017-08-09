@@ -17,4 +17,5 @@ LDADD = \
 
 mediaarttest_SOURCES = mediaarttest.c
 
-EXTRA_DIST = meson.build
+EXTRA_DIST = meson.build \
+	$(dist_test_data)
