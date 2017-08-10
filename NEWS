@@ -1,3 +1,9 @@
+NEW in 1.9.3 - 2017-08-09
+=========================
+
+  Brown paper bag release, fixes soname on meson builds and missing includes
+  on autotools.
+
 NEW in 1.9.2 - 2017-08-09
 =========================
 
