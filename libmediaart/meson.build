@@ -1,4 +1,5 @@
 libmediaart_public_headers = [
+  'mediaart-macros.h',
   'cache.h',
   'extract.h',
   'extractgeneric.h',
