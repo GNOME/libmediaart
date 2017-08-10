@@ -20,6 +20,8 @@
  * Philip Van Hoof <philip@codeminded.be>
  */
 
+#include "config.h"
+
 #include "extractgeneric.h"
 
 /**
