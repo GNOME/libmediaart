@@ -27,6 +27,7 @@ libmediaart_sources = \
 
 libmediaartinclude_HEADERS = \
 	mediaart.h \
+	mediaart-macros.h \
 	cache.h \
 	extract.h \
 	extractgeneric.h
@@ -72,7 +73,6 @@ BUILT_SOURCES = \
 CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = \
-	mediaart-macros.h \
 	meson.build \
 	marshal.list
 
