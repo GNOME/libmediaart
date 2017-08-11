@@ -1,5 +1,5 @@
 project('libmediaart', 'c', 'cpp',
-        version: '1.9.3',
+        version: '1.9.4',
         default_options: [ 'warning_level=1' ])
 
 gnome = import('gnome')
