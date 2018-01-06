@@ -6,6 +6,10 @@ libmediaart_public_headers = [
   'mediaart.h',
 ]
 
+libmediaart_introspection_sources = [
+  'extractdummy.c'
+]
+
 libmediaart_sources = [
   'cache.c',
   'extract.c',
@@ -38,7 +42,7 @@ libmediaart = shared_library(
 )
 
 libmediaart_gir_and_typelib = gnome.generate_gir(libmediaart,
-  sources: libmediaart_sources + libmediaart_public_headers,
+  sources: libmediaart_sources + libmediaart_introspection_sources + libmediaart_public_headers,
   nsversion: libmediaart_api_version,
   namespace: 'MediaArt',
   identifier_prefix: 'MediaArt',
