@@ -37,8 +37,6 @@
  * The API is built upon the top of GIO's #GMount, #GDrive and #GVolume API.
  **/
 
-#define STORAGE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_STORAGE, StoragePrivate))
-
 typedef struct {
 	GVolumeMonitor *volume_monitor;
 
@@ -94,7 +92,7 @@ enum {
 
 static guint signals[LAST_SIGNAL] = {0};
 
-G_DEFINE_TYPE (Storage, storage, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (Storage, storage, G_TYPE_OBJECT);
 
 static void
 storage_class_init (StorageClass *klass)
@@ -132,7 +130,6 @@ storage_class_init (StorageClass *klass)
 		              G_TYPE_STRING,
 		              G_TYPE_STRING);
 
-	g_type_class_add_private (object_class, sizeof (StoragePrivate));
 }
 
 static void
@@ -140,7 +137,7 @@ storage_init (Storage *storage)
 {
 	StoragePrivate *priv;
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	priv->mounts = g_node_new (NULL);
 
@@ -170,9 +167,11 @@ storage_init (Storage *storage)
 static void
 storage_finalize (GObject *object)
 {
+        Storage *storage;
 	StoragePrivate *priv;
 
-	priv = STORAGE_GET_PRIVATE (object);
+	storage = STORAGE (object);
+	priv = storage_get_instance_private (storage);
 
 	g_hash_table_destroy (priv->unmount_watchdogs);
 
@@ -340,7 +339,7 @@ mount_add_new (Storage *storage,
 	StoragePrivate *priv;
 	GNode *node;
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	node = mount_add_hierarchy (priv->mounts, uuid, mount_point, removable_device, optical_disc);
 	g_hash_table_insert (priv->mounts_by_uuid, g_strdup (uuid), node);
@@ -560,7 +559,7 @@ mount_add (Storage *storage,
 		return;
 	}
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	/* fstab partitions may not have corresponding
 	 * GVolumes, so volume may be NULL */
@@ -693,7 +692,7 @@ mounts_setup (Storage *storage)
 	StoragePrivate *priv;
 	GList *mounts, *lm;
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	mounts = g_volume_monitor_get_mounts (priv->volume_monitor);
 
@@ -735,7 +734,7 @@ mount_remove (Storage *storage,
 	gchar *mount_point;
 	gchar *mp;
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	file = g_mount_get_root (mount);
 	mount_point = g_file_get_path (file);
@@ -777,7 +776,7 @@ mount_removed_cb (GVolumeMonitor *monitor,
 	StoragePrivate *priv;
 
 	storage = user_data;
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	mount_remove (storage, mount);
 
@@ -797,7 +796,7 @@ unmount_failed_cb (gpointer user_data)
 	 * due to an error, and add back the still mounted
 	 * path.
 	 */
-	priv = STORAGE_GET_PRIVATE (data->storage);
+	priv = storage_get_instance_private (data->storage);
 
 	g_warning ("Unmount operation failed, adding back mount point...");
 
@@ -818,7 +817,7 @@ mount_pre_removed_cb (GVolumeMonitor *monitor,
 	guint id;
 
 	storage = user_data;
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	mount_remove (storage, mount);
 
@@ -905,7 +904,7 @@ storage_get_device_roots (Storage     *storage,
 
 	g_return_val_if_fail (IS_STORAGE (storage), NULL);
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	gr.roots = NULL;
 	gr.type = type;
@@ -943,7 +942,7 @@ storage_get_device_uuids (Storage     *storage,
 
 	g_return_val_if_fail (IS_STORAGE (storage), NULL);
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	uuids = NULL;
 
@@ -991,7 +990,7 @@ storage_get_mount_point_for_uuid (Storage     *storage,
 	g_return_val_if_fail (IS_STORAGE (storage), NULL);
 	g_return_val_if_fail (uuid != NULL, NULL);
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	node = g_hash_table_lookup (priv->mounts_by_uuid, uuid);
 
@@ -1024,7 +1023,7 @@ storage_get_type_for_uuid (Storage     *storage,
 	g_return_val_if_fail (IS_STORAGE (storage), 0);
 	g_return_val_if_fail (uuid != NULL, 0);
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	node = g_hash_table_lookup (priv->mounts_by_uuid, uuid);
 
@@ -1081,7 +1080,7 @@ storage_get_uuid_for_file (Storage *storage,
 		path = norm_path;
 	}
 
-	priv = STORAGE_GET_PRIVATE (storage);
+	priv = storage_get_instance_private (storage);
 
 	info = mount_info_find (priv->mounts, path);
 
