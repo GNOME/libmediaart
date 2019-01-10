@@ -1097,4 +1097,3 @@ storage_get_uuid_for_file (Storage *storage,
 
 	return info->uuid;
 }
-
