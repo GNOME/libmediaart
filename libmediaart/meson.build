@@ -13,7 +13,6 @@ libmediaart_introspection_sources = [
 libmediaart_sources = [
   'cache.c',
   'extract.c',
-  'storage.c'
 ]
 
 if image_library_name == 'gdk-pixbuf-2.0'
