@@ -33,10 +33,6 @@
 #include "extract.h"
 #include "cache.h"
 
-#define ALBUMARTER_SERVICE    "com.nokia.albumart"
-#define ALBUMARTER_PATH       "/com/nokia/albumart/Requester"
-#define ALBUMARTER_INTERFACE  "com.nokia.albumart.Requester"
-
 /**
  * SECTION:extract
  * @title: Extraction
