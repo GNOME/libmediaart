@@ -28,14 +28,9 @@
 #include <gio/gio.h>
 
 #include "extractgeneric.h"
-#include "storage.h"
 
 #include "extract.h"
 #include "cache.h"
-
-#define ALBUMARTER_SERVICE    "com.nokia.albumart"
-#define ALBUMARTER_PATH       "/com/nokia/albumart/Requester"
-#define ALBUMARTER_INTERFACE  "com.nokia.albumart.Requester"
 
 /**
  * SECTION:extract
@@ -73,7 +68,6 @@ typedef struct {
 	gboolean disable_requests;
 
 	GHashTable *media_art_cache;
-	Storage *storage;
 } MediaArtProcessPrivate;
 
 static const gchar *media_art_type_name[MEDIA_ART_TYPE_COUNT] = {
@@ -127,10 +121,6 @@ media_art_process_finalize (GObject *object)
 	process = MEDIA_ART_PROCESS (object);
 	private = media_art_process_get_instance_private (process);
 
-	if (private->storage) {
-		g_object_unref (private->storage);
-	}
-
 	if (private->media_art_cache) {
 		g_hash_table_unref (private->media_art_cache);
 	}
@@ -162,16 +152,6 @@ media_art_process_initable_init (GInitable     *initable,
 	                                                  g_str_equal,
 	                                                  (GDestroyNotify) g_free,
 	                                                  NULL);
-
-	private->storage = storage_new ();
-	if (!private->storage) {
-		g_critical ("Could not start storage module for removable media detection");
-		g_set_error_literal (error,
-		                     media_art_error_quark (),
-		                     MEDIA_ART_ERROR_NO_STORAGE,
-		                     _("Could not initialize storage module"));
-		return FALSE;
-	}
 
 	/* Returns 0 if already exists, so we don't check if directory
 	 * existed before, it's an additional stat() call we just
@@ -219,8 +199,7 @@ media_art_process_init (MediaArtProcess *thumbnailer)
  *
  * Initialize a GObject for processing and extracting media art.
  *
- * This function initializes cache hash tables, backend plugins,
- * and storage modules used for removable devices.
+ * This function initializes cache hash tables and backend plugins,
  *
  * Returns: A new #MediaArtProcess object on success or %NULL if
  * @error is set. This object must be freed using g_object_unref().

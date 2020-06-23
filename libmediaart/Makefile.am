@@ -21,9 +21,7 @@ libmediaart_sources = \
 	cache.h \
 	extract.c \
 	extract.h \
-	extractgeneric.h \
-	storage.c \
-	storage.h
+	extractgeneric.h
 
 libmediaartinclude_HEADERS = \
 	mediaart.h \
