@@ -1,0 +1,63 @@
+# The container images used in this pipeline are built from this
+# GitLab project: https://gitlab.gnome.org/GNOME/tracker-oci-images
+#
+# This CI config is based on https://gitlab.gnome.org/GNOME/tracker/-/blob/master/.gitlab-ci.yml
+
+variables:
+  G_MESSAGES_DEBUG: "libmediaart"
+  # This can be used when debugging test failures that only occur within GitLab CI.
+  MESON_TEST_EXTRA_ARGS: ""
+
+stages:
+  - test
+
+.test_template: &test
+  stage: test
+
+  script:
+    - su tracker -c 'mkdir build'
+    - su tracker -c 'cd build; meson ..'
+    - su tracker -c 'cd build; ninja'
+    - |
+      # Remove the many "CI_" variables from the environment. Meson dumps the
+      # whole environment for every failed test, and that gives a whole
+      # screenful of junk each time unless we strip these.
+      unset $(env|grep -o '^CI_[^=]*')
+      su tracker -c 'cd build; env meson test --print-errorlogs ${MESON_TEST_EXTRA_ARGS}'
+
+  after_script:
+    - |
+      echo "Distribution: "
+      echo
+      egrep '^NAME=|^VERSION=' /etc/os-release
+      echo
+      echo "Test suite settings:"
+      echo
+      echo "G_MESSAGES_DEBUG: ${G_MESSAGES_DEBUG}"
+      echo "MESON_TEST_EXTRA_ARGS: ${MESON_TEST_EXTRA_ARGS}"
+      echo
+      echo "These values can be set at https://gitlab.gnome.org/GNOME/libmediaart/pipelines/new"
+
+  artifacts:
+    when: always
+    paths:
+    - build/meson-logs/testlog.txt
+
+test-alpine-edge:
+  image: registry.gitlab.gnome.org/gnome/tracker-oci-images/amd64/alpine:edge
+  before_script:
+    - apk add gdk-pixbuf-dev
+  <<: *test
+
+test-fedora-latest:
+  image: registry.gitlab.gnome.org/gnome/tracker-oci-images/amd64/fedora:latest
+  before_script:
+    - dnf install -y gdk-pixbuf2-devel
+  <<: *test
+
+test-ubuntu-rolling:
+  image: registry.gitlab.gnome.org/gnome/tracker-oci-images/amd64/ubuntu:rolling
+  before_script:
+    - apt-get update
+    - apt-get install -y libgdk-pixbuf2.0-dev
+  <<: *test
