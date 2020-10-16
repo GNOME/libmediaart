@@ -1,4 +1,4 @@
-project('libmediaart', 'c', 'cpp',
+project('libmediaart', 'c',
         version: '1.9.4',
         default_options: [ 'warning_level=1' ])
 
