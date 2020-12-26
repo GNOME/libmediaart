@@ -115,6 +115,9 @@ media_art_strip_find_next_block (const gchar    *original,
  * 2. Text inside brackets of (), {}, [] and <> pairs are removed.
  * 3. Multiples of space characters are removed.
  *
+ * This function expects that the input is valid UTF-8. Use g_utf8_validate()
+ * if the input has not already been validated.
+ *
  * Returns: @original stripped of invalid characters which must be
  * freed. On error or if @original is empty, %NULL is returned.
  *
@@ -141,6 +144,7 @@ media_art_strip_invalid_entities (const gchar *original)
 	};
 
 	g_return_val_if_fail (original != NULL, NULL);
+	g_return_val_if_fail (g_utf8_validate (original, -1, NULL), NULL);
 
 	str_no_blocks = g_string_new ("");
 
@@ -262,6 +266,9 @@ media_art_checksum_for_data (GChecksumType  checksum_type,
  * This operation should not use i/o, but it depends on the backend
  * GFile implementation.
  *
+ * All string inputs must be valid UTF8. Use g_utf8_validate() if the
+ * input has not already been validated.
+ *
  * Returns: %TRUE if @cache_file was returned, otherwise %FALSE.
  *
  * Since: 0.2.0
@@ -272,6 +279,10 @@ media_art_get_file (const gchar  *artist,
                     const gchar  *prefix,
                     GFile       **cache_file)
 {
+	g_return_val_if_fail (g_utf8_validate (artist, -1, NULL), FALSE);
+	g_return_val_if_fail (g_utf8_validate (title, -1, NULL), FALSE);
+	g_return_val_if_fail (g_utf8_validate (prefix, -1, NULL), FALSE);
+
 	const gchar *space_checksum = "7215ee9c7d9dc229d2921a40e899ec5f";
 	const gchar *a, *b;
 
@@ -369,6 +380,9 @@ media_art_get_file (const gchar  *artist,
  * Get the path to media art for a given resource. Newly allocated
  * data returned in @cache_path must be freed with g_free().
  *
+ * All string inputs must be valid UTF8. Use g_utf8_validate() if the
+ * input has not already been validated.
+ *
  * Returns: %TRUE if @cache_path was returned, otherwise %FALSE.
  *
  * Since: 0.2.0
@@ -380,6 +394,10 @@ media_art_get_path (const gchar  *artist,
                     gchar       **cache_path)
 {
 	GFile *cache_file = NULL;
+
+	g_return_val_if_fail (g_utf8_validate (artist, -1, NULL), FALSE);
+	g_return_val_if_fail (g_utf8_validate (title, -1, NULL), FALSE);
+	g_return_val_if_fail (g_utf8_validate (prefix, -1, NULL), FALSE);
 
 	/* Rules:
 	 * 1. artist OR title must be non-NULL.
@@ -407,6 +425,9 @@ media_art_get_path (const gchar  *artist,
  *
  * If @artist and @album are %NULL, ALL media art cache is removed.
  *
+ * All string inputs must be valid UTF8. Use g_utf8_validate() if the
+ * input has not already been validated.
+ *
  * Returns: #TRUE on success, otherwise #FALSE where @error will be set.
  *
  * Since: 0.2.0
@@ -424,6 +445,8 @@ media_art_remove (const gchar   *artist,
 	gboolean success = TRUE;
 
 	g_return_val_if_fail (artist != NULL && artist[0] != '\0', FALSE);
+	g_return_val_if_fail (g_utf8_validate (artist, -1, NULL), FALSE);
+	g_return_val_if_fail (g_utf8_validate (album, -1, NULL), FALSE);
 
 	dirname = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
 
@@ -603,6 +626,9 @@ remove_thread (GTask        *task,
  * Any outstanding i/o request with higher priority (lower numerical
  * value) will be executed before an outstanding request with lower
  * priority. Default priority is %G_PRIORITY_DEFAULT.
+ *
+ * All string inputs must be valid UTF8. Use g_utf8_validate() if the
+ * input has not already been validated.
  *
  * Since: 0.7.0
  */

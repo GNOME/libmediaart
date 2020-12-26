@@ -54,6 +54,8 @@ static TestInfo strip_test_cases [] = {
 	{ "unbalanced-brackets-gt-lt-end", "Unbalanced brackets>", NULL, "unbalanced brackets" },
 	{ "messy-title-punctuation", "Live at *WEMBLEY* dude!", NULL, "live at wembley dude" },
 	{ "crap-brackets-everywhere", "met[xX[x]alli]ca", NULL, "metallica" },
+	/* This value found by fuzz testing, see https://gitlab.gnome.org/GNOME/libmediaart/-/merge_requests/5 */
+	{ "invalid-utf8-1", "\x0a\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1\xc1", NULL, "" },
 	{ NULL, NULL, NULL, NULL }
 };
 
