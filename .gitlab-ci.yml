@@ -15,15 +15,15 @@ stages:
   stage: test
 
   script:
-    - su tracker -c 'mkdir build'
-    - su tracker -c 'cd build; meson ..'
-    - su tracker -c 'cd build; ninja'
+    - mkdir build; cd build
+    - meson ..
+    - ninja
     - |
       # Remove the many "CI_" variables from the environment. Meson dumps the
       # whole environment for every failed test, and that gives a whole
       # screenful of junk each time unless we strip these.
       unset $(env|grep -o '^CI_[^=]*')
-      su tracker -c 'cd build; env meson test --print-errorlogs ${MESON_TEST_EXTRA_ARGS}'
+      env meson test --print-errorlogs ${MESON_TEST_EXTRA_ARGS}
 
   after_script:
     - |
@@ -45,19 +45,12 @@ stages:
 
 test-alpine-edge:
   image: registry.gitlab.gnome.org/gnome/tracker-oci-images/amd64/alpine:edge
-  before_script:
-    - apk add gdk-pixbuf-dev
   <<: *test
 
 test-fedora-latest:
   image: registry.gitlab.gnome.org/gnome/tracker-oci-images/amd64/fedora:latest
-  before_script:
-    - dnf install -y gdk-pixbuf2-devel
   <<: *test
 
 test-ubuntu-rolling:
   image: registry.gitlab.gnome.org/gnome/tracker-oci-images/amd64/ubuntu:rolling
-  before_script:
-    - apt-get update
-    - apt-get install -y libgdk-pixbuf2.0-dev
   <<: *test
