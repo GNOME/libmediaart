@@ -112,18 +112,20 @@ test_mediaart_stripping_failures_subprocess (void)
 static void
 test_mediaart_stripping_failures (void)
 {
-	gchar *stripped = NULL;
+	gchar *stripped, *input = NULL;
 
 	/* a. Return NULL for NULL (subprocess)
-	 * b. Return NULL for ""
+	 * b. Return a copy for ""
 	 */
-	stripped = media_art_strip_invalid_entities ("");
-	g_assert (stripped);
-	g_assert_cmpstr (stripped, ==, "");
+	stripped = media_art_strip_invalid_entities (NULL);
+	g_assert (!stripped);
 
-	g_test_trap_subprocess ("/mediaart/stripping_failures/subprocess", 0, 0);
-	g_test_trap_assert_failed ();
-	g_test_trap_assert_stderr ("*assertion 'original != NULL' failed*");
+	input = "";
+	stripped = media_art_strip_invalid_entities (input);
+	g_assert (stripped);
+	g_assert (stripped != input);
+	g_assert (strcmp(stripped, "") == 0);
+	g_free (stripped);
 }
 
 
