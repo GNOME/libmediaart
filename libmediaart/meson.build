@@ -41,6 +41,11 @@ libmediaart = shared_library(
   install: true,
 )
 
+gir_args = [
+  '--quiet',
+  '-DLIBMEDIAART_COMPILATION',
+]
+
 libmediaart_gir_and_typelib = gnome.generate_gir(libmediaart,
   sources: libmediaart_sources + libmediaart_introspection_sources + libmediaart_public_headers,
   nsversion: libmediaart_api_version,
@@ -48,9 +53,9 @@ libmediaart_gir_and_typelib = gnome.generate_gir(libmediaart,
   identifier_prefix: 'MediaArt',
   symbol_prefix: 'media_art',
   includes: ['Gio-2.0', 'GObject-2.0'],
-  extra_args: libmediaart_cflags + [
-    '--c-include=libmediaart/mediaart.h',
-  ],
+  header: 'libmediaart/mediaart.h',
+  export_packages: 'libmediaart-' + libmediaart_api_version,
+  extra_args: gir_args,
   install: true
 )
 
