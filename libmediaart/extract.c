@@ -1258,6 +1258,8 @@ media_art_set (const unsigned char  *buffer,
 /**
  * media_art_error_quark:
  *
+ * The error domain for #MediaArtError.
+ *
  * Returns: the #GQuark used to identify media art errors in
  * GError structures.
  *
