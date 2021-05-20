@@ -15,15 +15,14 @@ stages:
   stage: test
 
   script:
-    - mkdir build; cd build
-    - meson ..
-    - ninja
+    - meson setup _build .
+    - meson compile -C _build
     - |
       # Remove the many "CI_" variables from the environment. Meson dumps the
       # whole environment for every failed test, and that gives a whole
       # screenful of junk each time unless we strip these.
       unset $(env|grep -o '^CI_[^=]*')
-      env meson test --print-errorlogs ${MESON_TEST_EXTRA_ARGS}
+      env meson test -C _build --print-errorlogs ${MESON_TEST_EXTRA_ARGS}
 
   after_script:
     - |
