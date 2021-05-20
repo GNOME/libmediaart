@@ -1366,8 +1366,12 @@ process_data_new (MediaArtType          type,
 
 	data->uri = g_strdup (uri);
 
-	data->buffer = g_memdup (buffer, data->len);
 	data->len = len;
+#if GLIB_CHECK_VERSION (2, 68, 0)
+        data->buffer = g_memdup2 (buffer, data->len);
+#else
+	data->buffer = g_memdup (buffer, data->len);
+#endif
 	data->mime = g_strdup (mime);
 
 	data->artist = g_strdup (artist);
