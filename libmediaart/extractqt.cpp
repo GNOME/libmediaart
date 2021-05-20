@@ -26,11 +26,7 @@
 #include <QBuffer>
 #include <QImageReader>
 #include <QImageWriter>
-#ifdef HAVE_QT5
 #include <QCoreApplication>
-#else
-#include <QApplication>
-#endif
 #include <QColor>
 #include <QPainter>
 
@@ -40,11 +36,7 @@
 
 G_BEGIN_DECLS
 
-#ifdef HAVE_QT5
 static QCoreApplication *app = NULL;
-#else  /* HAVE_QT4 (we fallback to Qt4) */
-static QApplication *app = NULL;
-#endif /* HAVE_QT5 */
 
 static gint max_width_in_bytes = 0;
 
@@ -58,15 +50,11 @@ media_art_plugin_init (gint max_width)
 
 	max_width_in_bytes = max_width;
 
-#ifdef HAVE_QT5
 	if (QCoreApplication::instance()) {
 		// avoid a new instance if already running inside a qt app
 		return;
 	}
 	app = new QCoreApplication (argc, argv);
-#else  /* HAVE_QT4 (we fallback to Qt4) */
- 	app = new QApplication (argc, argv, QApplication::Tty);
-#endif /* HAVE_QT5 */
 }
 
 void
