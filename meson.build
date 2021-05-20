@@ -1,5 +1,6 @@
 project('libmediaart', 'c',
         version: '1.9.4',
+        meson_version: '>= 0.56.2',
         default_options: [ 'warning_level=1' ])
 
 gnome = import('gnome')
@@ -122,12 +123,8 @@ pkgconfig.generate(
   requires_private: image_library_name,
   libraries_private: ['-lz', '-lm'])
 
-summary = [
-  '\nBuild Configuration:',
-  '    Prefix:                                 ' + get_option('prefix'),
-  '    Source code location:                   ' + meson.source_root(),
-  '    Compiler:                               ' + cc.get_id(),
-  '    Image processing library:               ' + image_library_name,
-]
+summary('prefix', get_option('prefix'), section: 'Directories')
+summary('includedir', get_option('includedir'), section: 'Directories')
+summary('libdir', get_option('libdir'), section: 'Directories')
 
-message('\n'.join(summary))
+summary('Image processing library', image_library_name, section: 'Build')
