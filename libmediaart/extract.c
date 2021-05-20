@@ -1366,8 +1366,8 @@ process_data_new (MediaArtType          type,
 
 	data->uri = g_strdup (uri);
 
-	data->buffer = g_memdup (buffer, data->len);
 	data->len = len;
+	data->buffer = g_memdup (buffer, data->len);
 	data->mime = g_strdup (mime);
 
 	data->artist = g_strdup (artist);
