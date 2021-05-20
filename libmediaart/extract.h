@@ -106,21 +106,21 @@ typedef struct _MediaArtProcessClass MediaArtProcessClass;
 
 /**
  * MediaArtProcess:
- * @parent: parent object
  *
  * A class implementation for processing and extracting media art.
  **/
 struct _MediaArtProcess {
+        /*< private >*/
 	GObject parent;
 };
 
 /**
  * MediaArtProcessClass:
- * @parent: parent object class
  *
  * Prototype for the class.
  **/
 struct _MediaArtProcessClass {
+        /*< private >*/
 	GObjectClass parent;
 };
 
