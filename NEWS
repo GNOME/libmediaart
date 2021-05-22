@@ -1,3 +1,14 @@
+NEW in 1.9.5 - 2021-05-22
+=========================
+
+  * libmediaart: Remove QT4 support
+  * libmediaart: Mandate that input strings are UTF8
+  * extract: Remove local storage
+  * build: Drop autotools support
+  * build: Update to recent glib API
+  * build: introspection fixes
+  * build: Added CI
+
 NEW in 1.9.4 - 2017-08-11
 =========================
 
