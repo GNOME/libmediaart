@@ -10,8 +10,8 @@
     <releaseinfo>
 	  for libmediaart &version;.
 	  The latest version of this documentation can be found on-line at
-	  <ulink role="online-location" url="http://library.gnome.org/devel/libmediaart/unstable/">
-		http://library.gnome.org/devel/libmediaart/unstable
+	  <ulink role="online-location" url="https://gnome.pages.gitlab.gnome.org/libmediaart/">
+		https://gnome.pages.gitlab.gnome.org/libmediaart
 	  </ulink>.
 	</releaseinfo>
   </bookinfo>
