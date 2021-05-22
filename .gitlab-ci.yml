@@ -90,7 +90,7 @@ build-alpine-container@x86_64:
   stage: test
 
   script:
-    - meson setup _build .
+    - meson setup _build . -Dgtk_doc=true
     - meson compile -C _build
     - |
       # Remove the many "CI_" variables from the environment. Meson dumps the
