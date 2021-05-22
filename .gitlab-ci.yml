@@ -1,7 +1,9 @@
-# The container images used in this pipeline are built from this
-# GitLab project: https://gitlab.gnome.org/GNOME/tracker-oci-images
-#
-# This CI config is based on https://gitlab.gnome.org/GNOME/tracker/-/blob/master/.gitlab-ci.yml
+# This CI config uses FDO ci-templates: https://freedesktop.pages.freedesktop.org/ci-templates/
+include:
+  - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/290b79e0e78eab67a83766f4e9691be554fc4afd/templates/ci-fairy.yml"
+  - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/290b79e0e78eab67a83766f4e9691be554fc4afd/templates/alpine.yml'
+  - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/290b79e0e78eab67a83766f4e9691be554fc4afd/templates/fedora.yml'
+  - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/290b79e0e78eab67a83766f4e9691be554fc4afd/templates/ubuntu.yml'
 
 variables:
   G_MESSAGES_DEBUG: "libmediaart"
@@ -9,7 +11,80 @@ variables:
   MESON_TEST_EXTRA_ARGS: ""
 
 stages:
+  - prepare
   - test
+
+.libmediaart.fedora@common:
+  variables:
+    BASE_TAG: '2021-05-22.1'
+    FDO_UPSTREAM_REPO: GNOME/libmediaart
+    FDO_DISTRIBUTION_PACKAGES: 'git gdk-pixbuf2-devel gtk-doc meson'
+    FDO_DISTRIBUTION_EXEC: |
+      dnf install -y 'dnf-command(builddep)' &&
+      dnf builddep -y libmediaart --setopt=install_weak_deps=False &&
+      dnf clean all
+
+.libmediaart.ubuntu@common:
+  variables:
+    BASE_TAG: '2021-05-22.1'
+    FDO_UPSTREAM_REPO: GNOME/libmediaart
+    FDO_DISTRIBUTION_PACKAGES: 'git libgdk-pixbuf-2.0-dev gtk-doc-tools meson'
+    FDO_DISTRIBUTION_EXEC: |
+      export DEBIAN_FRONTEND=noninteractive &&
+      sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list &&
+      apt-get -yq update && apt-get -yq upgrade &&
+      apt-get -yq build-dep libmediaart
+
+.libmediaart.alpine@common:
+  variables:
+    BASE_TAG: '2021-05-22.1'
+    FDO_UPSTREAM_REPO: GNOME/libmediaart
+    FDO_DISTRIBUTION_PACKAGES: 'alpine-sdk git glib-dev gtk-doc gobject-introspection-dev gdk-pixbuf-dev vala meson'
+
+.libmediaart.fedora:rawhide@x86_64:
+  extends: .libmediaart.fedora@common
+  variables:
+    FDO_DISTRIBUTION_VERSION: rawhide
+    FDO_DISTRIBUTION_TAG: "x86_64-${BASE_TAG}"
+
+.libmediaart.ubuntu:rolling@x86_64:
+  extends: .libmediaart.ubuntu@common
+  variables:
+    FDO_DISTRIBUTION_VERSION: rolling
+    FDO_DISTRIBUTION_TAG: "x86_64-${BASE_TAG}"
+
+.libmediaart.alpine:edge@x86_64:
+  extends: .libmediaart.alpine@common
+  variables:
+    FDO_DISTRIBUTION_VERSION: edge
+    FDO_DISTRIBUTION_TAG: "x86_64-${BASE_TAG}"
+
+build-fedora-container@x86_64:
+  extends:
+    - .fdo.container-build@fedora
+    - .libmediaart.fedora:rawhide@x86_64
+  stage: prepare
+  variables:
+    GIT_STRATEGY: none
+  needs: []
+
+build-ubuntu-container@x86_64:
+  extends:
+    - .fdo.container-build@ubuntu
+    - .libmediaart.ubuntu:rolling@x86_64
+  stage: prepare
+  variables:
+    GIT_STRATEGY: none
+  needs: []
+
+build-alpine-container@x86_64:
+  extends:
+    - .fdo.container-build@alpine
+    - .libmediaart.alpine:edge@x86_64
+  stage: prepare
+  variables:
+    GIT_STRATEGY: none
+  needs: []
 
 .test_template: &test
   stage: test
@@ -43,13 +118,25 @@ stages:
     - build/meson-logs/testlog.txt
 
 test-alpine-edge:
-  image: registry.gitlab.gnome.org/gnome/tracker-oci-images/amd64/alpine:edge
+  extends:
+    - .fdo.distribution-image@alpine
+    - .libmediaart.alpine:edge@x86_64
+  needs:
+    - build-alpine-container@x86_64
   <<: *test
 
 test-fedora-latest:
-  image: registry.gitlab.gnome.org/gnome/tracker-oci-images/amd64/fedora:latest
+  extends:
+    - .fdo.distribution-image@fedora
+    - .libmediaart.fedora:rawhide@x86_64
+  needs:
+    - build-fedora-container@x86_64
   <<: *test
 
 test-ubuntu-rolling:
-  image: registry.gitlab.gnome.org/gnome/tracker-oci-images/amd64/ubuntu:rolling
+  extends:
+    - .fdo.distribution-image@ubuntu
+    - .libmediaart.ubuntu:rolling@x86_64
+  needs:
+    - build-ubuntu-container@x86_64
   <<: *test
