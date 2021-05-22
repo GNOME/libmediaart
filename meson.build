@@ -93,7 +93,7 @@ configure_file(output: 'config.h',
 root_inc = include_directories('.')
 
 subdir('libmediaart')
-subdir('docs/reference/libmediaart')
+subdir('docs')
 subdir('tests')
 
 pkgconfig.generate(
@@ -112,3 +112,4 @@ summary('includedir', get_option('includedir'), section: 'Directories')
 summary('libdir', get_option('libdir'), section: 'Directories')
 
 summary('Image processing library', image_library_name, section: 'Build')
+summary('Documentation', get_option('gtk_doc'), section: 'Build', bool_yn: true)

@@ -16,12 +16,17 @@ MediaArtError
 MediaArtProcessFlags
 MediaArtProcess
 MediaArtProcessClass
-media_art_error_quark
-media_art_process_get_type
 media_art_process_new
 media_art_process_uri
+media_art_process_uri_async
+media_art_process_uri_finish
 media_art_process_file
+media_art_process_file_async
+media_art_process_file_finish
 media_art_process_buffer
+media_art_process_buffer_async
+media_art_process_buffer_finish
+media_art_error_quark
 <SUBSECTION Standard>
 MEDIA_ART_IS_PROCESS
 MEDIA_ART_IS_PROCESS_CLASS
@@ -29,6 +34,8 @@ MEDIA_ART_PROCESS
 MEDIA_ART_PROCESS_CLASS
 MEDIA_ART_PROCESS_GET_CLASS
 MEDIA_ART_TYPE_PROCESS
+<SUBSECTION Private>
+media_art_process_get_type
 </SECTION>
 
 <SECTION>
@@ -38,10 +45,3 @@ media_art_plugin_shutdown
 media_art_file_to_jpeg
 media_art_buffer_to_jpeg
 </SECTION>
-
-<SECTION>
-<FILE>marshal</FILE>
-media_art_marshal_VOID__STRING_STRING
-media_art_marshal_VOID__STRING_STRING_STRING_BOOLEAN_BOOLEAN
-</SECTION>
-
