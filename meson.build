@@ -24,7 +24,6 @@ glib = dependency('glib-2.0', version: '> ' + glib_required)
 gio = dependency('gio-2.0', version: '> ' + glib_required)
 gio_unix = dependency('gio-unix-2.0', version: '> ' + glib_required)
 gobject = dependency('gobject-2.0', version: '> ' + glib_required)
-qt4 = dependency('qt4', version: '> 4.7.1', modules: 'Gui', required: false)
 qt5 = dependency('qt5', version: '> 5.0.0', modules: 'Gui', required: false)
 
 ##################################################################
@@ -54,17 +53,6 @@ if image_library_name == ''
 endif
 
 if image_library_name == ''
-  if qt4.found()
-    if get_option('image_library') == 'auto' or get_option('image_library') == 'qt4'
-      image_library = qt4
-      image_library_name = 'QtGui'
-    endif
-  elif get_option('image_library') == 'qt4'
-    error('qt4 explicitly requested, but not found')
-  endif
-endif
-
-if image_library_name == ''
   error('No usable image processing backends were found.')
 endif
 
@@ -72,10 +60,6 @@ conf = configuration_data()
 
 conf.set('HAVE_GDKPIXBUF', (image_library_name == 'gdk-pixbuf-2.0'),
          description: 'Define if GdkPixbuf is available')
-conf.set('HAVE_QT', (image_library_name == 'QtGui' or image_library_name == 'Qt5Gui'),
-         description: 'Define if QtGui is available')
-conf.set('HAVE_QT4', (image_library_name == 'QtGui'),
-         description: 'Define if Qt4 is available')
 conf.set('HAVE_QT5', (image_library_name == 'Qt5Gui'),
          description: 'Define Qt5 is available')
 conf.set('LIBMEDIAART_VERSION', meson.project_version(),

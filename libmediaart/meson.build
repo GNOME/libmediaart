@@ -17,7 +17,7 @@ libmediaart_sources = [
 
 if image_library_name == 'gdk-pixbuf-2.0'
   libmediaart_sources += 'extractpixbuf.c'
-elif image_library_name == 'QtGui' or image_library_name == 'Qt5Gui'
+elif image_library_name == 'Qt5Gui'
   add_languages('cpp', required : true)
   libmediaart_sources += 'extractqt.cpp'
 else

@@ -134,7 +134,6 @@ GLIB_TESTS
 GLIB_REQUIRED=2.38.0
 GDKPIXBUF_REQUIRED=2.12.0
 QT5_REQUIRED=5.0.0
-QT4_REQUIRED=4.7.1
 
 # Check requirements for libmediaart
 LIBMEDIAART_REQUIRED="glib-2.0 >= $GLIB_REQUIRED
@@ -229,50 +228,27 @@ if test "x$enable_qt" != "xno" && test "x$enable_gdkpixbuf" != "xyes"; then
                          [have_qt5=yes],
                          [have_qt5=no])
    fi
-   if test "x$with_qt_version" == "xauto" || test "x$with_qt_version" == "x4"; then
-       PKG_CHECK_MODULES(QT4,
-                         [QtGui >= $QT4_REQUIRED],
-                         [have_qt4=yes],
-                         [have_qt4=no])
-   fi
 
    if test "x$have_qt5" = "xyes"; then
       BACKEND_CFLAGS="$QT5_CFLAGS -fPIC"
       BACKEND_LIBS="$QT5_LIBS"
 
       AC_DEFINE(HAVE_QT5, [], [Define if we have Qt5])
-      AC_DEFINE(HAVE_QT, [], [Define if we have Qt])
       LIBMEDIAART_BACKEND=Qt5Gui
 
       selected_for_media_art="yes (qt5)"
-   else
-      if test "x$have_qt4" = "xyes"; then
-         BACKEND_CFLAGS="$QT4_CFLAGS -fPIC"
-         BACKEND_LIBS="$QT4_LIBS"
-
-         AC_DEFINE(HAVE_QT4, [], [Define if we have Qt4])
-         AC_DEFINE(HAVE_QT, [], [Define if we have Qt])
-         LIBMEDIAART_BACKEND=QtGui
-
-         selected_for_media_art="yes (qt4)"
-      fi
    fi
 else
-   have_qt4="no  (disabled)"
    have_qt5="no  (disabled)"
 fi
 
 if test "x$enable_qt" = "xyes"; then
    if test "x$have_qt5" != "xyes"; then
-      if test "x$have_qt4" != "xyes"; then
-         AC_MSG_ERROR([Couldn't find Qt4 >= $QT4_REQUIRED or Qt5 >= $QT5_REQUIRED.])
-      fi
+       AC_MSG_ERROR([Couldn't find Qt5 >= $QT5_REQUIRED.])
    fi
 fi
 
-AM_CONDITIONAL(HAVE_QT4, test "x$have_qt4" = "xyes")
-AM_CONDITIONAL(HAVE_QT5, test "x$have_qt5" = "xyes")
-AM_CONDITIONAL(HAVE_QT, test "x$have_qt5" = "xyes" || test "x$have_qt4" = "xyes")
+AM_CONDITIONAL(HAVE_QT, test "x$have_qt5" = "xyes")
 
 if test "x$enable_gdkpixbuf" != "xno" && test "x$enable_qt" != "xyes"; then
    PKG_CHECK_MODULES(GDKPIXBUF,
