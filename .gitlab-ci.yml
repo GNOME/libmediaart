@@ -13,6 +13,8 @@ variables:
 stages:
   - prepare
   - test
+  - docs
+  - deploy
 
 .libmediaart.fedora@common:
   variables:
@@ -140,3 +142,33 @@ test-ubuntu-rolling:
   needs:
     - build-ubuntu-container@x86_64
   <<: *test
+
+documentation:
+  extends:
+    - .fdo.distribution-image@fedora
+    - .libmediaart.fedora:rawhide@x86_64
+  needs:
+    - build-fedora-container@x86_64
+  stage: docs
+  script:
+    - meson setup _build . -Dgtk_doc=true
+    - meson compile -C _build
+    - mv _build/docs/html _reference
+  artifacts:
+    paths:
+      - _reference
+
+pages:
+  extends:
+    - .fdo.distribution-image@fedora
+    - .libmediaart.fedora:rawhide@x86_64
+  stage: deploy
+  script:
+    - mv _reference/ public/
+  artifacts:
+    paths:
+      - public
+  needs:
+    - documentation
+  only:
+    - master
