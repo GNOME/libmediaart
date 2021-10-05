@@ -1,5 +1,7 @@
 option('image_library', type: 'combo', choices: ['auto', 'gdk-pixbuf', 'qt4', 'qt5'],
        description: 'Which image processing backend to use')
+option('introspection', type : 'boolean', value : 'true',
+       description : 'Enable / disable the GObject-Introspection integration')
 option('gtk_doc',
   type: 'boolean',
   value: 'false',
