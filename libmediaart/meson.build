@@ -30,7 +30,7 @@ marshal = gnome.genmarshal('marshal',
 
 libmediaart_dependencies = [glib, gio_unix, gobject, image_library]
 
-libmediaart = shared_library(
+libmediaart = library(
   'mediaart-' + libmediaart_api_version,
   libmediaart_sources, marshal[0], marshal[1],
   version: libmediaart_ltversion,
