@@ -60,10 +60,12 @@ if get_option('introspection')
     install: true
   )
 
-  libmediaart_vapi = gnome.generate_vapi('libmediaart-' + libmediaart_api_version,
-    sources: libmediaart_gir_and_typelib[0],
-    packages: 'gio-2.0',
-    install: true)
+  if get_option('vapi')
+    libmediaart_vapi = gnome.generate_vapi('libmediaart-' + libmediaart_api_version,
+      sources: libmediaart_gir_and_typelib[0],
+      packages: 'gio-2.0',
+      install: true)
+  endif
 endif
 
 libmediaart_dep = declare_dependency(
