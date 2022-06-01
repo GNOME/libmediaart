@@ -3,6 +3,8 @@ option('image_library', type: 'combo', choices: ['auto', 'gdk-pixbuf', 'qt4', 'q
 option('introspection', type : 'boolean', value : 'true',
        description : 'Enable / disable the GObject-Introspection integration')
 option('vapi', type : 'boolean', value : 'true')
+option('tests', type : 'boolean', value : 'true',
+       description : 'Enable / disable unit tests')
 option('gtk_doc',
   type: 'boolean',
   value: 'false',
