@@ -1,3 +1,8 @@
+NEW in 1.9.6 - 2022-06-01
+=========================
+  * build: Add introspection/vapi/tests options
+  * build: Use library() to optionally build a static library
+
 NEW in 1.9.5 - 2021-05-22
 =========================
 

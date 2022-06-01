@@ -1,5 +1,5 @@
 project('libmediaart', 'c',
-        version: '1.9.5',
+        version: '1.9.6',
         meson_version: '>= 0.56.2',
         default_options: [ 'warning_level=1' ])
 
