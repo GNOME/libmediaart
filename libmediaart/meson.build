@@ -41,28 +41,32 @@ libmediaart = shared_library(
   install: true,
 )
 
-gir_args = [
-  '--quiet',
-  '-DLIBMEDIAART_COMPILATION',
-]
+if get_option('introspection')
+  gir_args = [
+    '--quiet',
+    '-DLIBMEDIAART_COMPILATION',
+  ]
 
-libmediaart_gir_and_typelib = gnome.generate_gir(libmediaart,
-  sources: libmediaart_sources + libmediaart_introspection_sources + libmediaart_public_headers,
-  nsversion: libmediaart_api_version,
-  namespace: 'MediaArt',
-  identifier_prefix: 'MediaArt',
-  symbol_prefix: 'media_art',
-  includes: ['Gio-2.0', 'GObject-2.0'],
-  header: 'libmediaart/mediaart.h',
-  export_packages: 'libmediaart-' + libmediaart_api_version,
-  extra_args: gir_args,
-  install: true
-)
+  libmediaart_gir_and_typelib = gnome.generate_gir(libmediaart,
+    sources: libmediaart_sources + libmediaart_introspection_sources + libmediaart_public_headers,
+    nsversion: libmediaart_api_version,
+    namespace: 'MediaArt',
+    identifier_prefix: 'MediaArt',
+    symbol_prefix: 'media_art',
+    includes: ['Gio-2.0', 'GObject-2.0'],
+    header: 'libmediaart/mediaart.h',
+    export_packages: 'libmediaart-' + libmediaart_api_version,
+    extra_args: gir_args,
+    install: true
+  )
 
-libmediaart_vapi = gnome.generate_vapi('libmediaart-' + libmediaart_api_version,
-  sources: libmediaart_gir_and_typelib[0],
-  packages: 'gio-2.0',
-  install: true)
+  if get_option('vapi')
+    libmediaart_vapi = gnome.generate_vapi('libmediaart-' + libmediaart_api_version,
+      sources: libmediaart_gir_and_typelib[0],
+      packages: 'gio-2.0',
+      install: true)
+  endif
+endif
 
 libmediaart_dep = declare_dependency(
   link_with: libmediaart,
