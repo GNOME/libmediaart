@@ -286,9 +286,9 @@ media_art_get_file (const gchar  *artist,
 
 	gchar *art_filename;
 	gchar *dir, *filename;
-	gchar *artist_down, *title_down;
-	gchar *artist_stripped, *title_stripped;
-	gchar *artist_norm, *title_norm;
+	gchar *artist_down = NULL, *title_down = NULL;
+	gchar *artist_stripped = NULL, *title_stripped = NULL;
+	gchar *artist_norm = NULL, *title_norm = NULL;
 	gchar *artist_checksum = NULL, *title_checksum = NULL;
 
 	/* http://live.gnome.org/MediaArtStorageSpec */
@@ -411,6 +411,7 @@ media_art_get_path (const gchar  *artist,
 	media_art_get_file (artist, title, prefix, cache_path ? &cache_file : NULL);
 	if (cache_path) {
 		*cache_path = cache_file ? g_file_get_path (cache_file) : NULL;
+		g_object_unref (cache_file);
 	}
 
 	return TRUE;
