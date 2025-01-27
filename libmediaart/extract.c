@@ -1789,8 +1789,8 @@ media_art_process_file (MediaArtProcess       *process,
 
 	cache_art_path = g_file_get_path (cache_art_file);
 
-	cache_mtime = get_mtime (cache_art_file, &local_error);
-	no_cache_or_old = cache_mtime == -1 || cache_mtime < mtime;
+	cache_mtime = get_mtime (cache_art_file, NULL);
+	no_cache_or_old = cache_mtime == 0 || cache_mtime < mtime;
 
 	if (no_cache_or_old) {
 		/* If not, we perform a heuristic on the dir */
@@ -1804,6 +1804,13 @@ media_art_process_file (MediaArtProcess       *process,
 			 */
 			if (!g_cancellable_set_error_if_cancelled (cancellable, error)) {
 				if (!get_heuristic (type, uri, artist, title, error)) {
+					g_free (key);
+
+					g_clear_object (&cache_art_file);
+
+					g_free (cache_art_path);
+					g_free (uri);
+
 					return FALSE;
 				}
 
@@ -1812,6 +1819,8 @@ media_art_process_file (MediaArtProcess       *process,
 				g_hash_table_insert (private->media_art_cache,
 				                     key,
 				                     GINT_TO_POINTER(TRUE));
+			} else {
+				g_free (key);
 			}
 		} else {
 			g_free (key);
