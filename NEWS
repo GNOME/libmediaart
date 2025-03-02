@@ -1,3 +1,7 @@
+NEW in 1.9.7 - 2025-03-02
+=========================
+  * Fix memory leaks and compiler warnings
+
 NEW in 1.9.6 - 2022-06-01
 =========================
   * build: Add introspection/vapi/tests options
